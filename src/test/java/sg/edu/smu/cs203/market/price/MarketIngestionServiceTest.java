@@ -73,7 +73,7 @@ class MarketIngestionServiceTest {
 
     private MarketIngestionService service(UsepClient client, MarketPriceRepository prices,
             IngestionRunRepository runs) {
-        return new MarketIngestionService(client, new PriceNormalizer(), prices, runs,
+        return new MarketIngestionService(client, new PriceNormalizer(), prices, runs, mock(MarketObservationRepository.class),
                 Clock.fixed(NOW, ZoneOffset.UTC), Duration.ofMinutes(40));
     }
 

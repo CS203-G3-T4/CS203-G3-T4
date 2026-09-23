@@ -19,6 +19,7 @@ public class MarketIngestionService {
     private final MarketPriceRepository prices;
     private final IngestionRunRepository runs;
     private final Clock clock;
+    private final MarketObservationRepository observations;
     private final Duration staleAfter;
 
     public MarketIngestionService(
@@ -26,12 +27,14 @@ public class MarketIngestionService {
             PriceNormalizer normalizer,
             MarketPriceRepository prices,
             IngestionRunRepository runs,
+            MarketObservationRepository observations,
             Clock clock,
             @Value("${market.feed.stale-after}") Duration staleAfter) {
         this.client = client;
         this.normalizer = normalizer;
         this.prices = prices;
         this.runs = runs;
+        this.observations = observations;
         this.clock = clock;
         this.staleAfter = staleAfter;
     }
@@ -43,6 +46,7 @@ public class MarketIngestionService {
             UsepFeedResponse response = client.fetch();
             MarketPrice price = normalizer.normalize(response, clock.instant());
             prices.upsert(price);
+            observations.save(response, price, staleAfter);
 
             IngestionStatus status = Duration.between(price.sourceUpdatedAt(), clock.instant())
                     .compareTo(staleAfter) > 0 ? IngestionStatus.STALE_SOURCE : IngestionStatus.SUCCESS;
