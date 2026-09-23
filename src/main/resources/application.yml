@@ -8,6 +8,15 @@ spring:
   flyway:
     enabled: true
 
+market:
+  feed:
+    url: ${USEP_FEED_URL:https://nems.sn.sg/api/status.json}
+    enabled: ${USEP_POLLING_ENABLED:true}
+    cron: ${USEP_POLL_CRON:0 2,32 * * * *}
+    connect-timeout: 3s
+    read-timeout: 5s
+    stale-after: 40m
+
 management:
   endpoints:
     web:
