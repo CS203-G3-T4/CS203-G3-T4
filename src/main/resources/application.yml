@@ -26,3 +26,9 @@ management:
 weather:
   feed:
     url: ${NEA_FEED_URL:https://api-open.data.gov.sg/v2/real-time/api/two-hr-forecast}
+  daily:
+    url: ${NEA_DAILY_FEED_URL:https://api-open.data.gov.sg/v2/real-time/api/twenty-four-hr-forecast}
+    enabled: ${NEA_DAILY_POLLING_ENABLED:${USEP_POLLING_ENABLED:true}}
+    cron: ${NEA_DAILY_POLL_CRON:0 5 */3 * * *}
+    stale-after: 6h
+    heat-threshold-c: ${WEATHER_HEAT_THRESHOLD_C:33}
