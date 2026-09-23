@@ -22,3 +22,7 @@ management:
     web:
       exposure:
         include: health,info
+
+weather:
+  feed:
+    url: ${NEA_FEED_URL:https://api-open.data.gov.sg/v2/real-time/api/two-hr-forecast}
