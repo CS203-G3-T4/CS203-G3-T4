@@ -48,7 +48,7 @@ API endpoints, and NEMS ingestion status continue to operate.
 
 The existing scheduler calls both feeds at startup and at :02/:32 Singapore time.
 `USEP_POLL_CRON` overrides the shared schedule; `USEP_POLLING_ENABLED=false`
-disables both feeds. `NEA_FEED_URL` overrides the default official endpoint:
+disables NEMS and both weather collectors by default (the daily collector can be enabled separately). `NEA_FEED_URL` overrides the default official endpoint:
 https://api-open.data.gov.sg/v2/real-time/api/two-hr-forecast
 Both clients use the existing bounded connection/read timeouts. Each feed is saved
 independently. Upstream failures never delete prior rows; NEA failures are logged.
@@ -85,3 +85,17 @@ metadata is unavailable. Combined history starts with the next successful poll.
 
 `src/test/resources/combined_observations_test.sql` validates the view on an isolated
 PostgreSQL database after applying migrations, using `psql -v ON_ERROR_STOP=1 -f`.
+
+## Jira backlog alignment
+
+See [the implementation-to-PBI map](docs/jira-alignment.md) for the verified Jira
+keys, delivered backend contracts, and acceptance criteria still requiring UI,
+team agreement, or later work. New dashboard-facing endpoints are
+`GET /api/v1/prices/current` (one-decimal cents/kWh and staleness) and
+`GET /api/v1/weather/today` (daily temperature forecast and configurable heat hint).
+The two-hour NEA collector and 66-column demo view remain available.
+
+The shared Clock lives in `common/TimeConfig` and uses Asia/Singapore. All business
+time must use that injected clock; the PR template includes this review rule.
+The existing price interval rule floors the source timestamp to a half-hour;
+EMC settlement-period attribution still needs the CSDT4-11 spike.

@@ -27,7 +27,7 @@ public class PriceNormalizer {
             throw new IllegalArgumentException("USEP feed update timestamp is outside the allowed range");
         }
 
-        // The provider publishes a timestamp within the current half-hour market interval.
+        // Bucket by source update time. EMC settlement-period attribution is pending CSDT4-11.
         long intervalEpoch = Math.floorDiv(feed.updated(), INTERVAL_SECONDS) * INTERVAL_SECONDS;
         return new MarketPrice(
                 SOURCE,
