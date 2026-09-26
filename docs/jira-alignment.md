@@ -16,6 +16,32 @@ agreement on behalf of other feature leads. Keep partial stories open.
 | [CSDT4-26 — Outage switch for demos and tests](https://csd-t4.atlassian.net/browse/CSDT4-26) | 2 | Configurable `USEP_FEED_URL` and outage tests are prerequisites only | Named `wattly.nems.base-url` contract, authorized runtime toggle, recommendation guard and recovery without restart |
 | [CSDT4-28 — Weather hint on the dashboard](https://csd-t4.atlassian.net/browse/CSDT4-28) | 2 | Separate NEA 24-hour client, stored daily high/low and text, 3-hour refresh, `/api/v1/weather/today`, configurable heat threshold, resilient fallback | Dashboard hint and team agreement on threshold (33°C is a configurable default, not an agreed decision) |
 
+## Shared Clock adoption (CSDT4-21)
+
+Reviewed against the issue description on 26 September 2026:
+
+- [x] `common/TimeConfig` provides one Clock bean with the Asia/Singapore zone.
+- [x] Price ingestion, price freshness, and both weather services inject that bean
+  wherever they need the current time.
+- [x] Main-code review found no no-argument `now()` or direct system-time calls
+  outside the Clock configuration.
+- [x] The rule is included in the PR template and explained in the README.
+- [ ] Every feature lead has confirmed the rule.
+
+Record each acknowledgement with the lead's name, date, and a reference to their
+confirmation. No acknowledgements have been verified in this review:
+
+| Feature | Lead confirmation |
+| --- | --- |
+| F1 — Live Market Engine & Resilience | Pending |
+| F2 — Household Profiling & Simulated Loads | Pending |
+| F3 — AI Forecaster & Baseline Evaluator | Pending |
+| F4 — Recommendation Engine & Savings Dashboard | Pending |
+| F5 — Time-Travel Demo Replay | Pending |
+
+Keep CSDT4-21 open until these confirmations are recorded. DemoClock implementation
+belongs to CSDT4-43; this task establishes the Clock contract it will replace.
+
 ## Existing user-requested collection
 
 The two-hour NEA area forecasts, 30-minute collection cadence, and 66-column

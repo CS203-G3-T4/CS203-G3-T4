@@ -99,3 +99,22 @@ The shared Clock lives in `common/TimeConfig` and uses Asia/Singapore. All busin
 time must use that injected clock; the PR template includes this review rule.
 The existing price interval rule floors the source timestamp to a half-hour;
 EMC settlement-period attribution still needs the CSDT4-11 spike.
+
+## Shared Clock rule (CSDT4-21)
+
+Constructor-inject the `java.time.Clock` bean from `common/TimeConfig` into any
+business service that needs the current time. Use `LocalDateTime.now(clock)`
+for Singapore local date/time, `LocalDate.now(clock)` for Singapore dates, and
+`clock.instant()` or `Instant.now(clock)` for timestamps. Persist timestamps as
+instants; do not replace them with local date/time values.
+
+Never call a no-argument `now()`, `System.currentTimeMillis()`, or create another
+system Clock in business code. `TimeConfig` is the single source of system time,
+so a future DemoClock can replace it without changing services. Tests should
+inject `Clock.fixed(instant, ZoneId.of("Asia/Singapore"))` when time affects behavior.
+
+The main-code review on 26 September 2026 found that the price and weather
+services use the injected Clock and no direct system-time calls remain outside
+`TimeConfig`. The [PR checklist](.github/pull_request_template.md) applies this
+rule to future changes. Feature-lead acknowledgements are tracked in the
+[CSDT4-21 acceptance checklist](docs/jira-alignment.md#shared-clock-adoption-csdt4-21).
