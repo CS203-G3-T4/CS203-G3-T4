@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Appliances · Wattly</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="/css/wattly.css">
+  <style>
+    .appliances-layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 24px; align-items: start; }
+    #appliance-list { display: flex; flex-direction: column; gap: 10px; }
+    .appliance-row { padding: 14px 16px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    .appliance-row.off { opacity: 0.55; }
+    .appliance-row.editing { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+    .appliance-icon {
+      width: 38px; height: 38px; border-radius: 10px; background: var(--accent-tint); color: var(--accent);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .appliance-info { flex: 1; min-width: 160px; }
+    .appliance-name { font-size: 14.5px; font-weight: 600; }
+    .appliance-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .appliance-actions { display: flex; align-items: center; gap: 8px; }
+    .empty { padding: 28px; text-align: center; color: var(--muted); }
+    .form-card { padding: 22px; position: sticky; top: 24px; }
+    .form-card h2 { font-size: 17px; font-weight: 700; margin-bottom: 16px; }
+    #appliance-form { display: flex; flex-direction: column; gap: 14px; }
+    .energy-preview { font-size: 12.5px; color: var(--ink-2); background: #f4f4f1; border-radius: 8px; padding: 8px 10px; }
+    .form-actions { display: flex; gap: 10px; }
+    .form-actions .btn-primary { flex: 1; }
+    @media (max-width: 1100px) {
+      .appliances-layout { grid-template-columns: 1fr; }
+      .form-card { position: static; }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M13 2L4 14H11L10 22L20 9H13L13 2Z" stroke="#2a78d6" stroke-width="1.7" stroke-linejoin="round" fill="#eaf2fc"/></svg>
+      <span>Wattly</span>
+    </div>
+    <nav class="nav" aria-label="Main">
+      <span class="nav-soon">Dashboard <small>soon</small></span>
+      <span class="nav-soon">Recommendations <small>soon</small></span>
+      <a class="active" href="/appliances.html" data-keep-household aria-current="page">Appliances</a>
+      <span class="nav-soon">Spending &amp; Budget <small>soon</small></span>
+      <a href="/settings.html" data-keep-household>Settings</a>
+      <a href="/about-data.html" data-keep-household>About our data</a>
+    </nav>
+    <div class="spacer"></div>
+    <div class="household-switch">
+      <label for="household-select">Viewing household</label>
+      <select id="household-select" class="field-input"></select>
+    </div>
+    <div class="card household-card" id="household-card">
+      <div class="avatar">…</div>
+      <div><div class="hh-name">Loading…</div><div class="hh-plan"></div></div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-head">
+      <h1>Your Appliances</h1>
+      <p>Manage the appliances Wattly considers when building your recommendations.</p>
+    </div>
+    <div id="page-banner"></div>
+
+    <div class="appliances-layout">
+      <section id="appliance-list" aria-live="polite" aria-label="Appliances">
+        <div class="card empty">Loading appliances…</div>
+      </section>
+
+      <section class="card form-card" aria-labelledby="form-title">
+        <h2 id="form-title">Add New Appliance</h2>
+        <form id="appliance-form" novalidate>
+          <div class="field">
+            <label class="field-label" for="name">Name</label>
+            <input class="field-input" id="name" name="name" placeholder="e.g. Tumble Dryer" maxlength="80">
+            <div class="field-error" data-error-for="name"></div>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="type">Type</label>
+            <select class="field-input" id="type" name="type">
+              <option value="WASHING_MACHINE">Washing machine</option>
+              <option value="TUMBLE_DRYER">Tumble dryer</option>
+              <option value="DISHWASHER">Dishwasher</option>
+              <option value="WATER_HEATER">Water heater</option>
+              <option value="EV_CHARGER">EV charger</option>
+              <option value="AIRCON">Aircon</option>
+              <option value="REFRIGERATOR">Refrigerator</option>
+              <option value="OTHER">Other</option>
+            </select>
+            <div class="field-error" data-error-for="type"></div>
+          </div>
+
+          <div class="row-2">
+            <div class="field">
+              <label class="field-label" for="powerKw">Power (kW)</label>
+              <input class="field-input" id="powerKw" name="powerKw" type="number" min="0" step="0.01" placeholder="2.5">
+              <div class="field-error" data-error-for="powerKw"></div>
+            </div>
+            <div class="field">
+              <label class="field-label" for="runMinutes">Run time (minutes)</label>
+              <input class="field-input" id="runMinutes" name="runMinutes" type="number" min="1" max="1440" step="1" placeholder="60">
+              <div class="field-error" data-error-for="runMinutes"></div>
+            </div>
+          </div>
+          <div class="energy-preview" id="energy-preview">Enter power and run time to see the energy per run.</div>
+
+          <div class="field">
+            <span class="field-label" id="flexibility-label">Flexibility</span>
+            <div class="segmented" role="group" aria-labelledby="flexibility-label">
+              <button type="button" data-flexibility="FLEXIBLE" aria-pressed="true">Flexible window</button>
+              <button type="button" data-flexibility="FIXED" aria-pressed="false">Fixed time</button>
+              <button type="button" data-flexibility="NOT_FLEXIBLE" aria-pressed="false">Not flexible</button>
+            </div>
+            <div class="field-hint" id="flexibility-hint"></div>
+            <div class="field-error" data-error-for="flexibility"></div>
+          </div>
+
+          <div class="row-2" id="window-fields">
+            <div class="field">
+              <label class="field-label" for="earliestStart">Earliest start</label>
+              <input class="field-input" id="earliestStart" name="earliestStart" type="time">
+              <div class="field-error" data-error-for="earliestStart"></div>
+            </div>
+            <div class="field">
+              <label class="field-label" for="mustFinishBy">Must finish by</label>
+              <input class="field-input" id="mustFinishBy" name="mustFinishBy" type="time">
+              <div class="field-error" data-error-for="mustFinishBy"></div>
+            </div>
+          </div>
+
+          <div class="field" id="usual-start-field">
+            <label class="field-label" for="usualStart" id="usual-start-label">Usual start (optional)</label>
+            <input class="field-input" id="usualStart" name="usualStart" type="time">
+            <div class="field-hint" id="usual-start-hint">When you normally run it. Wattly measures savings against this time.</div>
+            <div class="field-error" data-error-for="usualStart"></div>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="runsPerWeek">Runs per week</label>
+            <input class="field-input" id="runsPerWeek" name="runsPerWeek" type="number" min="0" max="70" step="1" value="7">
+            <div class="field-error" data-error-for="runsPerWeek"></div>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="notes">Notes (optional)</label>
+            <input class="field-input" id="notes" name="notes" placeholder="e.g. must finish before bedtime" maxlength="500">
+            <div class="field-error" data-error-for="notes"></div>
+          </div>
+
+          <div class="banner error" id="form-error" hidden></div>
+
+          <div class="form-actions">
+            <button class="btn-primary" type="submit" id="save-button">Save Appliance</button>
+            <button class="btn-ghost" type="button" id="cancel-button">Cancel</button>
+          </div>
+        </form>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script src="/js/wattly.js"></script>
+<script>
+  const householdId = Wattly.householdId();
+  const baseUrl = '/api/v1/households/' + householdId + '/appliances';
+  const form = document.getElementById('appliance-form');
+  const listEl = document.getElementById('appliance-list');
+
+  let appliances = [];
+  let editingId = null;          // null = adding a new appliance
+  let editingEnabled = true;     // keep the on/off state when editing
+  let flexibility = 'FLEXIBLE';
+
+  const ICONS = {
+    WASHING_MACHINE: '<rect x="4" y="3" width="16" height="18" rx="2"/><circle cx="12" cy="13" r="4.5"/><path d="M7 6.5h2"/>',
+    TUMBLE_DRYER: '<rect x="4" y="3" width="16" height="18" rx="2"/><circle cx="12" cy="13" r="4.5"/><path d="M10 12c1-1 3 1 4 0"/>',
+    DISHWASHER: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 8h16M8 13h8M8 16.5h8"/>',
+    WATER_HEATER: '<path d="M12 3c3 4 6 7.5 6 11a6 6 0 0 1-12 0c0-3.5 3-7 6-11z"/>',
+    EV_CHARGER: '<path d="M9 3v5M15 3v5M7 8h10v4a5 5 0 0 1-10 0V8zM12 17v4"/>',
+    AIRCON: '<rect x="3" y="5" width="18" height="8" rx="2"/><path d="M7 16v3M12 16v4M17 16v3"/>',
+    REFRIGERATOR: '<rect x="6" y="2.5" width="12" height="19" rx="2"/><path d="M6 10h12M9 6v2M9 13v3"/>',
+    OTHER: '<path d="M13 2 4 14h7l-1 8 10-13h-7l0-7z"/>'
+  };
+
+  function icon(type) {
+    const paths = ICONS[type] || ICONS.OTHER;
+    return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+      'stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + paths + '</svg>';
+  }
+
+  function flexibilityPill(appliance) {
+    if (appliance.flexibility === 'FIXED') {
+      return '<span class="pill fixed">Fixed · starts ' + Wattly.prettyTime(appliance.usualStart) + '</span>';
+    }
+    if (appliance.flexibility === 'NOT_FLEXIBLE') {
+      return '<span class="pill not-flexible">Not flexible</span>';
+    }
+    let text;
+    if (appliance.windowMinutes === 1440) {
+      text = 'Flexible · any time';
+    } else {
+      text = 'Flexible · ' + Wattly.prettyTime(appliance.earliestStart) + ' – ' +
+        Wattly.prettyTime(appliance.mustFinishBy);
+      if (appliance.windowCrossesMidnight) {
+        text = text + ' (overnight)';
+      }
+    }
+    return '<span class="pill flexible">' + text + '</span>';
+  }
+
+  function metaLine(appliance) {
+    const parts = [
+      Number(appliance.powerKw) + ' kW',
+      appliance.runMinutes + ' min per run',
+      Number(appliance.energyPerRunKwh).toFixed(2) + ' kWh per run'
+    ];
+    if (appliance.flexibility !== 'NOT_FLEXIBLE') {
+      parts.push(appliance.runsPerWeek + '× a week');
+    }
+    return parts.join(' · ');
+  }
+
+  function renderList() {
+    if (appliances.length === 0) {
+      listEl.innerHTML = '<div class="card empty">No appliances yet. Add your first one with the form.</div>';
+      return;
+    }
+    let html = '';
+    appliances.forEach(function (appliance) {
+      const classes = ['card', 'appliance-row'];
+      if (!appliance.enabled) {
+        classes.push('off');
+      }
+      if (appliance.id === editingId) {
+        classes.push('editing');
+      }
+      const name = Wattly.escape(appliance.name);
+      html +=
+        '<div class="' + classes.join(' ') + '" data-id="' + appliance.id + '">' +
+          '<div class="appliance-icon">' + icon(appliance.type) + '</div>' +
+          '<div class="appliance-info">' +
+            '<div class="appliance-name">' + name + '</div>' +
+            '<div class="appliance-meta">' + metaLine(appliance) + '</div>' +
+          '</div>' +
+          flexibilityPill(appliance) +
+          '<div class="appliance-actions">' +
+            '<button type="button" class="switch" role="switch" aria-checked="' + appliance.enabled + '" ' +
+              'data-action="toggle" aria-label="Include ' + name + ' in recommendations"></button>' +
+            '<button type="button" class="icon-btn" data-action="edit" aria-label="Edit ' + name + '">' +
+              '<svg width="14" height="14" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 14.5L4.6 12L13.5 3.1C13.9 2.7 14.5 2.7 14.9 3.1L16.4 4.6C16.8 5 16.8 5.6 16.4 6L7.5 14.9L4 14.5Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>' +
+            '</button>' +
+            '<button type="button" class="icon-btn danger" data-action="delete" aria-label="Delete ' + name + '">' +
+              '<svg width="14" height="14" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 5.5H15.5M8 5.5V3.8C8 3.4 8.3 3 8.8 3H11.2C11.6 3 12 3.4 12 3.8V5.5M6 5.5V15.5C6 16.3 6.7 17 7.5 17H12.5C13.3 17 14 16.3 14 15.5V5.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>' +
+            '</button>' +
+          '</div>' +
+        '</div>';
+    });
+    listEl.innerHTML = html;
+  }
+
+  async function loadAppliances() {
+    const result = await Wattly.api('GET', baseUrl);
+    if (!result.ok) {
+      const message = result.status === 404
+        ? 'Household ' + householdId + ' does not exist. Pick another one in the sidebar.'
+        : (result.data && result.data.detail) || 'Could not load appliances.';
+      listEl.innerHTML = '<div class="banner error">' + Wattly.escape(message) + '</div>';
+      return;
+    }
+    appliances = result.data;
+    renderList();
+  }
+
+  async function loadHousehold() {
+    const result = await Wattly.api('GET', '/api/v1/households/' + householdId);
+    if (!result.ok) {
+      return;
+    }
+    const household = result.data;
+    Wattly.renderHouseholdCard(household);
+    const banner = document.getElementById('page-banner');
+    let html = '';
+    if (!household.exposedToWholesalePrice) {
+      html += '<div class="banner info">This household is on a fixed-rate plan, so wholesale price ' +
+        'swings don\'t affect its bill and Wattly won\'t suggest moving appliances. You can still keep your list here.</div>';
+    }
+    if (household.simulated) {
+      html += '<div class="banner warn">This is a simulated household used for the admin view, not a real home.</div>';
+    }
+    banner.innerHTML = html;
+  }
+
+  // ---------- form ----------
+
+  function setFlexibility(value) {
+    flexibility = value;
+    document.querySelectorAll('[data-flexibility]').forEach(function (button) {
+      button.setAttribute('aria-pressed', String(button.dataset.flexibility === value));
+    });
+    const windowFields = document.getElementById('window-fields');
+    const usualField = document.getElementById('usual-start-field');
+    const hint = document.getElementById('flexibility-hint');
+    windowFields.hidden = value !== 'FLEXIBLE';
+    usualField.hidden = value === 'NOT_FLEXIBLE';
+    if (value === 'FLEXIBLE') {
+      document.getElementById('usual-start-label').textContent = 'Usual start (optional)';
+      document.getElementById('usual-start-hint').hidden = false;
+      hint.textContent = 'Wattly may suggest a cheaper start inside this window. Same start and finish = any time. ' +
+        'Windows can cross midnight, e.g. 22:00 → 07:00.';
+    } else if (value === 'FIXED') {
+      document.getElementById('usual-start-label').textContent = 'Starts at';
+      document.getElementById('usual-start-hint').hidden = true;
+      hint.textContent = 'Always runs at the same time (e.g. aircon at 6 PM). Wattly will not move it.';
+    } else {
+      hint.textContent = 'Runs whenever it needs to (e.g. a fridge). Its energy is spread over the day.';
+    }
+  }
+
+  function updateEnergyPreview() {
+    const power = Number(document.getElementById('powerKw').value);
+    const minutes = Number(document.getElementById('runMinutes').value);
+    const preview = document.getElementById('energy-preview');
+    if (power > 0 && minutes > 0) {
+      const kwh = power * minutes / 60;
+      preview.textContent = 'Uses ' + kwh.toFixed(2) + ' kWh per run (' + power + ' kW × ' +
+        (minutes / 60).toFixed(2).replace(/\.?0+$/, '') + ' h).';
+    } else {
+      preview.textContent = 'Enter power and run time to see the energy per run.';
+    }
+  }
+
+  function clearErrors() {
+    form.querySelectorAll('[data-error-for]').forEach(function (el) { el.textContent = ''; });
+    form.querySelectorAll('[aria-invalid]').forEach(function (el) { el.removeAttribute('aria-invalid'); });
+    document.getElementById('form-error').hidden = true;
+  }
+
+  function showErrors(result) {
+    const errors = result.data && result.data.errors;
+    if (errors) {
+      let firstField = null;
+      Object.keys(errors).forEach(function (field) {
+        const slot = form.querySelector('[data-error-for="' + field + '"]');
+        const input = document.getElementById(field);
+        if (slot) {
+          slot.textContent = errors[field];
+        }
+        if (input) {
+          input.setAttribute('aria-invalid', 'true');
+          if (!firstField) {
+            firstField = input;
+          }
+        }
+      });
+      if (firstField) {
+        firstField.focus();
+      }
+      return;
+    }
+    const box = document.getElementById('form-error');
+    box.textContent = (result.data && result.data.detail) || 'Could not save. Please try again.';
+    box.hidden = false;
+  }
+
+  function timeOrNull(id) {
+    const value = document.getElementById(id).value;
+    return value ? value : null;
+  }
+
+  function numberOrNull(id) {
+    const value = document.getElementById(id).value;
+    return value === '' ? null : Number(value);
+  }
+
+  function readForm() {
+    const body = {
+      name: document.getElementById('name').value.trim(),
+      type: document.getElementById('type').value,
+      powerKw: numberOrNull('powerKw'),
+      runMinutes: numberOrNull('runMinutes'),
+      flexibility: flexibility,
+      earliestStart: null,
+      mustFinishBy: null,
+      usualStart: null,
+      runsPerWeek: numberOrNull('runsPerWeek'),
+      enabled: editingEnabled,
+      notes: document.getElementById('notes').value.trim() || null
+    };
+    if (flexibility === 'FLEXIBLE') {
+      body.earliestStart = timeOrNull('earliestStart');
+      body.mustFinishBy = timeOrNull('mustFinishBy');
+      body.usualStart = timeOrNull('usualStart');
+    } else if (flexibility === 'FIXED') {
+      body.usualStart = timeOrNull('usualStart');
+    }
+    return body;
+  }
+
+  function resetForm() {
+    form.reset();
+    editingId = null;
+    editingEnabled = true;
+    document.getElementById('form-title').textContent = 'Add New Appliance';
+    document.getElementById('save-button').textContent = 'Save Appliance';
+    setFlexibility('FLEXIBLE');
+    clearErrors();
+    updateEnergyPreview();
+    renderList();
+  }
+
+  function startEditing(appliance) {
+    clearErrors();
+    editingId = appliance.id;
+    editingEnabled = appliance.enabled;
+    document.getElementById('form-title').textContent = 'Edit ' + appliance.name;
+    document.getElementById('save-button').textContent = 'Save Changes';
+    document.getElementById('name').value = appliance.name;
+    document.getElementById('type').value = appliance.type;
+    document.getElementById('powerKw').value = Number(appliance.powerKw);
+    document.getElementById('runMinutes').value = appliance.runMinutes;
+    document.getElementById('earliestStart').value = Wattly.hhmm(appliance.earliestStart);
+    document.getElementById('mustFinishBy').value = Wattly.hhmm(appliance.mustFinishBy);
+    document.getElementById('usualStart').value = Wattly.hhmm(appliance.usualStart);
+    document.getElementById('runsPerWeek').value = appliance.runsPerWeek;
+    document.getElementById('notes').value = appliance.notes || '';
+    setFlexibility(appliance.flexibility);
+    updateEnergyPreview();
+    renderList();
+    document.getElementById('name').focus();
+  }
+
+  // The API expects the full appliance on PUT, so the toggle resends everything.
+  function toRequest(appliance) {
+    return {
+      name: appliance.name,
+      type: appliance.type,
+      powerKw: Number(appliance.powerKw),
+      runMinutes: appliance.runMinutes,
+      flexibility: appliance.flexibility,
+      earliestStart: appliance.earliestStart ? Wattly.hhmm(appliance.earliestStart) : null,
+      mustFinishBy: appliance.mustFinishBy ? Wattly.hhmm(appliance.mustFinishBy) : null,
+      usualStart: appliance.usualStart ? Wattly.hhmm(appliance.usualStart) : null,
+      runsPerWeek: appliance.runsPerWeek,
+      enabled: appliance.enabled,
+      notes: appliance.notes
+    };
+  }
+
+  form.addEventListener('submit', async function (event) {
+    event.preventDefault();
+    clearErrors();
+    const saveButton = document.getElementById('save-button');
+    saveButton.disabled = true;
+    let result;
+    if (editingId === null) {
+      result = await Wattly.api('POST', baseUrl, readForm());
+    } else {
+      result = await Wattly.api('PUT', baseUrl + '/' + editingId, readForm());
+    }
+    saveButton.disabled = false;
+    if (!result.ok) {
+      showErrors(result);
+      return;
+    }
+    Wattly.toast(editingId === null ? 'Appliance added' : 'Changes saved');
+    resetForm();
+    await loadAppliances();
+  });
+
+  document.getElementById('cancel-button').addEventListener('click', resetForm);
+  document.getElementById('powerKw').addEventListener('input', updateEnergyPreview);
+  document.getElementById('runMinutes').addEventListener('input', updateEnergyPreview);
+  document.querySelectorAll('[data-flexibility]').forEach(function (button) {
+    button.addEventListener('click', function () { setFlexibility(button.dataset.flexibility); });
+  });
+
+  listEl.addEventListener('click', async function (event) {
+    const button = event.target.closest('[data-action]');
+    if (!button) {
+      return;
+    }
+    const row = button.closest('[data-id]');
+    const id = Number(row.dataset.id);
+    const appliance = appliances.find(function (item) { return item.id === id; });
+    const action = button.dataset.action;
+
+    if (action === 'edit') {
+      startEditing(appliance);
+    } else if (action === 'toggle') {
+      const body = toRequest(appliance);
+      body.enabled = !appliance.enabled;
+      const result = await Wattly.api('PUT', baseUrl + '/' + id, body);
+      if (!result.ok) {
+        Wattly.toast('Could not update ' + appliance.name);
+        return;
+      }
+      Wattly.toast(appliance.name + (body.enabled ? ' switched on' : ' switched off'));
+      if (editingId === id) {
+        editingEnabled = body.enabled;
+      }
+      await loadAppliances();
+    } else if (action === 'delete') {
+      if (!window.confirm('Delete ' + appliance.name + '? This cannot be undone.')) {
+        return;
+      }
+      const result = await Wattly.api('DELETE', baseUrl + '/' + id);
+      if (!result.ok) {
+        Wattly.toast('Could not delete ' + appliance.name);
+        return;
+      }
+      Wattly.toast(appliance.name + ' deleted');
+      if (editingId === id) {
+        resetForm();
+      }
+      await loadAppliances();
+    }
+  });
+
+  setFlexibility('FLEXIBLE');
+  Wattly.keepHouseholdInLinks();
+  Wattly.loadHouseholdSwitcher();
+  loadHousehold();
+  loadAppliances();
+</script>
+</body>
+</html>
