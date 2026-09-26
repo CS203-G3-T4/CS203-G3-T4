@@ -78,6 +78,10 @@ a:hover { color: #1d5ba8; }
 .btn-primary:disabled { opacity: 0.6; cursor: wait; }
 .btn-ghost { background: transparent; color: var(--ink-2); border: 1px solid var(--border); }
 .btn-ghost:hover { background: #f2f2f0; }
+.btn-danger { background: var(--critical); color: #fff; border: none; }
+.btn-danger:hover { background: #962727; }
+.btn-danger:disabled { opacity: 0.6; cursor: wait; }
+.btn-sm { padding: 7px 12px; font-size: 13px; }
 .icon-btn {
   width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border); background: transparent;
   display: inline-flex; align-items: center; justify-content: center; color: var(--ink-2); cursor: pointer;

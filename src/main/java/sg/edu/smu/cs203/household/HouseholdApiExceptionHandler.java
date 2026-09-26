@@ -28,6 +28,14 @@ public class HouseholdApiExceptionHandler {
         return problem;
     }
 
+    @ExceptionHandler(HouseholdNotDeletableException.class)
+    public ProblemDetail householdNotDeletable(HouseholdNotDeletableException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT,
+                exception.getMessage());
+        problem.setTitle("Household cannot be deleted");
+        return problem;
+    }
+
     @ExceptionHandler(ApplianceNotFoundException.class)
     public ProblemDetail applianceNotFound(ApplianceNotFoundException exception) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND,

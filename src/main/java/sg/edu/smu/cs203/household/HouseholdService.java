@@ -62,6 +62,20 @@ public class HouseholdService {
         return get(householdId);
     }
 
+    /**
+     * Deletes a household and its appliances (CSDT4-62). Simulated households belong to the
+     * admin population (CSDT4-49) and are refused, so the platform numbers stay reproducible.
+     */
+    public void delete(long householdId) {
+        Household existing = find(householdId);
+        if (existing.simulated()) {
+            throw new HouseholdNotDeletableException(householdId);
+        }
+        if (!households.delete(householdId)) {
+            throw new HouseholdNotFoundException(householdId);
+        }
+    }
+
     /** Used by other F2 services (and later F4) to reject requests for unknown households. */
     public void requireExists(long householdId) {
         if (!households.exists(householdId)) {

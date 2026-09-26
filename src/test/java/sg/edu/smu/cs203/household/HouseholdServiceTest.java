@@ -103,6 +103,53 @@ class HouseholdServiceTest {
         assertThat(saved.getValue().archetypeId()).isEqualTo(6L);
     }
 
+    @Test
+    void deletingARealHouseholdRemovesIt() {
+        when(households.findById(1L)).thenReturn(Optional.of(household(PlanType.PRICE_LINKED, null)));
+        when(households.delete(1L)).thenReturn(true);
+
+        service.delete(1L);
+
+        verify(households).delete(1L);
+    }
+
+    @Test
+    void deletingASimulatedHouseholdIsRefused() {
+        Instant created = Instant.parse("2026-09-20T00:00:00Z");
+        Household simulated = new Household(42L, "Simulated household 42",
+                DwellingType.HDB_3_ROOM, 3, PlanType.PRICE_LINKED, null, 2L, true, created, created);
+        when(households.findById(42L)).thenReturn(Optional.of(simulated));
+
+        assertThatThrownBy(() -> service.delete(42L))
+                .isInstanceOf(HouseholdNotDeletableException.class);
+        verify(households, never()).delete(42L);
+    }
+
+    @Test
+    void deletingAnUnknownHouseholdIsNotFound() {
+        when(households.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.delete(99L))
+                .isInstanceOf(HouseholdNotFoundException.class);
+        verify(households, never()).delete(99L);
+    }
+
+    @Test
+    void newHouseholdIsRealAndStampedWithTheClock() {
+        when(households.insert(any())).thenReturn(7L);
+        when(households.findById(7L)).thenReturn(Optional.of(household(PlanType.PRICE_LINKED, null)));
+        HouseholdRequest request = new HouseholdRequest("  The Wongs ",
+                DwellingType.PRIVATE_APARTMENT_CONDO, 2, PlanType.PRICE_LINKED, null);
+
+        service.create(request);
+
+        ArgumentCaptor<Household> saved = ArgumentCaptor.forClass(Household.class);
+        verify(households).insert(saved.capture());
+        assertThat(saved.getValue().name()).isEqualTo("The Wongs");
+        assertThat(saved.getValue().simulated()).isFalse();
+        assertThat(saved.getValue().createdAt()).isEqualTo(now);
+    }
+
     private Household household(PlanType plan, BigDecimal rate) {
         Instant created = Instant.parse("2026-09-20T00:00:00Z");
         return new Household(1L, "The Tan Household", DwellingType.HDB_4_ROOM, 4, plan, rate,

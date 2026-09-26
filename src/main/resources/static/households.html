@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Households · Wattly</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="/css/wattly.css">
+  <style>
+    .households-layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 24px; align-items: start; }
+    #household-list { display: flex; flex-direction: column; gap: 10px; }
+    .household-row { padding: 14px 16px; }
+    .household-row.current { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+    .household-row.new { animation: flash 1.6s ease-out; }
+    @keyframes flash { from { background: var(--teal-tint); } to { background: var(--surface); } }
+    @media (prefers-reduced-motion: reduce) { .household-row.new { animation: none; } }
+    .row-main { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    .row-main .avatar { flex-shrink: 0; }
+    .household-info { flex: 1; min-width: 180px; }
+    .household-name { font-size: 14.5px; font-weight: 600; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .household-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .viewing { font-size: 11.5px; font-weight: 600; color: var(--accent); background: var(--accent-tint); border-radius: 999px; padding: 2px 9px; }
+    .household-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .household-actions a { display: inline-flex; align-items: center; }
+    .confirm {
+      margin-top: 12px; padding: 12px 14px; border-radius: 10px; background: var(--critical-tint);
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    }
+    .confirm p { margin: 0; flex: 1; min-width: 200px; font-size: 13.5px; color: var(--critical); }
+    .confirm-actions { display: flex; gap: 8px; }
+    .empty { padding: 28px; text-align: center; color: var(--muted); }
+    .list-note { font-size: 12.5px; color: var(--muted); margin: 4px 2px 0; }
+    .form-card { padding: 22px; position: sticky; top: 24px; }
+    .form-card h2 { font-size: 17px; font-weight: 700; margin-bottom: 4px; }
+    .form-card > p { color: var(--muted); font-size: 13px; margin: 0 0 16px; }
+    #household-form { display: flex; flex-direction: column; gap: 14px; }
+    .segmented.two { grid-template-columns: repeat(2, 1fr); }
+    .banner.success { background: var(--teal-tint); color: var(--teal); }
+    .banner.success a { color: var(--teal); font-weight: 600; text-decoration: underline; }
+    @media (max-width: 1100px) {
+      .households-layout { grid-template-columns: 1fr; }
+      .form-card { position: static; }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M13 2L4 14H11L10 22L20 9H13L13 2Z" stroke="#2a78d6" stroke-width="1.7" stroke-linejoin="round" fill="#eaf2fc"/></svg>
+      <span>Wattly</span>
+    </div>
+    <nav class="nav" aria-label="Main">
+      <span class="nav-soon">Dashboard <small>soon</small></span>
+      <span class="nav-soon">Recommendations <small>soon</small></span>
+      <a href="/appliances.html" data-keep-household>Appliances</a>
+      <span class="nav-soon">Spending &amp; Budget <small>soon</small></span>
+      <a href="/settings.html" data-keep-household>Settings</a>
+      <a class="active" href="/households.html" data-keep-household aria-current="page">Households</a>
+      <a href="/about-data.html" data-keep-household>About our data</a>
+    </nav>
+    <div class="spacer"></div>
+    <div class="household-switch">
+      <label for="household-select">Viewing household</label>
+      <select id="household-select" class="field-input"></select>
+    </div>
+    <div class="card household-card" id="household-card">
+      <div class="avatar">…</div>
+      <div><div class="hh-name">Loading…</div><div class="hh-plan"></div></div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-head">
+      <h1>Households</h1>
+      <p>Add a home to try Wattly with, or remove one you no longer need.</p>
+    </div>
+    <div id="page-banner"></div>
+
+    <div class="households-layout">
+      <section aria-labelledby="list-title">
+        <h2 id="list-title" hidden>Your households</h2>
+        <div id="household-list" aria-live="polite"><div class="card empty">Loading households…</div></div>
+        <p class="list-note">The 100 simulated households used for the admin view aren't listed here and can't be deleted.</p>
+      </section>
+
+      <section class="card form-card" aria-labelledby="form-title">
+        <h2 id="form-title">Add a household</h2>
+        <p>You can add its appliances straight after.</p>
+        <form id="household-form" novalidate>
+          <div class="field">
+            <label class="field-label" for="name">Household name</label>
+            <input class="field-input" id="name" maxlength="100" placeholder="e.g. The Wong Family" autocomplete="off">
+            <div class="field-error" data-error-for="name"></div>
+          </div>
+          <div class="field">
+            <label class="field-label" for="dwellingType">Home type</label>
+            <select class="field-input" id="dwellingType"></select>
+            <div class="field-hint" id="dwelling-hint"></div>
+            <div class="field-error" data-error-for="dwellingType"></div>
+          </div>
+          <div class="field">
+            <label class="field-label" for="occupants">Occupants</label>
+            <input class="field-input" id="occupants" type="number" min="1" max="20" step="1" value="3">
+            <div class="field-error" data-error-for="occupants"></div>
+          </div>
+          <div class="field">
+            <span class="field-label" id="plan-label">Electricity plan</span>
+            <div class="segmented two" role="group" aria-labelledby="plan-label">
+              <button type="button" data-plan="PRICE_LINKED" aria-pressed="true">Price-linked (USEP)</button>
+              <button type="button" data-plan="FIXED" aria-pressed="false">Fixed rate</button>
+            </div>
+            <div class="field-error" data-error-for="planType"></div>
+          </div>
+          <div class="field" id="rate-field" hidden>
+            <label class="field-label" for="fixedRateCentsPerKwh">Fixed rate (¢ per kWh)</label>
+            <input class="field-input" id="fixedRateCentsPerKwh" type="number" min="0" step="0.01" placeholder="e.g. 29.5">
+            <div class="field-error" data-error-for="fixedRateCentsPerKwh"></div>
+          </div>
+          <div class="banner error" id="form-error" hidden></div>
+          <div class="banner success" id="form-success" hidden></div>
+          <button class="btn-primary" type="submit" id="add-button">Add Household</button>
+        </form>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script src="/js/wattly.js"></script>
+<script>
+  const form = document.getElementById('household-form');
+  const listEl = document.getElementById('household-list');
+
+  let households = [];
+  let applianceCounts = {};   // household id -> number of appliances
+  let archetypes = [];
+  let planType = 'PRICE_LINKED';
+  let confirmingId = null;    // the household whose delete is waiting for "Yes, delete"
+  let newestId = null;        // highlighted briefly after adding
+
+  // The household the sidebar is showing. Starts from ?household=N and changes if it is deleted.
+  let viewingId = Wattly.householdId();
+
+  function homeTypeLabel(code) {
+    const archetype = archetypes.find(function (item) { return item.dwellingType === code; });
+    return archetype ? archetype.label : code;
+  }
+
+  function applianceText(id) {
+    const count = applianceCounts[id];
+    if (count === undefined) {
+      return '';
+    }
+    return count === 1 ? '1 appliance' : count + ' appliances';
+  }
+
+  function planPill(household) {
+    if (household.exposedToWholesalePrice) {
+      return '<span class="pill flexible">Price-linked (USEP)</span>';
+    }
+    return '<span class="pill fixed">Fixed rate · ' + Number(household.fixedRateCentsPerKwh) + '¢/kWh</span>';
+  }
+
+  function renderList() {
+    if (households.length === 0) {
+      listEl.innerHTML = '<div class="card empty">No households yet. Add one with the form to start using Wattly.</div>';
+      return;
+    }
+    let html = '';
+    households.forEach(function (household) {
+      const id = household.id;
+      const name = Wattly.escape(household.name);
+      const classes = ['card', 'household-row'];
+      if (id === viewingId) {
+        classes.push('current');
+      }
+      if (id === newestId) {
+        classes.push('new');
+      }
+      const occupants = household.occupants === 1 ? '1 occupant' : household.occupants + ' occupants';
+      const meta = [Wattly.escape(homeTypeLabel(household.dwellingType)), occupants];
+      if (applianceText(id)) {
+        meta.push(applianceText(id));
+      }
+      html +=
+        '<div class="' + classes.join(' ') + '" data-id="' + id + '">' +
+          '<div class="row-main">' +
+            '<div class="avatar" aria-hidden="true">' + Wattly.escape(Wattly.initials(household.name)) + '</div>' +
+            '<div class="household-info">' +
+              '<div class="household-name">' + name + ' ' + planPill(household) +
+                (id === viewingId ? ' <span class="viewing">Viewing</span>' : '') + '</div>' +
+              '<div class="household-meta">' + meta.join(' · ') + '</div>' +
+            '</div>' +
+            '<div class="household-actions">' +
+              '<a class="btn-ghost btn-sm" href="/appliances.html?household=' + id + '">Appliances</a>' +
+              '<a class="btn-ghost btn-sm" href="/settings.html?household=' + id + '">Settings</a>' +
+              '<button class="icon-btn danger" type="button" data-action="ask-delete" ' +
+                'aria-label="Delete ' + name + '" title="Delete">' +
+                '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" ' +
+                'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>' +
+              '</button>' +
+            '</div>' +
+          '</div>' +
+          (id === confirmingId ? confirmBox(household) : '') +
+        '</div>';
+    });
+    listEl.innerHTML = html;
+  }
+
+  function confirmBox(household) {
+    let what = 'Delete ' + Wattly.escape(household.name);
+    const count = applianceCounts[household.id];
+    if (count) {
+      what += ' and its ' + (count === 1 ? 'appliance' : count + ' appliances');
+    }
+    return '<div class="confirm" role="alertdialog" aria-label="Confirm delete">' +
+      '<p>' + what + '? This can\'t be undone.</p>' +
+      '<div class="confirm-actions">' +
+        '<button class="btn-ghost btn-sm" type="button" data-action="cancel-delete">Cancel</button>' +
+        '<button class="btn-danger btn-sm" type="button" data-action="confirm-delete">Yes, delete</button>' +
+      '</div></div>';
+  }
+
+  async function loadHouseholds() {
+    const result = await Wattly.api('GET', '/api/v1/households');
+    if (!result.ok) {
+      listEl.innerHTML = '<div class="banner error">' +
+        Wattly.escape((result.data && result.data.detail) || 'Could not load households.') + '</div>';
+      return;
+    }
+    households = result.data;
+    renderList();
+    // Count each household's appliances (a handful of demo homes, so one request each is fine).
+    const counts = await Promise.all(households.map(function (household) {
+      return Wattly.api('GET', '/api/v1/households/' + household.id + '/appliances');
+    }));
+    applianceCounts = {};
+    households.forEach(function (household, index) {
+      if (counts[index].ok) {
+        applianceCounts[household.id] = counts[index].data.length;
+      }
+    });
+    renderList();
+  }
+
+  // Sidebar: show the viewed household, or the first one if it no longer exists.
+  async function refreshSidebar() {
+    if (!households.some(function (h) { return h.id === viewingId; }) && households.length > 0) {
+      viewingId = households[0].id;
+    }
+    const params = new URLSearchParams(window.location.search);
+    params.delete('none');
+    if (households.length > 0) {
+      params.set('household', viewingId);
+    } else {
+      params.delete('household');
+    }
+    const query = params.toString();
+    history.replaceState(null, '', window.location.pathname + (query ? '?' + query : ''));
+
+    Wattly.keepHouseholdInLinks();
+    const card = document.getElementById('household-card');
+    const current = households.find(function (h) { return h.id === viewingId; });
+    card.hidden = !current;
+    if (current) {
+      Wattly.renderHouseholdCard(current);
+    }
+    await Wattly.loadHouseholdSwitcher();
+    document.querySelector('.household-switch').hidden = households.length === 0;
+  }
+
+  // ---------- delete ----------
+
+  listEl.addEventListener('click', async function (event) {
+    const button = event.target.closest('button[data-action]');
+    if (!button) {
+      return;
+    }
+    const id = Number(button.closest('.household-row').dataset.id);
+    const action = button.dataset.action;
+
+    if (action === 'ask-delete') {
+      confirmingId = id;
+      renderList();
+      listEl.querySelector('[data-action="cancel-delete"]').focus();
+      return;
+    }
+    if (action === 'cancel-delete') {
+      confirmingId = null;
+      renderList();
+      const deleteButton = listEl.querySelector('.household-row[data-id="' + id + '"] [data-action="ask-delete"]');
+      if (deleteButton) {
+        deleteButton.focus();
+      }
+      return;
+    }
+    if (action === 'confirm-delete') {
+      button.disabled = true;
+      const household = households.find(function (h) { return h.id === id; });
+      const result = await Wattly.api('DELETE', '/api/v1/households/' + id);
+      confirmingId = null;
+      if (!result.ok && result.status !== 404) {
+        document.getElementById('page-banner').innerHTML = '<div class="banner error">' +
+          Wattly.escape((result.data && result.data.detail) || 'Could not delete the household.') + '</div>';
+        renderList();
+        return;
+      }
+      document.getElementById('page-banner').innerHTML = '';
+      Wattly.toast('Deleted ' + (household ? household.name : 'household'));
+      await loadHouseholds();
+      await refreshSidebar();
+      renderList();
+      document.getElementById('name').focus();
+    }
+  });
+
+  // ---------- add ----------
+
+  function setPlan(value) {
+    planType = value;
+    document.querySelectorAll('[data-plan]').forEach(function (button) {
+      button.setAttribute('aria-pressed', String(button.dataset.plan === value));
+    });
+    document.getElementById('rate-field').hidden = value !== 'FIXED';
+  }
+
+  function updateDwellingHint() {
+    const code = document.getElementById('dwellingType').value;
+    const archetype = archetypes.find(function (item) { return item.dwellingType === code; });
+    document.getElementById('dwelling-hint').textContent = archetype
+      ? 'EMA average for this home type: ' + Number(archetype.monthlyKwh) + ' kWh a month (2024).'
+      : '';
+  }
+
+  async function loadArchetypes() {
+    const result = await Wattly.api('GET', '/api/v1/archetypes');
+    if (!result.ok) {
+      return;
+    }
+    archetypes = result.data;
+    const select = document.getElementById('dwellingType');
+    select.innerHTML = '';
+    archetypes.forEach(function (archetype) {
+      const option = document.createElement('option');
+      option.value = archetype.dwellingType;
+      option.textContent = archetype.label;
+      option.selected = archetype.dwellingType === 'HDB_4_ROOM';
+      select.appendChild(option);
+    });
+    updateDwellingHint();
+  }
+
+  function clearMessages() {
+    form.querySelectorAll('[data-error-for]').forEach(function (el) { el.textContent = ''; });
+    form.querySelectorAll('[aria-invalid]').forEach(function (el) { el.removeAttribute('aria-invalid'); });
+    document.getElementById('form-error').hidden = true;
+    document.getElementById('form-success').hidden = true;
+  }
+
+  form.addEventListener('submit', async function (event) {
+    event.preventDefault();
+    clearMessages();
+    const rateValue = document.getElementById('fixedRateCentsPerKwh').value;
+    const occupantsValue = document.getElementById('occupants').value;
+    const body = {
+      name: document.getElementById('name').value.trim(),
+      dwellingType: document.getElementById('dwellingType').value || null,
+      occupants: occupantsValue === '' ? null : Number(occupantsValue),
+      planType: planType,
+      fixedRateCentsPerKwh: planType === 'FIXED' && rateValue !== '' ? Number(rateValue) : null
+    };
+    const button = document.getElementById('add-button');
+    button.disabled = true;
+    const result = await Wattly.api('POST', '/api/v1/households', body);
+    button.disabled = false;
+
+    if (!result.ok) {
+      const errors = result.data && result.data.errors;
+      if (errors) {
+        let first = null;
+        Object.keys(errors).forEach(function (field) {
+          const slot = form.querySelector('[data-error-for="' + field + '"]');
+          const input = document.getElementById(field);
+          if (slot) { slot.textContent = errors[field]; }
+          if (input) {
+            input.setAttribute('aria-invalid', 'true');
+            first = first || input;
+          }
+        });
+        if (first) { first.focus(); }
+      } else {
+        const box = document.getElementById('form-error');
+        box.textContent = (result.data && result.data.detail) || 'Could not add the household. Please try again.';
+        box.hidden = false;
+      }
+      return;
+    }
+
+    const created = result.data;
+    newestId = created.id;
+    if (households.length === 0) {
+      viewingId = created.id;
+    }
+    form.reset();
+    setPlan('PRICE_LINKED');
+    document.getElementById('dwellingType').value = 'HDB_4_ROOM';
+    updateDwellingHint();
+    const success = document.getElementById('form-success');
+    success.innerHTML = Wattly.escape(created.name) + ' was added. ' +
+      '<a href="/appliances.html?household=' + created.id + '">Add its appliances →</a>';
+    success.hidden = false;
+    Wattly.toast('Added ' + created.name);
+    await loadHouseholds();
+    await refreshSidebar();
+    renderList();
+    newestId = null;   // highlight the new row once, not on every later re-render
+  });
+
+  document.querySelectorAll('[data-plan]').forEach(function (button) {
+    button.addEventListener('click', function () { setPlan(button.dataset.plan); });
+  });
+  document.getElementById('dwellingType').addEventListener('change', updateDwellingHint);
+
+  if (new URLSearchParams(window.location.search).get('none') === '1') {
+    document.getElementById('page-banner').innerHTML =
+      '<div class="banner info">There are no households left. Add one to keep using Wattly.</div>';
+  }
+
+  setPlan('PRICE_LINKED');
+  loadArchetypes()
+    .then(loadHouseholds)
+    .then(refreshSidebar)
+    .then(renderList);
+</script>
+</body>
+</html>
