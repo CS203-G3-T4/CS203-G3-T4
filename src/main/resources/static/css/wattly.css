@@ -52,7 +52,37 @@ a:hover { color: #1d5ba8; }
 .nav .nav-soon { color: var(--muted); cursor: default; }
 .nav .nav-soon small { font-size: 11px; }
 .sidebar .spacer { flex: 1; }
-.household-card { padding: 12px; display: flex; align-items: center; gap: 10px; }
+/* Sidebar household card: click it to switch household */
+.household-picker { position: relative; }
+.household-card {
+  width: 100%; padding: 10px 12px; display: flex; align-items: center; gap: 10px;
+  font: inherit; color: inherit; text-align: left; cursor: pointer;
+}
+.household-card:hover { border-color: rgba(11, 11, 11, 0.22); background: #fff; }
+.household-card[aria-expanded="true"] { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.household-card .hh-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.household-card .hh-caption { font-size: 11px; color: var(--muted); }
+.household-card .hh-chevron { color: var(--muted); flex-shrink: 0; }
+.household-menu {
+  position: absolute; left: 0; width: 290px; bottom: calc(100% + 8px); z-index: 20;
+  padding: 6px; box-shadow: 0 8px 24px rgba(11, 11, 11, 0.12);
+}
+.household-menu .menu-title { font-size: 11.5px; color: var(--muted); padding: 6px 8px 4px; }
+.household-menu .menu-items { list-style: none; margin: 0; padding: 0; max-height: 300px; overflow-y: auto; }
+.household-menu .menu-item {
+  display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 8px; color: var(--ink);
+}
+.household-menu .menu-item:hover, .household-menu .menu-item:focus-visible { background: #f2f2f0; color: var(--ink); }
+.household-menu .menu-item[aria-current="true"] { background: var(--accent-tint); }
+.household-menu .menu-item .avatar { width: 28px; height: 28px; font-size: 11.5px; }
+.household-menu .menu-item-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.household-menu .menu-item-name { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.household-menu .menu-item-plan { font-size: 11.5px; color: var(--muted); }
+.household-menu .menu-check { color: var(--accent); flex-shrink: 0; }
+.household-menu .menu-manage {
+  display: block; margin-top: 4px; padding: 9px 8px 5px; border-top: 1px solid var(--gridline);
+  font-size: 12.5px; font-weight: 600;
+}
 .avatar {
   width: 34px; height: 34px; border-radius: 999px; background: var(--accent-tint); color: var(--accent);
   display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px;
@@ -60,8 +90,6 @@ a:hover { color: #1d5ba8; }
 }
 .household-card .hh-name { font-size: 13px; font-weight: 600; }
 .household-card .hh-plan { font-size: 11.5px; color: var(--muted); }
-.household-switch label { font-size: 11.5px; color: var(--muted); display: block; margin: 0 4px 4px; }
-.household-switch select { width: 100%; }
 
 .main { flex: 1; min-width: 0; padding: 32px 40px 48px; display: flex; flex-direction: column; gap: 18px; }
 .page-head h1 { font-size: 24px; font-weight: 700; }
@@ -141,5 +169,7 @@ a:hover { color: #1d5ba8; }
   .sidebar { width: 100%; height: auto; position: static; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 12px; padding: 14px 16px; }
   .nav { flex-direction: row; flex-wrap: wrap; }
   .sidebar .spacer { display: none; }
+  .household-picker { width: 100%; }
+  .household-menu { bottom: auto; top: calc(100% + 8px); width: auto; right: 0; }
   .main { padding: 20px 16px 40px; }
 }

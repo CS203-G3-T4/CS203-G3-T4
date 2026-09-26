@@ -51,13 +51,23 @@
       <a href="/about-data.html" data-keep-household>About our data</a>
     </nav>
     <div class="spacer"></div>
-    <div class="household-switch">
-      <label for="household-select">Viewing household</label>
-      <select id="household-select" class="field-input"></select>
-    </div>
-    <div class="card household-card" id="household-card">
-      <div class="avatar">…</div>
-      <div><div class="hh-name">Loading…</div><div class="hh-plan"></div></div>
+    <div class="household-picker" id="household-picker">
+      <div class="card household-menu" id="household-menu" hidden>
+        <div class="menu-title" id="household-menu-title">Switch household</div>
+        <ul class="menu-items" id="household-menu-items" aria-labelledby="household-menu-title"></ul>
+        <a class="menu-manage" href="/households.html" data-keep-household>Add or remove households</a>
+      </div>
+      <button type="button" class="card household-card" id="household-card"
+              aria-expanded="false" aria-controls="household-menu" title="Switch household">
+        <span class="avatar" aria-hidden="true">…</span>
+        <span class="hh-text">
+          <span class="hh-caption">Viewing household</span>
+          <span class="hh-name">Loading…</span>
+          <span class="hh-plan"></span>
+        </span>
+        <svg class="hh-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg>
+      </button>
     </div>
   </aside>
 

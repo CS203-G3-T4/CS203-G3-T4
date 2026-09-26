@@ -90,7 +90,7 @@ Wattly.initials = function (name) {
   return (words[0][0] + words[1][0]).toUpperCase();
 };
 
-// Fills the household card at the bottom of the sidebar and the household switcher.
+// Fills the household card at the bottom of the sidebar.
 Wattly.renderHouseholdCard = function (household) {
   const card = document.getElementById('household-card');
   if (!card || !household) {
@@ -101,29 +101,113 @@ Wattly.renderHouseholdCard = function (household) {
   card.querySelector('.hh-plan').textContent = household.exposureLabel;
 };
 
+// The household card is also the switcher: clicking it opens a list of households just
+// above it. Picking one reloads the same page for that household.
 Wattly.loadHouseholdSwitcher = async function () {
-  const select = document.getElementById('household-select');
-  if (!select) {
+  const card = document.getElementById('household-card');
+  const menu = document.getElementById('household-menu');
+  const items = document.getElementById('household-menu-items');
+  if (!card || !menu || !items) {
     return;
   }
+  Wattly.setUpHouseholdMenu(card, menu);
   const result = await Wattly.api('GET', '/api/v1/households');
   if (!result.ok) {
-    select.closest('.household-switch').hidden = true;
+    items.innerHTML = '<li class="menu-title">Could not load households.</li>';
     return;
   }
   const current = Wattly.householdId();
-  select.innerHTML = '';
+  let html = '';
   result.data.forEach(function (household) {
-    const option = document.createElement('option');
-    option.value = household.id;
-    option.textContent = household.name;
-    option.selected = household.id === current;
-    select.appendChild(option);
-  });
-  select.addEventListener('change', function () {
     const params = new URLSearchParams(window.location.search);
-    params.set('household', select.value);
-    window.location.search = params.toString();
+    params.delete('none');
+    params.set('household', household.id);
+    const isCurrent = household.id === current;
+    html += '<li><a class="menu-item" href="' + window.location.pathname + '?' + params.toString() + '"' +
+      (isCurrent ? ' aria-current="true"' : '') + '>' +
+      '<span class="avatar" aria-hidden="true">' + Wattly.escape(Wattly.initials(household.name)) + '</span>' +
+      '<span class="menu-item-text">' +
+        '<span class="menu-item-name">' + Wattly.escape(household.name) + '</span>' +
+        '<span class="menu-item-plan">' + Wattly.escape(household.exposureLabel) + '</span>' +
+      '</span>' +
+      (isCurrent
+        ? '<svg class="menu-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+          'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>'
+        : '') +
+      '</a></li>';
+  });
+  items.innerHTML = html;
+};
+
+// Open/close behaviour for the household list. Runs once per page.
+Wattly.setUpHouseholdMenu = function (card, menu) {
+  if (card.dataset.ready) {
+    return;
+  }
+  card.dataset.ready = 'true';
+
+  function links() {
+    return Array.prototype.slice.call(menu.querySelectorAll('a'));
+  }
+  function open() {
+    menu.hidden = false;
+    card.setAttribute('aria-expanded', 'true');
+    const current = menu.querySelector('.menu-item[aria-current="true"]') || links()[0];
+    if (current) {
+      current.focus();
+      current.scrollIntoView({ block: 'nearest' });
+    }
+  }
+  function close(returnFocus) {
+    if (menu.hidden) {
+      return;
+    }
+    menu.hidden = true;
+    card.setAttribute('aria-expanded', 'false');
+    if (returnFocus) {
+      card.focus();
+    }
+  }
+
+  card.addEventListener('click', function () {
+    if (menu.hidden) {
+      open();
+    } else {
+      close(false);
+    }
+  });
+  // Up/Down arrows move between households; Escape closes the list.
+  menu.addEventListener('keydown', function (event) {
+    const all = links();
+    const index = all.indexOf(document.activeElement);
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      all[(index + 1) % all.length].focus();
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      all[(index - 1 + all.length) % all.length].focus();
+    } else if (event.key === 'Escape') {
+      close(true);
+    }
+  });
+  card.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape') {
+      close(true);
+    } else if ((event.key === 'ArrowUp' || event.key === 'ArrowDown') && menu.hidden) {
+      event.preventDefault();
+      open();
+    }
+  });
+  // Clicking anywhere else, or tabbing out of the list, closes it.
+  document.addEventListener('click', function (event) {
+    if (!menu.contains(event.target) && !card.contains(event.target)) {
+      close(false);
+    }
+  });
+  menu.addEventListener('focusout', function (event) {
+    if (event.relatedTarget && !menu.contains(event.relatedTarget) && event.relatedTarget !== card) {
+      close(false);
+    }
   });
 };
 
