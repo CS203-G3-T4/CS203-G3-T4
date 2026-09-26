@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>About our data · Wattly</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="/css/wattly.css">
+  <style>
+    .doc { max-width: 760px; display: flex; flex-direction: column; gap: 16px; }
+    .doc section { padding: 20px 22px; }
+    .doc h2 { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+    .doc p, .doc li { font-size: 14px; line-height: 1.6; color: var(--ink-2); max-width: 68ch; }
+    .doc ul { padding-left: 20px; margin: 8px 0; }
+    .tag { display: inline-block; font-size: 11.5px; font-weight: 600; padding: 2px 9px; border-radius: 999px; margin-left: 8px; vertical-align: 2px; }
+    .tag.measured { background: var(--teal-tint); color: var(--teal); }
+    .tag.modelled { background: var(--warning-tint); color: var(--warning); }
+    .tag.simulated { background: #efefec; color: var(--ink-2); }
+    table { border-collapse: collapse; width: 100%; font-size: 13.5px; margin-top: 8px; }
+    th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--gridline); }
+    th { font-size: 12px; color: var(--muted); font-weight: 600; }
+    td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M13 2L4 14H11L10 22L20 9H13L13 2Z" stroke="#2a78d6" stroke-width="1.7" stroke-linejoin="round" fill="#eaf2fc"/></svg>
+      <span>Wattly</span>
+    </div>
+    <nav class="nav" aria-label="Main">
+      <span class="nav-soon">Dashboard <small>soon</small></span>
+      <span class="nav-soon">Recommendations <small>soon</small></span>
+      <a href="/appliances.html" data-keep-household>Appliances</a>
+      <span class="nav-soon">Spending &amp; Budget <small>soon</small></span>
+      <a href="/settings.html" data-keep-household>Settings</a>
+      <a class="active" href="/about-data.html" data-keep-household aria-current="page">About our data</a>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <div class="page-head">
+      <h1>About our data</h1>
+      <p>Which numbers are measured, which are modelled, and where each one comes from.</p>
+    </div>
+
+    <div class="doc">
+      <section class="card">
+        <h2>Wholesale electricity price (USEP) <span class="tag measured">Live, provisional</span></h2>
+        <p>The Uniform Singapore Energy Price is set for every half-hour of the day. Wattly reads it from the free
+          <a href="https://nems.sn.sg/" target="_blank" rel="noopener">NEMS API</a>, an unofficial community service
+          with no uptime guarantee. When it is down, Wattly keeps showing the last price it saved and marks it as stale.</p>
+        <p>Live prices are provisional. The Energy Market Company publishes final prices a few business days later
+          (<a href="https://www.nems.emcsg.com/nems-prices" target="_blank" rel="noopener">EMC NEMS prices</a>).
+          USEP is a wholesale signal, not your full tariff.</p>
+      </section>
+
+      <section class="card">
+        <h2>Your household's electricity use <span class="tag modelled">Modelled, not metered</span></h2>
+        <p>There is no public way to read a home's live smart-meter data, so Wattly models it:</p>
+        <ul>
+          <li>We start from EMA's average monthly use for your home type (table below).</li>
+          <li>We subtract the appliances you listed, because we place those at their own times.
+            EV charging is not in EMA's averages, so it is added on top and shown separately.</li>
+          <li>The rest is spread across the day with a typical Singapore pattern: aircon at night, a morning bump,
+            a quiet weekday afternoon and an evening peak. Weekends use 10% more per day. This daily pattern is our
+            assumption, not published data.</li>
+          <li>An appliance run three times a week counts as 3/7 of a run every day, so the numbers are averages.</li>
+        </ul>
+        <p>Over a whole month, the base load plus your appliances adds up exactly to EMA's figure.</p>
+        <table>
+          <thead><tr><th>Home type</th><th class="num">Average kWh per month (2024)</th></tr></thead>
+          <tbody>
+            <tr><td>1–2 room HDB flat</td><td class="num">175.7</td></tr>
+            <tr><td>3-room HDB flat</td><td class="num">276.1</td></tr>
+            <tr><td>4-room HDB flat</td><td class="num">380.7</td></tr>
+            <tr><td>5-room / Executive HDB flat</td><td class="num">464.0</td></tr>
+            <tr><td>Private apartment / condominium</td><td class="num">522.0</td></tr>
+            <tr><td>Landed property</td><td class="num">1,208.2</td></tr>
+          </tbody>
+        </table>
+        <p>Source: <a href="https://www.mse.gov.sg/latest-news/written-reply-to-parliamentary-question-on--monthly-average-electricity-and-water-consumption-rates-for-households/"
+          target="_blank" rel="noopener">Ministry of Sustainability and the Environment, written reply to a parliamentary question, 24 September 2025</a> (EMA data).</p>
+      </section>
+
+      <section class="card">
+        <h2>Appliances <span class="tag measured">You enter them</span></h2>
+        <p>Power is in kilowatts (how hard an appliance draws) and run time in minutes. Energy per run is
+          power × hours, in kilowatt-hours. Your cost is energy × price.</p>
+      </section>
+
+      <section class="card">
+        <h2>Weather <span class="tag measured">Live forecast</span></h2>
+        <p>Daily temperature forecasts come from the National Environment Agency through
+          <a href="https://data.gov.sg/datasets/d_ce2eb1e307bda31993c533285834ef2b/view" target="_blank" rel="noopener">data.gov.sg</a>.
+          A hot-day hint is a temperature signal, not a price prediction.</p>
+      </section>
+
+      <section class="card">
+        <h2>Households in the admin view <span class="tag simulated">Simulated</span></h2>
+        <p>Apart from a handful of demo homes, the households in the admin view are generated, not real people.
+          Their home-type mix roughly follows Singapore's housing stock and 70% are on price-linked plans, both of
+          which are demo assumptions. They are always labelled "simulated" and cannot be used to log in.</p>
+      </section>
+
+      <section class="card">
+        <h2>Savings <span class="tag modelled">Assumption</span></h2>
+        <p>Because Wattly cannot see your meter, an accepted suggestion is treated as followed. Savings are
+          labelled "estimated" until the actual half-hourly prices are known.</p>
+      </section>
+    </div>
+  </main>
+</div>
+<script src="/js/wattly.js"></script>
+<script>Wattly.keepHouseholdInLinks();</script>
+</body>
+</html>
