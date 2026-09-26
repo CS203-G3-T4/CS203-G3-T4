@@ -89,8 +89,8 @@ PostgreSQL database after applying migrations, using `psql -v ON_ERROR_STOP=1 -f
 ## F2: households and appliances
 
 Households, their electricity plan, appliances with time windows, and a modelled half-hourly
-load calibrated to EMA averages. Pages: `/appliances.html`, `/settings.html` and
-`/about-data.html`. Endpoints and the modelling method are in
+load calibrated to EMA averages. Pages: `/appliances.html`, `/settings.html`,
+`/households.html` (add and delete households) and `/about-data.html`. Endpoints and the modelling method are in
 [docs/f2-households.md](docs/f2-households.md). Migrations V4–V8 create the tables and load
 demo households (the Tans, Lim, Ong, Nair, Rahman) plus 100 simulated households.
 

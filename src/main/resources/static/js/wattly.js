@@ -127,6 +127,28 @@ Wattly.loadHouseholdSwitcher = async function () {
   });
 };
 
+// Called when the household in the URL doesn't exist (for example it was deleted on the
+// Households page). Moves to the first remaining household, or to the Households page if
+// there are none left, so the page doesn't sit on an error. Returns false if it can't move.
+Wattly.leaveMissingHousehold = async function () {
+  const result = await Wattly.api('GET', '/api/v1/households');
+  if (!result.ok) {
+    return false;
+  }
+  if (result.data.length === 0) {
+    window.location.replace('/households.html?none=1');
+    return true;
+  }
+  const first = result.data[0].id;
+  if (first === Wattly.householdId()) {
+    return false;
+  }
+  const params = new URLSearchParams(window.location.search);
+  params.set('household', first);
+  window.location.replace(window.location.pathname + '?' + params.toString());
+  return true;
+};
+
 // Keeps ?household=N when moving between pages.
 Wattly.keepHouseholdInLinks = function () {
   const id = Wattly.householdId();

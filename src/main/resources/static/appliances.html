@@ -47,6 +47,7 @@
       <a class="active" href="/appliances.html" data-keep-household aria-current="page">Appliances</a>
       <span class="nav-soon">Spending &amp; Budget <small>soon</small></span>
       <a href="/settings.html" data-keep-household>Settings</a>
+      <a href="/households.html" data-keep-household>Households</a>
       <a href="/about-data.html" data-keep-household>About our data</a>
     </nav>
     <div class="spacer"></div>
@@ -280,6 +281,9 @@
   async function loadHousehold() {
     const result = await Wattly.api('GET', '/api/v1/households/' + householdId);
     if (!result.ok) {
+      if (result.status === 404) {
+        await Wattly.leaveMissingHousehold();
+      }
       return;
     }
     const household = result.data;

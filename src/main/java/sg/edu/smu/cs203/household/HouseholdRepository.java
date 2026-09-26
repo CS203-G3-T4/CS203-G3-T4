@@ -98,4 +98,12 @@ public class HouseholdRepository {
                 household.id());
         return changed == 1;
     }
+
+    /**
+     * Deletes a household. Its appliances go with it (ON DELETE CASCADE in V4).
+     * Returns false if the household does not exist.
+     */
+    public boolean delete(long id) {
+        return jdbc.update("DELETE FROM household WHERE id = ?", id) == 1;
+    }
 }

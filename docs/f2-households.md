@@ -17,6 +17,7 @@ Code: `src/main/java/sg/edu/smu/cs203/household` (households), `.../household/ap
 | [CSDT4-32](https://csd-t4.atlassian.net/browse/CSDT4-32) Settings page | `static/settings.html`: edit name, home type, occupants, plan and fixed rate; shows the modelled day as a chart |
 | [CSDT4-49](https://csd-t4.atlassian.net/browse/CSDT4-49) Simulated population | 100 deterministic households (V8) with `simulated = true`, hidden from `GET /api/v1/households` unless `?includeSimulated=true` |
 | [CSDT4-50](https://csd-t4.atlassian.net/browse/CSDT4-50) "About our data" page | `static/about-data.html` |
+| [CSDT4-62](https://csd-t4.atlassian.net/browse/CSDT4-62) Add and delete households | `DELETE /api/v1/households/{id}` (204; its appliances go too; simulated → 409; unknown → 404); `static/households.html` lists households with their appliance count, adds one through `POST /api/v1/households` and deletes one after an in-page confirmation. Pages whose household was deleted move to the first remaining household, or to the Households page if none are left |
 
 Still open because they depend on other features:
 
@@ -24,6 +25,8 @@ Still open because they depend on other features:
 - "Load profile includes accepted runs": needs F4's accepted recommendations. Today each run is
   placed at the appliance's usual start.
 - "Simulated households can't log in": needs login (CSDT4-23).
+- Adding and deleting households is open to anyone until login exists. After CSDT4-23, adding
+  becomes part of sign-up and deleting should be admin-only (CSDT4-62).
 
 ## Try it
 
@@ -34,6 +37,7 @@ docker compose up -d postgres
 
 - http://localhost:8080/appliances.html (add `?household=3` for another household)
 - http://localhost:8080/settings.html
+- http://localhost:8080/households.html (add or delete a household)
 - http://localhost:8080/about-data.html
 - http://localhost:8080/swagger-ui.html → the "F2" sections
 
@@ -66,7 +70,9 @@ Summed over a month, base load plus non-EV appliances equals EMA's figure exactl
 
 ## For F4 (recommendations and spend)
 
-Depend on `sg.edu.smu.cs203.household.HouseholdDirectory`, not on F2's repositories:
+Depend on `sg.edu.smu.cs203.household.HouseholdDirectory`, not on F2's repositories.
+Households can be deleted (CSDT4-62), so any F4 table that references `household(id)` must
+use `ON DELETE CASCADE`, like `appliance` does, or the delete will fail with a foreign-key error.
 
 - `household(id)` → plan type and `exposedToWholesalePrice` (skip fixed-rate households)
 - `flexibleAppliances(id)` → enabled `FLEXIBLE` appliances with their windows
