@@ -51,6 +51,7 @@ public class HouseholdService {
 
     public HouseholdResponse update(long householdId, HouseholdRequest request) {
         Household existing = find(householdId);
+        rejectSimulated(existing);
         checkPlanRules(request);
         Household updated = new Household(existing.id(), request.name().trim(),
                 request.dwellingType(), request.occupants(), request.planType(),
@@ -80,6 +81,17 @@ public class HouseholdService {
     public void requireExists(long householdId) {
         if (!households.exists(householdId)) {
             throw new HouseholdNotFoundException(householdId);
+        }
+    }
+
+    /** Simulated households are seeded admin data and must remain unchanged. */
+    public void requireWritable(long householdId) {
+        rejectSimulated(find(householdId));
+    }
+
+    private static void rejectSimulated(Household household) {
+        if (household.simulated()) {
+            throw new SimulatedHouseholdReadOnlyException(household.id());
         }
     }
 

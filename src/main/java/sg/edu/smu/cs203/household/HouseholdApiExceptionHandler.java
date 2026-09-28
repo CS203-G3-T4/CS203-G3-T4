@@ -36,6 +36,14 @@ public class HouseholdApiExceptionHandler {
         return problem;
     }
 
+    @ExceptionHandler(SimulatedHouseholdReadOnlyException.class)
+    public ProblemDetail simulatedHouseholdReadOnly(SimulatedHouseholdReadOnlyException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT,
+                exception.getMessage());
+        problem.setTitle("Simulated household is read-only");
+        return problem;
+    }
+
     @ExceptionHandler(ApplianceNotFoundException.class)
     public ProblemDetail applianceNotFound(ApplianceNotFoundException exception) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND,

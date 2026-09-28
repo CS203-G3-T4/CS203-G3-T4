@@ -1,6 +1,7 @@
 package sg.edu.smu.cs203.household;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -8,6 +9,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -77,6 +79,17 @@ class HouseholdControllerTest {
         mvc.perform(delete("/api/v1/households/42"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.title").value("Household cannot be deleted"));
+    }
+
+    @Test
+    void updatingASimulatedHouseholdIsA409() throws Exception {
+        when(service.update(eq(42L), any()))
+                .thenThrow(new SimulatedHouseholdReadOnlyException(42L));
+
+        mvc.perform(put("/api/v1/households/42")
+                        .contentType(MediaType.APPLICATION_JSON).content(VALID_HOUSEHOLD))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.title").value("Simulated household is read-only"));
     }
 
     private static HouseholdResponse response(long id) {
