@@ -74,11 +74,31 @@ class MarketIngestionServiceTest {
     private MarketIngestionService service(UsepClient client, MarketPriceRepository prices,
             IngestionRunRepository runs) {
         return new MarketIngestionService(client, new PriceNormalizer(), prices, runs, mock(MarketObservationRepository.class),
-                Clock.fixed(NOW, ZoneOffset.UTC), Duration.ofMinutes(40));
+                Clock.fixed(NOW, ZoneOffset.UTC), Duration.ofMinutes(40), mock(org.springframework.context.ApplicationEventPublisher.class));
     }
 
     private UsepFeedResponse feedAt(Instant updatedAt) {
         return new UsepFeedResponse(updatedAt.getEpochSecond(), new BigDecimal("180.81"),
                 new BigDecimal("7385"), null);
+    }
+
+    @Test
+    void notifiesForecastOnlyAfterCanonicalSaveAndPollStatus() {
+        UsepClient client=mock(UsepClient.class);
+        MarketPriceRepository prices=mock(MarketPriceRepository.class);
+        IngestionRunRepository runs=mock(IngestionRunRepository.class);
+        MarketObservationRepository observations=mock(MarketObservationRepository.class);
+        var events=mock(org.springframework.context.ApplicationEventPublisher.class);
+        when(client.fetch()).thenReturn(feedAt(NOW.minusSeconds(240)));
+        when(observations.save(any(),any(),any())).thenReturn(true,false);
+        var service=new MarketIngestionService(client,new PriceNormalizer(),prices,runs,observations,
+                Clock.fixed(NOW,ZoneOffset.UTC),Duration.ofMinutes(40),events);
+        service.poll();
+        var order=org.mockito.Mockito.inOrder(observations,runs,events);
+        order.verify(observations).save(any(),any(),any());
+        order.verify(runs).save(any());
+        order.verify(events).publishEvent(any(MarketObservationSaved.class));
+        service.poll();
+        org.mockito.Mockito.verify(events,org.mockito.Mockito.times(1)).publishEvent(any(MarketObservationSaved.class));
     }
 }

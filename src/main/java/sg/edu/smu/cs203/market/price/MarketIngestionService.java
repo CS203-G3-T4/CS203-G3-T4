@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.context.ApplicationEventPublisher;
 
 @Service
 public class MarketIngestionService {
@@ -21,6 +22,7 @@ public class MarketIngestionService {
     private final Clock clock;
     private final MarketObservationRepository observations;
     private final Duration staleAfter;
+    private final ApplicationEventPublisher events;
 
     public MarketIngestionService(
             UsepClient client,
@@ -29,7 +31,8 @@ public class MarketIngestionService {
             IngestionRunRepository runs,
             MarketObservationRepository observations,
             Clock clock,
-            @Value("${market.feed.stale-after}") Duration staleAfter) {
+            @Value("${market.feed.stale-after}") Duration staleAfter,
+            ApplicationEventPublisher events) {
         this.client = client;
         this.normalizer = normalizer;
         this.prices = prices;
@@ -37,16 +40,18 @@ public class MarketIngestionService {
         this.observations = observations;
         this.clock = clock;
         this.staleAfter = staleAfter;
+        this.events = events;
     }
 
     public void poll() {
         Instant startedAt = clock.instant();
         IngestionRun run;
+        boolean changed = false;
         try {
             UsepFeedResponse response = client.fetch();
             MarketPrice price = normalizer.normalize(response, clock.instant());
             prices.upsert(price);
-            observations.save(response, price, staleAfter);
+            changed = observations.save(response, price, staleAfter);
 
             IngestionStatus status = Duration.between(price.sourceUpdatedAt(), clock.instant())
                     .compareTo(staleAfter) > 0 ? IngestionStatus.STALE_SOURCE : IngestionStatus.SUCCESS;
@@ -63,5 +68,12 @@ public class MarketIngestionService {
             LOG.error("USEP ingestion failed; stored prices remain available", exception);
         }
         runs.save(run);
+        if (changed) {
+            try {
+                events.publishEvent(new MarketObservationSaved());
+            } catch (RuntimeException exception) {
+                LOG.error("Forecast notification failed; saved F1 data remains available", exception);
+            }
+        }
     }
 }
