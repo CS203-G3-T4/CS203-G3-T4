@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools==80.9.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wattly-ml"
+version = "0.1.0"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "fastapi==0.115.12", "uvicorn==0.34.2", "scikit-learn==1.6.1", "numpy==2.2.5"
+]
+
+[project.scripts]
+wattly-ml = "wattly_ml.cli:main"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

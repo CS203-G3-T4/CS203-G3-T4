@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "sha256": "274b1bc930061fc4919e05a2191d0b47257773edbb528109cdc27425143a4919",
+  "sources": [
+    {
+      "schemaVersion": 1,
+      "kind": "sqlite",
+      "source": "/home/bryan/cs203/data/collector.sqlite3",
+      "sourceUrl": null,
+      "acquiredAt": "2026-09-28T16:55:33.975394+00:00",
+      "sha256": "3f7ffd687b9bfaf0e2923d2175766473aca2657a558dbef775d7dbde4e02ce39",
+      "file": "collector.sqlite3",
+      "priceStatus": "PROVISIONAL",
+      "timeMapping": "UNVERIFIED_FLOOR",
+      "quality": {
+        "rowCount": 266,
+        "periodCount": 257,
+        "missingHalfHours": 3,
+        "duplicateRows": 0,
+        "revisionRows": 9,
+        "staleObservations": 0,
+        "parsingFailures": [],
+        "from": "2026-09-23T07:00:00+00:00",
+        "to": "2026-09-28T16:30:00+00:00",
+        "mappingVerified": false,
+        "publicationVintages": true
+      }
+    }
+  ],
+  "provisionalOffsetMinutes": 0,
+  "quality": {
+    "rowCount": 266,
+    "periodCount": 257,
+    "missingHalfHours": 3,
+    "duplicateRows": 0,
+    "revisionRows": 9,
+    "staleObservations": 0,
+    "parsingFailures": [],
+    "from": "2026-09-23T07:00:00+00:00",
+    "to": "2026-09-28T16:30:00+00:00",
+    "mappingVerified": false,
+    "publicationVintages": true
+  }
+}

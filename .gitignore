@@ -31,3 +31,22 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# F3 local data and trusted model artifacts live outside source control.
+.env
+.venv/
+__pycache__/
+.pytest_cache/
+*.egg-info/
+ml/dist/
+*.sqlite3*
+*.db-wal
+*.db-shm
+*.joblib
+*.pkl
+*.log
+/.local/
+/ml/snapshots/
+/ml/datasets/
+/ml/models/
+/ml/reports/
