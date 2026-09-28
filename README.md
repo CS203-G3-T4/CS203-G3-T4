@@ -86,6 +86,14 @@ metadata is unavailable. Combined history starts with the next successful poll.
 `src/test/resources/combined_observations_test.sql` validates the view on an isolated
 PostgreSQL database after applying migrations, using `psql -v ON_ERROR_STOP=1 -f`.
 
+## F2: households and appliances
+
+Households, their electricity plan, appliances with time windows, and a modelled half-hourly
+load calibrated to EMA averages. Pages: `/appliances.html`, `/settings.html`,
+`/households.html` (add and delete households) and `/about-data.html`. Endpoints and the modelling method are in
+[docs/f2-households.md](docs/f2-households.md). Migrations V4–V8 create the tables and load
+demo households (the Tans, Lim, Ong, Nair, Rahman) plus 100 simulated households.
+
 ## Jira backlog alignment
 
 See [the implementation-to-PBI map](docs/jira-alignment.md) for the verified Jira
