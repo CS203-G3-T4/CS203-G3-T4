@@ -41,7 +41,7 @@ public class ApplianceService {
     }
 
     public ApplianceResponse create(long householdId, ApplianceRequest request) {
-        households.requireExists(householdId);
+        households.requireWritable(householdId);
         checkRules(request);
         Instant now = clock.instant();
         Appliance toSave = build(null, householdId, request, now, now);
@@ -51,6 +51,7 @@ public class ApplianceService {
 
     public ApplianceResponse update(long householdId, long applianceId, ApplianceRequest request) {
         Appliance existing = find(householdId, applianceId);
+        households.requireWritable(householdId);
         checkRules(request);
         Appliance updated = build(existing.id(), householdId, request, existing.createdAt(),
                 clock.instant());
@@ -61,7 +62,7 @@ public class ApplianceService {
     }
 
     public void delete(long householdId, long applianceId) {
-        households.requireExists(householdId);
+        households.requireWritable(householdId);
         if (!appliances.delete(householdId, applianceId)) {
             throw new ApplianceNotFoundException(householdId, applianceId);
         }

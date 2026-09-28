@@ -126,6 +126,30 @@ class HouseholdServiceTest {
     }
 
     @Test
+    void updatingASimulatedHouseholdIsRefused() {
+        Instant created = Instant.parse("2026-09-20T00:00:00Z");
+        Household simulated = new Household(42L, "Simulated household 42",
+                DwellingType.HDB_3_ROOM, 3, PlanType.PRICE_LINKED, null, 2L, true, created, created);
+        when(households.findById(42L)).thenReturn(Optional.of(simulated));
+        HouseholdRequest request = new HouseholdRequest("Changed", DwellingType.LANDED, 5,
+                PlanType.PRICE_LINKED, null);
+
+        assertThatThrownBy(() -> service.update(42L, request))
+                .isInstanceOf(SimulatedHouseholdReadOnlyException.class);
+        verify(households, never()).update(any());
+    }
+
+    @Test
+    void onlyRealHouseholdsAreWritable() {
+        when(households.findById(1L)).thenReturn(Optional.of(household(PlanType.PRICE_LINKED, null)));
+        when(households.findById(99L)).thenReturn(Optional.empty());
+
+        service.requireWritable(1L);
+        assertThatThrownBy(() -> service.requireWritable(99L))
+                .isInstanceOf(HouseholdNotFoundException.class);
+    }
+
+    @Test
     void deletingAnUnknownHouseholdIsNotFound() {
         when(households.findById(99L)).thenReturn(Optional.empty());
 

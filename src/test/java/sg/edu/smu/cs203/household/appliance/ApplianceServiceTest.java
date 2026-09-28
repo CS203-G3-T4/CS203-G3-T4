@@ -22,6 +22,7 @@ import org.mockito.ArgumentCaptor;
 
 import sg.edu.smu.cs203.household.HouseholdNotFoundException;
 import sg.edu.smu.cs203.household.HouseholdService;
+import sg.edu.smu.cs203.household.SimulatedHouseholdReadOnlyException;
 import sg.edu.smu.cs203.household.ValidationFailedException;
 
 class ApplianceServiceTest {
@@ -63,6 +64,27 @@ class ApplianceServiceTest {
                 .satisfies(e -> assertThat(((ValidationFailedException) e).errors())
                         .containsKey("mustFinishBy"));
         verify(appliances, never()).insert(any());
+    }
+
+    @Test
+    void simulatedHouseholdAppliancesCannotBeChanged() {
+        long householdId = 42L;
+        ApplianceRequest request = new ApplianceRequest("Dryer", ApplianceType.TUMBLE_DRYER,
+                new BigDecimal("2.5"), 60, Flexibility.FLEXIBLE,
+                LocalTime.of(7, 0), LocalTime.of(21, 0), null, 3, true, null);
+        doThrow(new SimulatedHouseholdReadOnlyException(householdId))
+                .when(households).requireWritable(householdId);
+        when(appliances.findById(householdId, 10L)).thenReturn(Optional.of(dryer(10L)));
+
+        assertThatThrownBy(() -> service.create(householdId, request))
+                .isInstanceOf(SimulatedHouseholdReadOnlyException.class);
+        assertThatThrownBy(() -> service.update(householdId, 10L, request))
+                .isInstanceOf(SimulatedHouseholdReadOnlyException.class);
+        assertThatThrownBy(() -> service.delete(householdId, 10L))
+                .isInstanceOf(SimulatedHouseholdReadOnlyException.class);
+        verify(appliances, never()).insert(any());
+        verify(appliances, never()).update(any());
+        verify(appliances, never()).delete(householdId, 10L);
     }
 
     @Test

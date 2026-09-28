@@ -26,6 +26,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import sg.edu.smu.cs203.household.HouseholdApiExceptionHandler;
 import sg.edu.smu.cs203.household.HouseholdNotFoundException;
+import sg.edu.smu.cs203.household.SimulatedHouseholdReadOnlyException;
 import sg.edu.smu.cs203.household.ValidationFailedException;
 
 class ApplianceControllerTest {
@@ -89,6 +90,17 @@ class ApplianceControllerTest {
 
         mvc.perform(get("/api/v1/households/99/appliances"))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void addingAnApplianceToASimulatedHouseholdIsA409() throws Exception {
+        when(service.create(eq(42L), any()))
+                .thenThrow(new SimulatedHouseholdReadOnlyException(42L));
+
+        mvc.perform(post("/api/v1/households/42/appliances")
+                        .contentType(MediaType.APPLICATION_JSON).content(VALID_DRYER))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.title").value("Simulated household is read-only"));
     }
 
     @Test
