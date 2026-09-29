@@ -55,18 +55,20 @@ acquisition stopped. The importer and documented manual acquisition path are rea
 Final EMC files without publication vintages can support **retrospective final-price**
 evaluation, not an exact reconstruction of live provisional-price availability.
 
-The collector was rechecked near completion: `nems-collector.service` was active,
+At the initial checkpoint, `nems-collector.service` was active,
 PID **9572**, with its original **23 Sep 19:33:41 +08:00** activation time. Its
 database had naturally grown to **275 payloads**, latest **29 Sep 05:01 SGT**.
 No collector code, environment, service, SQLite tables or raw CSVs were modified.
+The continuation rechecked the system service on 29 September: it was still active
+with that same PID and activation time. The frozen evaluation dataset is unchanged.
 
 ## Verification performed
 
-- **93 Java tests passed**, including existing F1/F2 tests. The final acceptance
+- **94 Java tests passed**, with no failures or skips, including existing F1/F2 tests. The final acceptance
   runs used Java **21.0.12.1**, Maven **3.8.7**, and an isolated PostgreSQL **16.15**
   instance on port 55439. The project still targets Java 21 and its compose file
   still uses PostgreSQL 17. No H2, Java upgrade or production dependency was added.
-- **10 Python tests passed** with pinned Python **3.12.3** dependencies. These
+- **11 Python tests passed** with pinned Python **3.12.3** dependencies. These
   include a labelled synthetic 24-model training/save/load/inference path and
   approved-pointer promotion/rollback mechanics. Synthetic validation metadata is
   used only to exercise approval mechanics, never as performance evidence.
@@ -74,7 +76,13 @@ No collector code, environment, service, SQLite tables or raw CSVs were modified
   smoke fetched live Spring JSON and the actual forecast page script, rendered all
   **24 rows** into a minimal test DOM, and exercised stale/unavailable/network states.
   `target/forecast-ui-proof.json` records the rendered count, BASELINE identity and
-  fixed replay origin. This is not a full browser visual audit.
+  fixed replay origin. The continuation also ran a real FastAPI process with 24
+  tiny trained models, verifying Spring → FastAPI → PostgreSQL → public API → page
+  JavaScript. It rendered 24 AI rows, then 24 B2 fallback rows after Python stopped
+  and new input arrived. Proofs are `target/forecast-python-ui-proof.json` and
+  `target/forecast-python-fallback-ui-proof.json`. The model's approval and prior
+  training-date metadata are explicitly synthetic test fixtures. This is not
+  historical accuracy evidence or a full browser visual audit.
 - Timestamp/midnight boundaries, delayed publications, changing revisions, missing
   intervals, exact lags, shared baseline parity, negative/zero prices, zero MAD,
   missing reference history, future/expired weather, train-only imputer fitting,
@@ -84,6 +92,13 @@ No collector code, environment, service, SQLite tables or raw CSVs were modified
   updates during an in-flight run, stale feed, Clock-controlled replay, ADMIN denial,
   atomic partial-run rollback, evaluation readback, immutable predictions, daily
   weather revision retention, and idempotent/transactional imports are exercised.
+- A changed manifest under an existing model version now rejects the AI transaction
+  and saves Java fallback using the prior accepted ranking. The persistence test
+  verifies that even a duplicate run checks model identity, retains the original
+  manifest and stores no rejected AI candidate. The page identifies the fallback.
+- Python backtests and serving now read the artifact's validated `spikeConfig`;
+  Spring rejects AI if its configured rule differs. Tests cover nondefault settings,
+  invalid values and baseline fallback without the rejected AI's ranking/flags.
 - Editable Python package installation and a runnable Spring Boot jar build passed.
   `git diff --check` passed; new business code uses the shared Clock.
 
@@ -113,7 +128,9 @@ preserved outside the Git repository at:
 
 No scheduled training daemon, cloud deployment, paid service, F2/F4/F5 replacement,
 or production model approval was performed. The code is at a tested, runnable
-checkpoint. No background training or partially promoted model remains. Setup,
+checkpoint. The temporary FastAPI process, its fixture bundle and the disposable
+PostgreSQL server were torn down after testing. No background training or partially
+promoted model remains. Setup,
 import, train, serve, test, deployment and recovery commands are in the
 [runbook](runbook.md). Production use must retain the current non-actionable mapping
 guard until independent EMC evidence is recorded.

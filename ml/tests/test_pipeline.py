@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 from wattly_ml.timebase import instant, floor, targets, DAY, STEP
 from wattly_ml.data import as_of, truth, quality, read_source, snapshot, prepare, load_dataset, weather_for, digest
 from wattly_ml.baselines import baselines
-from wattly_ml.spikes import reference
+from wattly_ml.spikes import DEFAULT_CONFIG, reference
 from wattly_ml.features import features
 from wattly_ml.backtest import backtest, scores
 from wattly_ml.serving.app import create_app
@@ -104,6 +104,34 @@ def test_spike_zero_mad_insufficient_history_and_negative_reference():
     assert ref["typical"]==-5 and ref["threshold"]==-2
     assert not reference({},target,origin)["available"]
     assert not reference(dict(list(past.items())[:13]),target,origin)["available"]
+    for invalid in ({}, {**DEFAULT_CONFIG,"minimumSamples":True}, {**DEFAULT_CONFIG,"minimumSamples":29},
+                    {**DEFAULT_CONFIG,"k":float('nan')}, {**DEFAULT_CONFIG,"spreadFloor":0}):
+        with pytest.raises(ValueError): reference(past,target,origin,invalid)
+
+
+def test_backtest_and_serving_use_the_artifacts_spike_rule():
+    from sklearn.dummy import DummyRegressor
+    model=DummyRegressor(strategy="constant",constant=1000).fit([[0]],[1000])
+    rows=history(); origin=instant(rows[8*48]["periodStart"])
+    config={"minimumSamples":7,"k":2.0,"spreadFloor":2.0}
+    manifest={"version":"SYNTHETIC_CONFIG_TEST","usableFrom":origin.isoformat(),"trainingDate":origin.isoformat(),
+              "baselineRanking":["B1","B2","B3"],"retrospective":False,"spikeConfig":config}
+    bundle={"manifest":manifest,"models":[model]*24}
+    records=backtest(rows,origin,origin+DAY,bundle=bundle)
+    expected=[r for r in records if instant(r['asOf'])==origin and r['method']=='AI']
+    past=as_of(rows,origin)
+    assert not reference(past,targets(origin)[0],origin)['available']  # Default minimum is 14 days.
+    assert expected[0]['threshold']==105
+    payload=request_payload(); payload['asOf']=origin.isoformat()
+    payload['priceHistory']=[{k:r[k] for k in ('periodStart','sourceUpdatedAt','availableAt','usep')}
+                             for r in past.values()]
+    with TestClient(create_app(lambda:bundle)) as client:
+        response=client.post('/forecast',json=payload)
+        assert response.status_code==200,response.text
+        for actual,offline in zip(response.json()['points'],expected):
+            assert actual['assessmentAvailable']
+            assert actual['spikeThreshold']==offline['threshold']
+            assert actual['spikeFlag']==offline['spikeFlag']
 
 
 def test_shared_features_ignore_future_and_backtest_purges_split():
@@ -172,6 +200,9 @@ def test_tiny_training_artifact_serving_and_promotion_guards(tmp_path,monkeypatc
     incompatible=json.loads(original_manifest); incompatible['dependencies']['scikit-learn']='incompatible'
     manifest_path.write_text(json.dumps(incompatible))
     with pytest.raises(ValueError): load_bundle(tmp_path/'models'/'fixture')
+    invalid_rule=json.loads(original_manifest); invalid_rule['spikeConfig']['spreadFloor']=0
+    manifest_path.write_text(json.dumps(invalid_rule))
+    with pytest.raises(ValueError,match="Invalid spike configuration"): load_bundle(tmp_path/'models'/'fixture')
     manifest_path.write_text(original_manifest)
     # A deliberately labelled fixture simulates a model that existed before the replay day.
     loaded['manifest']['trainingDate']=cutoff.isoformat()

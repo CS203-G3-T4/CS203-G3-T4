@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import sg.edu.smu.cs203.market.price.MarketHistoryRepository;
 import sg.edu.smu.cs203.market.price.MarketRevision;
+import tools.jackson.databind.JsonNode;
 import static sg.edu.smu.cs203.forecast.ForecastTypes.*;
 
 @Service
@@ -30,6 +31,13 @@ public class CurrentAssessmentService {
             throw new IllegalArgumentException("Invalid spike configuration");
         this.history=history; this.clock=clock; this.forecasts=forecasts;
         this.minimum=minimum; this.k=k; this.spreadFloor=spreadFloor; this.band=band;
+    }
+    /** An AI run must use the same spike definition as its evaluated artifact. */
+    public void requireModelConfig(JsonNode config) {
+        if (!config.path("minimumSamples").isIntegralNumber() || config.path("minimumSamples").asInt()!=minimum
+                || !config.path("k").isNumber() || config.path("k").decimalValue().compareTo(k)!=0
+                || !config.path("spreadFloor").isNumber() || config.path("spreadFloor").decimalValue().compareTo(spreadFloor)!=0)
+            throw new IllegalArgumentException("Model spike configuration differs from Spring configuration");
     }
     public Reference reference(List<MarketRevision> rows, Instant target, Instant asOf) {
         var values=BaselineForecastService.values(rows,asOf);

@@ -11,6 +11,7 @@ import tempfile
 
 from .data import digest, write_json
 from .features import FEATURES
+from .spikes import validate_config
 
 
 def versions():
@@ -42,6 +43,7 @@ def save_bundle(bundle, root: Path, version: str):
 def load_bundle(path: Path):
     import joblib
     manifest = json.loads((path/"manifest.json").read_text())
+    validate_config(manifest["spikeConfig"])
     if (manifest["schemaVersion"]!=1 or manifest["featureOrder"]!=FEATURES or
         manifest["dependencies"]!=versions() or digest(path/"models.joblib")!=manifest["modelSha256"]):
         raise ValueError("Corrupt or incompatible model bundle")

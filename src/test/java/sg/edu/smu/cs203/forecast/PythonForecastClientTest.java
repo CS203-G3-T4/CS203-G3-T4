@@ -25,6 +25,7 @@ class PythonForecastClientTest {
                 .put("trainingDate",NOW.minus(Duration.ofDays(1)).toString())
                 .put("validationEnd",NOW.minus(Duration.ofDays(1)).toString());
         manifest.set("baselineRanking",ranking);
+        manifest.putObject("spikeConfig").put("minimumSamples",14).put("k",3.0).put("spreadFloor",1.0);
         response.putArray("qualityFlags").add("SYNTHETIC_TEST_ONLY");
         var points=response.putArray("points");
         int h=0;

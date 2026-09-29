@@ -20,8 +20,22 @@ public class ForecastRepository {
     private final ObjectMapper mapper;
     public ForecastRepository(JdbcTemplate jdbc,ObjectMapper mapper) { this.jdbc=jdbc; this.mapper=mapper; }
 
+    public static class ModelManifestConflict extends IllegalStateException {
+        ModelManifestConflict(String version) { super("Model version changed manifest: "+version); }
+    }
+
     @Transactional
     public boolean save(Run run, String snapshot, Map<String,List<Point>> candidates, JsonNode model) {
+        // Check even on a duplicate run, within the same transaction as its points.
+        if (model!=null) {
+            String version=model.path("version").asText();
+            jdbc.update("""
+                    INSERT INTO model_run(version,manifest,registered_at,usable_from,promotion_state)
+                    VALUES (?,?::jsonb,?,?,'APPROVED') ON CONFLICT(version) DO NOTHING
+                    """,version,model.toString(),ts(run.generatedAt()),ts(Instant.parse(model.path("usableFrom").asText())));
+            String existing=jdbc.queryForObject("SELECT manifest::text FROM model_run WHERE version=?",String.class,version);
+            if (!mapper.readTree(existing).equals(model)) throw new ModelManifestConflict(version);
+        }
         int inserted=jdbc.update("""
                 INSERT INTO forecast_run(id,as_of,generated_at,origin_slot,input_revision,input_snapshot,mode,model_type,
                     model_version,selected_model,fallback_reason,quality_flags,stale,status)
@@ -40,15 +54,6 @@ public class ForecastRepository {
                         VALUES (?,?,?,?,?,?,?)
                         """,run.id(),entry.getKey(),p.horizon(),ts(p.targetPeriod()),p.predictedUsep(),p.spikeThreshold(),p.spikeFlag());
             }
-        }
-        if (model!=null) {
-            String version=model.path("version").asText();
-            jdbc.update("""
-                    INSERT INTO model_run(version,manifest,registered_at,usable_from,promotion_state)
-                    VALUES (?,?::jsonb,?,?,'APPROVED') ON CONFLICT(version) DO NOTHING
-                    """,version,model.toString(),ts(run.generatedAt()),ts(Instant.parse(model.path("usableFrom").asText())));
-            String existing=jdbc.queryForObject("SELECT manifest::text FROM model_run WHERE version=?",String.class,version);
-            if (!mapper.readTree(existing).equals(model)) throw new IllegalArgumentException("Model version changed manifest");
         }
         return true;
     }
