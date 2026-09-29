@@ -25,7 +25,8 @@ WattlyForecast.render = function (view, assessment) {
       const tr = document.createElement('tr');
       [formatted.format(new Date(point.targetPeriod)),
         Number(point.predictedUsep).toFixed(2), (Number(point.predictedUsep) / 10).toFixed(2),
-        point.spikeFlag === null ? 'Insufficient reference history' : point.spikeFlag ? 'Predicted spike' : 'Below spike threshold'
+        typeof point.spikeFlag !== 'boolean' || !Number.isFinite(point.spikeThreshold) ? 'Insufficient history' :
+          point.spikeFlag ? 'Predicted spike' : 'Below spike threshold'
       ].forEach(function (value) {
         const td = document.createElement('td'); td.textContent = value; tr.appendChild(td);
       });
@@ -38,7 +39,7 @@ WattlyForecast.render = function (view, assessment) {
   } else {
     current.textContent = 'Current price: ' + (Number(assessment.actualPrice) / 10).toFixed(2) + ' cents/kWh. ' +
       (assessment.available ? assessment.classification.toLowerCase() + ' against ' + assessment.sampleCount + ' prior days.' :
-        'Assessment unavailable: ' + assessment.sampleCount + ' reference samples.') +
+        'Spike assessment: Insufficient history (' + assessment.sampleCount + ' reference samples).') +
       (assessment.stale ? ' Price data is stale.' : '');
   }
 };

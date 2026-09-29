@@ -24,9 +24,13 @@ WattlyDemo.selectOrigin = function () {
   const body = document.getElementById('demo-points'); body.replaceChildren();
   origin.points.forEach(p => WattlyDemo.row(body, [WattlyDemo.format.format(new Date(p.targetPeriod)),
     p.actual, p.AI, p.B1, p.B2, p.B3].map((v, i) => i ? WattlyDemo.number(v) : v)));
+  const windowStart = origin.points[0].targetPeriod;
+  const windowEnd = new Date(Date.parse(origin.points.at(-1).targetPeriod) + 30 * 60 * 1000).toISOString();
+  WattlyDemo.text('demo-window', 'Selected 12-hour target window: ' + WattlyDemo.format.format(new Date(windowStart)) +
+    ' → ' + WattlyDemo.format.format(new Date(windowEnd)) + ' SGT (end exclusive). 24 half-hour predictions.');
   const svg = document.getElementById('demo-chart'); svg.replaceChildren();
-  WattlyDemo.svg('title', { id: 'demo-chart-title' }, 'Actual prices and experimental 24-interval forecasts');
-  WattlyDemo.svg('desc', { id: 'demo-chart-description' }, 'AI, B1 and B2 use the selected historical origin. Exact values are available in the table below.');
+  WattlyDemo.svg('title', { id: 'demo-chart-title' }, 'Actual prices and experimental 12-hour forecasts');
+  WattlyDemo.svg('desc', { id: 'demo-chart-description' }, 'The shaded window contains 24 half-hour target intervals for one origin. MAE uses all eligible origins. Exact values are in the table below.');
   const start = Date.parse(report.protocol.testStart), end = Date.parse(report.protocol.testEnd);
   const series = [{ key: 'actual', points: report.actuals, color: '#52514e', dash: '' },
     { key: 'AI', points: origin.points, color: '#2a78d6', dash: '' },
@@ -37,6 +41,10 @@ WattlyDemo.selectOrigin = function () {
   const bottom = low - pad, top = high + pad;
   const x = t => 72 + (Date.parse(t) - start) / (end - start) * 900;
   const y = v => 290 - (v - bottom) / (top - bottom) * 260;
+  WattlyDemo.svg('rect', { id: 'demo-window-highlight', x: x(windowStart), y: 30,
+    width: x(windowEnd) - x(windowStart), height: 260, fill: '#eaf2fc', stroke: '#92b8e8' });
+  WattlyDemo.svg('line', { x1: x(origin.asOf), x2: x(origin.asOf), y1: 30, y2: 290,
+    stroke: '#52514e', 'stroke-dasharray': '4 4' });
   for (let i = 0; i <= 4; i++) {
     const value = bottom + (top - bottom) * i / 4;
     WattlyDemo.svg('line', { x1: 72, x2: 972, y1: y(value), y2: y(value), stroke: '#e1e0d9' });
@@ -70,7 +78,14 @@ WattlyDemo.render = function (report) {
   WattlyDemo.text('demo-baseline-label', selected + ' baseline MAE');
   WattlyDemo.text('demo-baseline-mae', WattlyDemo.number(baseline));
   WattlyDemo.text('demo-pairs', report.test.commonPairs);
-  WattlyDemo.text('demo-origins', report.origins.length + ' origins · 24 horizons · one day');
+  WattlyDemo.text('demo-origins', report.origins.length + ' origins · 12 hours each · one day');
+  const purged = report.exclusions.AI.PURGED_SPLIT_BOUNDARY || 0;
+  WattlyDemo.text('demo-pair-explanation', report.origins.length + ' eligible origins × 24 predictions = ' +
+    report.test.commonPairs + ' included pairs per compared method. ' + purged / 24 + ' later origins × 24 = ' + purged +
+    ' excluded pairs per method because their full forecast crosses the test-day boundary.');
+  const assessed = report.test.table.AI.spikes?.assessedPairs || 0;
+  WattlyDemo.text('demo-spikes', assessed ? 'Spike assessments have sufficient reference history for ' + assessed +
+    ' evaluated AI pairs; see the downloaded report.' : 'Spike assessment: Insufficient history. No spike flags or spike-accuracy claim are available for this experiment.');
   const p = report.protocol, date = value => WattlyDemo.format.format(new Date(value));
   WattlyDemo.text('demo-dates', 'Train: ' + date(p.trainingStart) + ' → ' + date(p.trainingCutoff) +
     '. Validate: ' + date(p.validationStart) + ' → ' + date(p.validationEnd) +

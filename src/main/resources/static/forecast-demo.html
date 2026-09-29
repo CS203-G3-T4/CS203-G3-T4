@@ -25,7 +25,7 @@
       <p>One untouched test day. The same forecast origins, targets and actual prices for every eligible method.</p>
     </header>
     <section id="experiment" class="card demo-section" aria-labelledby="experiment-title">
-      <h2 id="experiment-title">Historical experiment</h2>
+      <h2 id="experiment-title">Historical experiment · 12-hour forecast</h2>
       <p id="demo-status" role="status" aria-live="polite">Loading the saved experiment…</p>
       <div id="demo-results" hidden>
         <p id="demo-verdict" class="demo-verdict"></p>
@@ -35,16 +35,22 @@
           <div><span>Common test pairs</span><strong id="demo-pairs"></strong><small id="demo-origins"></small></div>
         </div>
         <p id="demo-dates"></p>
+        <p id="demo-pair-explanation"></p>
         <label for="demo-origin">Offline forecast origin (SGT)</label>
         <select id="demo-origin"></select>
+        <p id="demo-window" role="status" aria-live="polite"></p>
         <figure>
           <svg id="demo-chart" viewBox="0 0 1000 340" role="img" aria-labelledby="demo-chart-title demo-chart-description"></svg>
-          <figcaption>Actual prices span the test day. Each forecast uses only information available at the selected origin and predicts the next 24 half-hours.</figcaption>
+          <figcaption>The chart shows one selected origin and its 12-hour forecast: 24 half-hour predictions.
+            The shaded area marks those target intervals; actual prices span the whole test day.
+            MAE covers all eligible origins, so changing this chart does not change the reported MAE.</figcaption>
         </figure>
         <div class="demo-legend" aria-label="Chart legend">
           <span class="actual">Actual provisional price</span><span class="ai">AI experiment</span>
           <span class="b1">B1 · recent six-period mean</span><span class="b2">B2 · yesterday</span>
+          <span class="window">Selected 12-hour window</span>
         </div>
+        <p id="demo-spikes"></p>
         <div class="demo-table-scroll">
           <table>
             <caption>Test MAE uses identical eligible pairs. B3 is reported separately when seven prior days are unavailable.</caption>
@@ -75,9 +81,9 @@
       <button id="demo-refresh" class="btn-ghost" type="button">Refresh live display</button>
       <h3 id="forecast-status" role="status" aria-live="polite">Loading saved forecast…</h3>
       <p id="forecast-metadata"></p><p id="current-assessment"></p>
-      <details><summary>24 live forecast intervals</summary>
+      <details><summary>12-hour live forecast · 24 half-hour predictions</summary>
         <div class="demo-table-scroll"><table id="forecast-table" hidden>
-          <caption>Next 24 future half-hour starts, Singapore time</caption>
+          <caption>12-hour forecast: 24 future half-hour starts, Singapore time</caption>
           <thead><tr><th scope="col">Target start</th><th scope="col">SGD/MWh</th><th scope="col">cents/kWh</th><th scope="col">Spike assessment</th></tr></thead>
           <tbody id="forecast-points"></tbody>
         </table></div>
