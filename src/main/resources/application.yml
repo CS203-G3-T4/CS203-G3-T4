@@ -32,3 +32,16 @@ weather:
     cron: ${NEA_DAILY_POLL_CRON:0 5 */3 * * *}
     stale-after: 6h
     heat-threshold-c: ${WEATHER_HEAT_THRESHOLD_C:33}
+
+forecast:
+  mode: ${FORECAST_MODE:LIVE}
+  python-url: ${FORECAST_PYTHON_URL:http://127.0.0.1:8001}
+  python-timeout: ${FORECAST_PYTHON_TIMEOUT:5s}
+  # Leave empty until F1 documents an EMC comparison proving the existing floor rule.
+  period-mapping-evidence: ${FORECAST_PERIOD_MAPPING_EVIDENCE:}
+  import-file: ${FORECAST_IMPORT_FILE:}
+  spike:
+    minimum-samples: ${FORECAST_SPIKE_MINIMUM_SAMPLES:14}
+    k: ${FORECAST_SPIKE_K:3}
+    spread-floor: ${FORECAST_SPIKE_SPREAD_FLOOR:1}
+    classification-band: ${FORECAST_CLASSIFICATION_BAND:1}

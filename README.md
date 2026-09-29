@@ -128,3 +128,18 @@ services use the injected Clock and no direct system-time calls remain outside
 `TimeConfig`. The [PR checklist](.github/pull_request_template.md) applies this
 rule to future changes. Feature-lead acknowledgements are tracked in the
 [CSDT4-21 acceptance checklist](docs/jira-alignment.md#shared-clock-adoption-csdt4-21).
+
+## F3: forecaster and baseline evaluator
+
+The [forecast page](/forecast.html) reads saved 24-interval forecasts from Spring.
+F3 adds Java baseline fallback, revision-aware history/imports, PostgreSQL forecast
+runs, and a separate Python training/inference package under `ml/`. Existing F1
+polling and F2 pages remain in place. The standalone collector is unchanged.
+
+Start with the [F3 runbook](docs/forecasting/runbook.md),
+[contracts](docs/forecasting/contracts.md), and
+[measured results/remaining acceptance work](docs/forecasting/results.md).
+The current evidence is exploratory: long-history acquisition and verification of
+NEMS settlement-period mapping remain blocked. No AI improvement is claimed, and
+unverified forecasts are not actionable. The admin accuracy endpoint requires an
+ADMIN servlet role; this repository has no login integration yet.

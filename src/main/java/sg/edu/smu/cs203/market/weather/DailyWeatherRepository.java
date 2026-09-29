@@ -23,6 +23,14 @@ public class DailyWeatherRepository {
         for (JsonNode record : records) {
             DailyWeatherForecast forecast = DailyWeatherForecast.from(record, fetchedAt);
             jdbc.update("""
+                    INSERT INTO daily_weather_revision(forecast_date,issued_at,updated_at,available_at,
+                        valid_start,valid_end,temperature_high_c,temperature_low_c,payload)
+                    VALUES (?,?,?,?,?,?,?,?,?::jsonb)
+                    ON CONFLICT(forecast_date,issued_at,updated_at,payload) DO NOTHING
+                    """, Date.valueOf(forecast.date()),Timestamp.from(forecast.issuedAt()),
+                    Timestamp.from(forecast.updatedAt()),Timestamp.from(fetchedAt),Timestamp.from(forecast.validStart()),
+                    Timestamp.from(forecast.validEnd()),forecast.temperatureHighC(),forecast.temperatureLowC(),record.toString());
+            jdbc.update("""
                     INSERT INTO daily_weather
                         (forecast_date, issued_at, updated_at, valid_start, valid_end,
                          temperature_high_c, temperature_low_c, forecast, fetched_at, payload)

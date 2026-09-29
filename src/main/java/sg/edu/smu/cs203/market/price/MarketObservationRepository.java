@@ -4,19 +4,23 @@ import java.sql.Timestamp;
 import java.time.Duration;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.ObjectMapper;
 
 @Repository
 public class MarketObservationRepository {
     private final JdbcTemplate jdbc;
     private final ObjectMapper mapper;
+    private final MarketHistoryRepository history;
 
-    public MarketObservationRepository(JdbcTemplate jdbc, ObjectMapper mapper) {
+    public MarketObservationRepository(JdbcTemplate jdbc, ObjectMapper mapper, MarketHistoryRepository history) {
         this.jdbc = jdbc;
         this.mapper = mapper;
+        this.history = history;
     }
 
-    public void save(UsepFeedResponse response, MarketPrice price, Duration staleAfter) {
+    @Transactional
+    public boolean save(UsepFeedResponse response, MarketPrice price, Duration staleAfter) {
         Duration age = Duration.between(price.sourceUpdatedAt(), price.fetchedAt());
         jdbc.update("""
                 INSERT INTO market_observation
@@ -28,5 +32,9 @@ public class MarketObservationRepository {
                 """, Timestamp.from(price.sourceUpdatedAt()), Timestamp.from(price.fetchedAt()),
                 Timestamp.from(price.fetchedAt()), age.toMillis() / 1000.0,
                 age.compareTo(staleAfter) > 0, mapper.writeValueAsString(response));
+        String payload = mapper.writeValueAsString(response);
+        return history.save(new MarketRevision(0,price.source(),price.intervalStart(),price.sourceUpdatedAt(),
+                price.fetchedAt(),price.usepSgdPerMwh(),price.forecastDemandMw(),price.vcpSgdPerMwh(),
+                "PROVISIONAL","UNVERIFIED_FLOOR"),"app-nems",payload,payload);
     }
 }
