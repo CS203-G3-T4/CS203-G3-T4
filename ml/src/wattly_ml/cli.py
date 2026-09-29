@@ -35,6 +35,9 @@ def main(argv=None):
     s.add_argument("--provisional-offset-minutes",type=int,default=0)
     s = sub.add_parser("demo-report",help="Separate, unapproved latest-complete-day presentation experiment")
     s.add_argument("dataset",type=Path); s.add_argument("--output",type=Path,required=True)
+    s = sub.add_parser("compare-models",help="Fixed offline candidates; validation selection and separate already-seen test diagnostics")
+    s.add_argument("dataset",type=Path); s.add_argument("--reference",type=Path,required=True)
+    s.add_argument("--output",type=Path,required=True)
     for name in ("backtest","train","evaluate","weekly"):
         s = sub.add_parser(name); s.add_argument("dataset",type=Path)
         s.add_argument("--start",type=instant,required=True); s.add_argument("--end",type=instant,required=True)
@@ -58,6 +61,11 @@ def main(argv=None):
         if args.command=="demo-report":
             from .demo import experiment
             print(json.dumps(experiment(args.dataset,args.output),indent=2)); return 0
+        if args.command=="compare-models":
+            from .experiments import compare
+            result = compare(args.dataset,args.reference,args.output)
+            print(json.dumps({'status':result['status'],'output':str(args.output),
+                              'selectedMethod':result['selection']['selectedMethod']},indent=2)); return 0
         if args.command=="decisions":
             from .decisions import compare
             write_json(args.output,compare(json.loads(args.cases.read_text()))); return 0

@@ -7,6 +7,25 @@ from .spikes import DEFAULT_CONFIG
 from .timebase import DAY, STEP, instant, targets
 
 
+def training_examples(rows, start, cutoff, *, policy="FINAL", retrospective=False):
+    """Shared purged, as-of examples for the production trainer and offline studies."""
+    history, actuals = History(rows, retrospective), truth(rows,policy,cutoff,retrospective)
+    xs, ys = [[] for _ in range(24)], [[] for _ in range(24)]
+    excluded = 0
+    for origin in origins(start, cutoff):
+        ts = targets(origin)
+        if ts[-1]+STEP > cutoff or not all(t in actuals for t in ts):
+            excluded += 1
+            continue
+        past = history.at(origin)
+        if len(past)<6 or not fresh(past,origin):
+            excluded += 1
+            continue
+        for h,t in enumerate(ts):
+            xs[h].append(features(past,origin,t)); ys[h].append(actuals[t])
+    return xs, ys, excluded
+
+
 def train(rows, dataset_manifest, start, cutoff, validation_end, *, retrospective=False,
           policy="FINAL", exploratory=False, iterations=40):
     import numpy as np
@@ -24,20 +43,7 @@ def train(rows, dataset_manifest, start, cutoff, validation_end, *, retrospectiv
               and not quality["missingHalfHours"])
     if not exploratory and not enough:
         raise ValueError("Insufficient verified history; use --exploratory only for non-promotable experiments")
-    history, actuals = History(rows, retrospective), truth(rows,policy,cutoff,retrospective)
-    xs, ys = [[] for _ in range(24)], [[] for _ in range(24)]
-    excluded = 0
-    for origin in origins(start, cutoff):
-        ts = targets(origin)
-        if ts[-1]+STEP > cutoff or not all(t in actuals for t in ts):
-            excluded += 1
-            continue
-        past = history.at(origin)
-        if len(past)<6 or not fresh(past,origin):
-            excluded += 1
-            continue
-        for h,t in enumerate(ts):
-            xs[h].append(features(past,origin,t)); ys[h].append(actuals[t])
+    xs, ys, excluded = training_examples(rows,start,cutoff,policy=policy,retrospective=retrospective)
     if len(ys[0])<48:
         raise ValueError("At least 48 complete eligible training origins required")
     models = []
