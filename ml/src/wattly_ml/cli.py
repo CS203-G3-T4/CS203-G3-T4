@@ -33,6 +33,8 @@ def main(argv=None):
     s.add_argument("--output",type=Path,required=True); s.add_argument("--source-url")
     s = sub.add_parser("prepare"); s.add_argument("snapshots",type=Path,nargs="+"); s.add_argument("--output",type=Path,required=True)
     s.add_argument("--provisional-offset-minutes",type=int,default=0)
+    s = sub.add_parser("demo-report",help="Separate, unapproved latest-complete-day presentation experiment")
+    s.add_argument("dataset",type=Path); s.add_argument("--output",type=Path,required=True)
     for name in ("backtest","train","evaluate","weekly"):
         s = sub.add_parser(name); s.add_argument("dataset",type=Path)
         s.add_argument("--start",type=instant,required=True); s.add_argument("--end",type=instant,required=True)
@@ -53,6 +55,9 @@ def main(argv=None):
             print(snapshot(args.source,args.output,args.kind,args.source_url)); return 0
         if args.command=="prepare":
             print(json.dumps(prepare(args.snapshots,args.output,args.provisional_offset_minutes),indent=2)); return 0
+        if args.command=="demo-report":
+            from .demo import experiment
+            print(json.dumps(experiment(args.dataset,args.output),indent=2)); return 0
         if args.command=="decisions":
             from .decisions import compare
             write_json(args.output,compare(json.loads(args.cases.read_text()))); return 0
