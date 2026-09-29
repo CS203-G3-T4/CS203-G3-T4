@@ -31,6 +31,8 @@
   async function loadPrice() {
     const result = await Wattly.api('GET', '/api/v1/prices/current');
     const status = document.getElementById('price-status');
+    const staleBanner = document.getElementById('price-stale-banner');
+    staleBanner.hidden = true;
     if (!result.ok) {
       document.getElementById('price-value').textContent = '—';
       document.getElementById('market-price').textContent = '—';
@@ -50,6 +52,7 @@
     document.getElementById('price-updated').textContent = formatTime(price.sourceUpdatedAt);
     document.getElementById('interval-start').textContent = formatTime(price.intervalStart);
     setStatus(status, data.stale ? 'Stale market data' : 'Live market data', data.stale ? 'stale' : '');
+    staleBanner.hidden = !data.stale;
   }
 
   async function loadWeather() {
