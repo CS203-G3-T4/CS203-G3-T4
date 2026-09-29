@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard · Wattly</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="/css/wattly.css">
+  <style>
+    .dashboard-head { display: flex; align-items: end; justify-content: space-between; gap: 18px; }
+    .today-label { color: var(--teal); font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+    .dashboard-head h1 { margin-top: 4px; }
+    .dashboard-head p { margin-top: 5px; }
+    .dashboard-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(300px, .8fr); gap: 16px; }
+    .dashboard-panel { min-height: 290px; padding: 22px; display: flex; flex-direction: column; }
+    .panel-top { display: flex; align-items: start; justify-content: space-between; gap: 12px; }
+    .panel-kicker { margin: 0 0 4px; color: var(--muted); font-size: 12px; font-weight: 600; text-transform: uppercase; }
+    .panel-title { font-size: 18px; }
+    .panel-icon { width: 38px; height: 38px; flex: 0 0 38px; display: grid; place-items: center; border-radius: 9px; }
+    .price-icon { color: #2367b5; background: #eaf2fc; }
+    .weather-icon { color: #a35616; background: #fff0df; }
+    .price-line { display: flex; align-items: baseline; gap: 9px; margin: 28px 0 4px; }
+    .price-value { font: 700 54px/1 "Space Grotesk", sans-serif; font-variant-numeric: tabular-nums; }
+    .price-unit { font-size: 15px; color: var(--muted); }
+    .price-context { margin: 0; color: var(--ink-2); font-size: 13px; }
+    .price-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: auto; padding-top: 24px; }
+    .meta-cell { border-top: 1px solid var(--gridline); padding-top: 10px; }
+    .meta-label { color: var(--muted); font-size: 11.5px; }
+    .meta-value { margin-top: 3px; font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .weather-temperatures { display: flex; align-items: baseline; gap: 14px; margin: 28px 0 9px; }
+    .weather-high { font: 700 48px/1 "Space Grotesk", sans-serif; font-variant-numeric: tabular-nums; }
+    .weather-low { color: var(--muted); font: 600 25px/1 "Space Grotesk", sans-serif; font-variant-numeric: tabular-nums; }
+    .weather-description { min-height: 24px; margin: 0; color: var(--ink-2); font-size: 14px; }
+    .weather-detail { margin-top: auto; padding-top: 20px; }
+    .state-line { min-height: 20px; margin-top: 14px; color: var(--muted); font-size: 12px; }
+    .status-pill { display: inline-flex; align-items: center; gap: 6px; width: fit-content; padding: 4px 9px; border-radius: 999px; background: var(--teal-tint); color: var(--teal); font-size: 11.5px; font-weight: 700; }
+    .status-pill::before { width: 7px; height: 7px; content: ""; border-radius: 50%; background: currentColor; }
+    .status-pill.stale { background: var(--warning-tint); color: var(--warning); }
+    .status-pill.unavailable { background: #efefec; color: var(--muted); }
+    .dashboard-banner { margin-top: 0; }
+    .dashboard-links { display: flex; flex-wrap: wrap; gap: 10px; border-top: 1px solid var(--gridline); padding-top: 16px; }
+    .dashboard-links a { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; }
+    .dashboard-links svg { width: 16px; height: 16px; }
+    .refresh-button { display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; }
+    .refresh-button svg { width: 16px; height: 16px; }
+    @media (max-width: 850px) { .dashboard-grid { grid-template-columns: 1fr; } .dashboard-panel { min-height: 260px; } }
+    @media (max-width: 560px) {
+      .dashboard-head { align-items: start; flex-direction: column; }
+      .dashboard-head .btn-ghost { align-self: flex-start; }
+      .dashboard-panel { padding: 18px; }
+      .price-value { font-size: 48px; }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M13 2L4 14H11L10 22L20 9H13L13 2Z" stroke="#2a78d6" stroke-width="1.7" stroke-linejoin="round" fill="#eaf2fc"/></svg>
+      <span>Wattly</span>
+    </div>
+    <nav class="nav" aria-label="Main">
+      <a class="active" href="/dashboard.html" data-keep-household aria-current="page">Dashboard</a>
+      <span class="nav-soon">Recommendations <small>soon</small></span>
+      <a href="/appliances.html" data-keep-household>Appliances</a>
+      <span class="nav-soon">Spending &amp; Budget <small>soon</small></span>
+      <a href="/settings.html" data-keep-household>Settings</a>
+      <a href="/households.html" data-keep-household>Households</a>
+      <a href="/about-data.html" data-keep-household>About our data</a>
+    </nav>
+    <div class="spacer"></div>
+    <div class="household-picker" id="household-picker">
+      <div class="card household-menu" id="household-menu" hidden>
+        <div class="menu-title" id="household-menu-title">Switch household</div>
+        <ul class="menu-items" id="household-menu-items" aria-labelledby="household-menu-title"></ul>
+        <a class="menu-manage" href="/households.html" data-keep-household>Add or remove households</a>
+      </div>
+      <button type="button" class="card household-card" id="household-card"
+              aria-expanded="false" aria-controls="household-menu" title="Switch household">
+        <span class="avatar" aria-hidden="true">…</span>
+        <span class="hh-text">
+          <span class="hh-caption">Viewing household</span>
+          <span class="hh-name">Loading…</span>
+          <span class="hh-plan"></span>
+        </span>
+        <svg class="hh-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="dashboard-head">
+      <div class="page-head">
+        <div class="today-label" id="today-label">Today in Singapore</div>
+        <h1 id="welcome-title">Household dashboard</h1>
+        <p>A current view of the wholesale market and today's weather.</p>
+      </div>
+      <button type="button" class="btn-ghost refresh-button" id="refresh-button" title="Refresh dashboard data">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M5.6 9A7 7 0 0 1 18 6l2 6M4 12l2 6a7 7 0 0 0 12.4-3"/></svg>
+        Refresh
+      </button>
+    </header>
+
+    <div id="page-banner" class="dashboard-banner" aria-live="polite"></div>
+
+    <section class="dashboard-grid" aria-label="Today's energy conditions">
+      <article class="card dashboard-panel" aria-labelledby="price-title">
+        <div class="panel-top">
+          <div><p class="panel-kicker">Electricity market</p><h2 class="panel-title" id="price-title">Current wholesale price</h2></div>
+          <span class="panel-icon price-icon" aria-hidden="true"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
+        </div>
+        <div class="price-line"><span class="price-value" id="price-value" aria-live="polite">—</span><span class="price-unit">¢ / kWh</span></div>
+        <p class="price-context">Wholesale USEP signal; your retail tariff may differ.</p>
+        <div class="state-line"><span class="status-pill unavailable" id="price-status">Loading price</span></div>
+        <div class="price-meta">
+          <div class="meta-cell"><div class="meta-label">Market price</div><div class="meta-value" id="market-price">—</div></div>
+          <div class="meta-cell"><div class="meta-label">Forecast demand</div><div class="meta-value" id="forecast-demand">—</div></div>
+          <div class="meta-cell"><div class="meta-label">Source updated</div><div class="meta-value" id="price-updated">—</div></div>
+          <div class="meta-cell"><div class="meta-label">Interval starts</div><div class="meta-value" id="interval-start">—</div></div>
+        </div>
+      </article>
+
+      <article class="card dashboard-panel" aria-labelledby="weather-title">
+        <div class="panel-top">
+          <div><p class="panel-kicker">Singapore forecast</p><h2 class="panel-title" id="weather-title">Today's weather</h2></div>
+          <span class="panel-icon weather-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg></span>
+        </div>
+        <div class="weather-temperatures"><span class="weather-high" id="weather-high">—</span><span class="weather-low" id="weather-low">—</span></div>
+        <p class="weather-description" id="weather-description" aria-live="polite">Loading forecast…</p>
+        <div class="state-line"><span class="status-pill unavailable" id="weather-status">Loading forecast</span></div>
+        <div class="weather-detail" id="heat-hint" aria-live="polite"></div>
+      </article>
+    </section>
+
+    <nav class="dashboard-links" aria-label="Household tools">
+      <a href="/appliances.html" data-keep-household><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 7h6m-6 4h6m-6 4h6"/></svg>Manage appliances</a>
+      <a href="/settings.html" data-keep-household><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="m19.4 15 .1.1 1.4 1.1-1.4 2.4-1.7-.7a8 8 0 0 1-1.6.9l-.3 1.8h-2.8l-.3-1.8a8 8 0 0 1-1.6-.9l-1.7.7-1.4-2.4 1.4-1.1a7 7 0 0 1 0-1.9l-1.4-1.1 1.4-2.4 1.7.7a8 8 0 0 1 1.6-.9l.3-1.8h2.8l.3 1.8a8 8 0 0 1 1.6.9l1.7-.7 1.4 2.4-1.4 1.1a7 7 0 0 1-.1 1.8Z"/></svg>Household settings</a>
+    </nav>
+    <div class="state-line" id="last-refreshed" role="status"></div>
+  </main>
+</div>
+<script src="/js/wattly.js"></script>
+<script src="/js/dashboard.js"></script>
+</body>
+</html>
