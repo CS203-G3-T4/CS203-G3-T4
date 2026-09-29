@@ -45,15 +45,19 @@ test('saved endpoint response renders 24 rows, provenance, stale, empty and outa
   await vm.runInContext('WattlyForecast.refresh()', context);
   assert.equal(nodes['forecast-points'].children.length, 24);
   assert.equal(nodes['forecast-table'].hidden, false);
-  assert.match(nodes['forecast-metadata'].textContent, /Baseline B1/);
+  assert.ok(nodes['forecast-metadata'].textContent.startsWith(
+    view.run.modelType === 'AI' ? 'AI · ' : 'Baseline ' + view.run.selectedModel + ' · '));
   assert.match(nodes['forecast-metadata'].textContent, /SGT/);
   assert.equal(nodes['forecast-points'].children[0].children.length, 4);
   if (process.env.WATTLY_UI_PROOF) {
     fs.writeFileSync(process.env.WATTLY_UI_PROOF, JSON.stringify({
       endpoint: base, renderedRows: nodes['forecast-points'].children.length,
-      modelType: view.run.modelType, asOf: view.run.asOf
+      modelType: view.run.modelType, modelVersion: view.run.modelVersion, asOf: view.run.asOf
     }));
   }
+  view = fixture(); view.run.fallbackReason = 'MODEL_MANIFEST_CONFLICT';
+  await vm.runInContext('WattlyForecast.refresh()', context);
+  assert.match(nodes['forecast-metadata'].textContent, /AI unavailable; baseline fallback/);
   view = { ...view, stale: true };
   await vm.runInContext('WattlyForecast.refresh()', context);
   assert.match(nodes['forecast-status'].textContent, /Stale forecast/);

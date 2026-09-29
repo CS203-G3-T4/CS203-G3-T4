@@ -19,7 +19,7 @@ WattlyForecast.render = function (view, assessment) {
     });
     metadata.textContent = (run.modelType === 'AI' ? 'AI' : 'Baseline ' + run.selectedModel) +
       ' · ' + run.modelVersion + ' · forecast as of ' + formatted.format(new Date(run.asOf)) + ' SGT' +
-      (run.fallbackReason === 'PYTHON_UNAVAILABLE_OR_INVALID' ? ' · AI unavailable; baseline fallback' : '') +
+      (['PYTHON_UNAVAILABLE_OR_INVALID', 'MODEL_MANIFEST_CONFLICT'].includes(run.fallbackReason) ? ' · AI unavailable; baseline fallback' : '') +
       (run.qualityFlags.includes('BASELINE_RANKING_UNRANKED') ? ' · baseline order not yet validated' : '');
     run.points.forEach(function (point) {
       const tr = document.createElement('tr');

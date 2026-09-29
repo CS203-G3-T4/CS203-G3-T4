@@ -31,6 +31,13 @@ going forward; preexisting overwritten revisions cannot be recovered. Spike
 thresholds use prior days at the target half-hour, frozen at origin. Default
 28-day window, minimum 14 samples, k=3, spread floor 1 SGD/MWh are provisional
 configuration pending validation. No probabilities or confidence percentages.
+Python backtesting and inference use the immutable artifact's `spikeConfig`.
+Spring accepts AI only when its minimum samples, k and spread floor match that
+configuration. A mismatch uses Java fallback. The 28-day window is fixed.
+Current assessment uses the same reference: SPIKE above the spike threshold,
+otherwise EXPENSIVE above typical + band × spread, CHEAP below typical - band ×
+spread, and NORMAL within those bounds. The classification band defaults to 1
+and affects current assessment only.
 
 ## Ownership and integration
 
@@ -59,6 +66,9 @@ validation ranking exists, default order B1, B2, B3 is explicitly UNRANKED. A
 baseline is never labelled AI. Missing history yields UNAVAILABLE. Stale feeds
 and unresolved mapping prevent actionable recommendations; saved older runs
 retain their timestamps and are visibly stale.
+Reusing a model version with a changed manifest rejects the AI transaction,
+including on retries, and saves baseline fallback using the prior accepted
+ranking. The original manifest and forecasts remain immutable.
 
 ## Acceptance checkpoints
 

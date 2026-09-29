@@ -104,15 +104,7 @@ class ForecastPersistenceTest {
         assertThat(page.body()).contains("id=\"forecast-points\"","/js/forecast.js");
         java.nio.file.Files.writeString(java.nio.file.Path.of("target/forecast-smoke-response.json"),response.body());
         if (System.getenv("WATTLY_UI_SMOKE")!=null) {
-            var proof=java.nio.file.Path.of("target/forecast-ui-proof.json").toAbsolutePath();
-            java.nio.file.Files.deleteIfExists(proof);
-            var builder=new ProcessBuilder("node","--test","src/test/js/forecast-smoke.test.js").inheritIO();
-            builder.environment().put("WATTLY_FORECAST_BASE_URL","http://127.0.0.1:"+port);
-            builder.environment().put("WATTLY_UI_PROOF",proof.toString());
-            var browser=builder.start();
-            assertThat(browser.waitFor(30,java.util.concurrent.TimeUnit.SECONDS)).isTrue();
-            assertThat(browser.exitValue()).isZero();
-            assertThat(mapper.readTree(proof.toFile()).path("renderedRows").asInt()).isEqualTo(24);
+            smokeUi("forecast-ui-proof.json");
         }
         var daily=mapper.readTree(getClass().getResourceAsStream("/weather/daily-forecast.json")).path("data").path("records");
         weather.save(daily,NOW); weather.save(daily,NOW.plusSeconds(30));
@@ -124,6 +116,24 @@ class ForecastPersistenceTest {
         assertThat(saved.baselineRanking(NOW,"REPLAY")).containsExactly("B2","B1","B3");
         assertThat(saved.baselineRanking(NOW,"LIVE")).isEmpty();
         assertThat(jdbc.queryForObject("select count(*) from model_run",Integer.class)).isEqualTo(1);
+        String originalManifest=jdbc.queryForObject("select manifest::text from model_run",String.class);
+        doAnswer(call -> {
+            var conflicting=PythonForecastClientTest.syntheticResponse(call.getArgument(0));
+            var changed=mapper.valueToTree(List.of("B3","B1","B2"));
+            ((tools.jackson.databind.node.ObjectNode)conflicting).set("baselineRanking",changed);
+            ((tools.jackson.databind.node.ObjectNode)conflicting.path("manifest")).set("baselineRanking",changed);
+            return conflicting;
+        }).when(python).forecast(anyString(),any(),anyList());
+        // Also reject a changed manifest when the AI run's id would be a retry.
+        job.runOnce();
+        var fallback=saved.latest("REPLAY",NOW).orElseThrow();
+        assertThat(fallback.modelType()).isEqualTo("BASELINE");
+        assertThat(fallback.selectedModel()).isEqualTo("B2");
+        assertThat(fallback.fallbackReason()).isEqualTo("MODEL_MANIFEST_CONFLICT");
+        assertThat(fallback.qualityFlags()).doesNotContain("SYNTHETIC_TEST_ONLY");
+        assertThat(saved.points(fallback.id(),"AI")).isEmpty();
+        assertThat(jdbc.queryForObject("select count(*) from forecast_run where model_type='AI'",Integer.class)).isEqualTo(1);
+        assertThat(jdbc.queryForObject("select manifest::text from model_run",String.class)).isEqualTo(originalManifest);
         var line=mapper.createObjectNode();
         Instant old=BaselineForecastService.floor(NOW).minus(Duration.ofDays(40));
         line.put("source","NEMS_SN_SG").put("periodStart",old.toString()).put("sourceUpdatedAt",old.plusSeconds(60).toString())
@@ -142,5 +152,80 @@ class ForecastPersistenceTest {
             assertThat(jdbc.queryForObject("select usep_sgd_per_mwh from market_price where source='NEMS_SN_SG'",BigDecimal.class))
                     .isEqualByComparingTo("-12.3457");
         } finally { java.nio.file.Files.deleteIfExists(file); }
+        if (System.getenv("WATTLY_PYTHON_SMOKE_EXECUTABLE")!=null) smokePythonProcess();
+    }
+
+    private void smokeUi(String name) throws Exception {
+        var proof=java.nio.file.Path.of("target",name).toAbsolutePath();
+        java.nio.file.Files.deleteIfExists(proof);
+        var builder=new ProcessBuilder("node","--test","src/test/js/forecast-smoke.test.js").inheritIO();
+        builder.environment().put("WATTLY_FORECAST_BASE_URL","http://127.0.0.1:"+port);
+        builder.environment().put("WATTLY_UI_PROOF",proof.toString());
+        var browser=builder.start();
+        try {
+            assertThat(browser.waitFor(30,java.util.concurrent.TimeUnit.SECONDS)).isTrue();
+            assertThat(browser.exitValue()).isZero();
+            assertThat(mapper.readTree(proof.toFile()).path("renderedRows").asInt()).isEqualTo(24);
+        } finally { browser.destroyForcibly(); }
+    }
+
+    private void smokePythonProcess() throws Exception {
+        int pythonPort;
+        try (var socket=new java.net.ServerSocket(0,1,java.net.InetAddress.getLoopbackAddress())) { pythonPort=socket.getLocalPort(); }
+        var home=java.nio.file.Files.createTempDirectory("wattly-python-smoke-");
+        Process process=null;
+        try {
+            var builder=new ProcessBuilder(System.getenv("WATTLY_PYTHON_SMOKE_EXECUTABLE"),"ml/tests/serve_fixture.py",
+                    "--home",home.toString(),"--port",String.valueOf(pythonPort));
+            builder.environment().put("OMP_NUM_THREADS","1");
+            builder.environment().put("OPENBLAS_NUM_THREADS","1");
+            builder.redirectErrorStream(true).redirectOutput(java.nio.file.Path.of("target/forecast-python-smoke.log").toFile());
+            process=builder.start();
+            String url="http://127.0.0.1:"+pythonPort;
+            var http=HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).connectTimeout(Duration.ofSeconds(1)).build();
+            boolean ready=false;
+            long deadline=System.nanoTime()+Duration.ofSeconds(45).toNanos();
+            while (process.isAlive() && System.nanoTime()<deadline) {
+                try {
+                    ready=http.send(HttpRequest.newBuilder(URI.create(url+"/ready")).timeout(Duration.ofSeconds(1)).build(),
+                            HttpResponse.BodyHandlers.ofString()).statusCode()==200;
+                    if (ready) break;
+                } catch (java.io.IOException ignored) { /* Process is still starting. */ }
+                Thread.sleep(100);
+            }
+            assertThat(ready).as("Synthetic FastAPI startup; see target/forecast-python-smoke.log").isTrue();
+            var realPython=new PythonForecastClient(url,Duration.ofSeconds(5));
+            doAnswer(call -> realPython.forecast(call.getArgument(0),call.getArgument(1),call.getArgument(2)))
+                    .when(python).forecast(anyString(),any(),anyList());
+            job.runOnce(); job.runOnce();
+            var ai=saved.latest("REPLAY",NOW).orElseThrow();
+            assertThat(ai.modelType()).isEqualTo("AI");
+            assertThat(ai.modelVersion()).isEqualTo("SYNTHETIC_HTTP_SMOKE");
+            assertThat(ai.points()).hasSize(24);
+            assertThat(ai.points()).extracting(ForecastTypes.Point::targetPeriod).containsExactlyElementsOf(BaselineForecastService.targets(NOW));
+            assertThat(jdbc.queryForObject("select count(*) from forecast_run where model_version='SYNTHETIC_HTTP_SMOKE'",Integer.class)).isEqualTo(1);
+            assertThat(jdbc.queryForObject("select count(*) from forecast_point where run_id=?",Integer.class,ai.id())).isEqualTo(96);
+            smokeUi("forecast-python-ui-proof.json");
+            process.destroy();
+            assertThat(process.waitFor(5,java.util.concurrent.TimeUnit.SECONDS)).isTrue();
+            // New input after an actual Python outage must save the learned fallback order.
+            var last=rows().getLast();
+            history.save(new MarketRevision(3,last.source(),last.periodStart(),NOW.minusSeconds(1),NOW,
+                    BigDecimal.valueOf(321),last.demand(),null,"PROVISIONAL","EMC_PERIOD"),"fixture","outage-input","{}");
+            job.runOnce();
+            var fallback=saved.latest("REPLAY",NOW).orElseThrow();
+            assertThat(fallback.modelType()).isEqualTo("BASELINE");
+            assertThat(fallback.selectedModel()).isEqualTo("B2");
+            assertThat(fallback.fallbackReason()).isEqualTo("PYTHON_UNAVAILABLE_OR_INVALID");
+            assertThat(fallback.qualityFlags()).doesNotContain("BASELINE_RANKING_UNRANKED");
+            smokeUi("forecast-python-fallback-ui-proof.json");
+        } finally {
+            if (process!=null && process.isAlive()) {
+                process.destroyForcibly(); process.waitFor(5,java.util.concurrent.TimeUnit.SECONDS);
+            }
+            try (var files=java.nio.file.Files.walk(home)) {
+                for (var path:files.sorted(java.util.Comparator.reverseOrder()).toList()) java.nio.file.Files.deleteIfExists(path);
+            }
+        }
     }
 }

@@ -64,6 +64,24 @@ class ForecastJobTest {
     }
 
     @Test
+    void mismatchedSpikeRuleRejectsAiAndRetainsPreviouslyValidatedBaselineRanking() {
+        when(history.asOf(NOW)).thenReturn(rows());
+        when(saved.baselineRanking(NOW,"REPLAY")).thenReturn(List.of("B3","B1","B2"));
+        when(python.forecast(anyString(),eq(NOW),anyList())).thenAnswer(call -> {
+            var response=PythonForecastClientTest.syntheticResponse(call.getArgument(0));
+            ((tools.jackson.databind.node.ObjectNode)response.path("manifest").path("spikeConfig")).put("k",4);
+            return response;
+        });
+        var job=job(service("REPLAY","synthetic"));
+        try { job.runOnce(); } finally { job.close(); }
+        var capture=ArgumentCaptor.forClass(ForecastTypes.Run.class);
+        verify(saved).save(capture.capture(),anyString(),argThat(candidates -> !candidates.containsKey("AI")),isNull());
+        assertThat(capture.getValue().selectedModel()).isEqualTo("B3");
+        assertThat(capture.getValue().fallbackReason()).isEqualTo("PYTHON_UNAVAILABLE_OR_INVALID");
+        assertThat(capture.getValue().qualityFlags()).doesNotContain("SYNTHETIC_TEST_ONLY","BASELINE_RANKING_UNRANKED");
+    }
+
+    @Test
     void updatesDuringInflightRunAreCoalescedAndProcessedAfterIt() throws Exception {
         when(history.asOf(NOW)).thenReturn(rows()); when(saved.baselineRanking(eq(NOW),anyString())).thenReturn(List.of());
         var entered=new java.util.concurrent.CountDownLatch(1);

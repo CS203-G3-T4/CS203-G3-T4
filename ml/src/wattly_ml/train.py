@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from .backtest import History, origins, backtest, scores, fresh
 from .data import truth
 from .features import FEATURES, features
+from .spikes import DEFAULT_CONFIG
 from .timebase import DAY, STEP, instant, targets
 
 
@@ -54,7 +55,7 @@ def train(rows, dataset_manifest, start, cutoff, validation_end, *, retrospectiv
                 "productionEligible":enough and not exploratory,
                 "trainingOrigins":len(ys[0]),"excludedTrainingOrigins":excluded,
                 "parameters":{"max_iter":iterations,"max_leaf_nodes":15,"l2_regularization":1},
-                "spikeConfig":{"minimumSamples":14,"k":3.0,"spreadFloor":1.0},
+                "spikeConfig":DEFAULT_CONFIG.copy(),
                 "validationStart":cutoff.isoformat(),"validationEnd":validation_end.isoformat()}
     bundle = {"manifest":manifest,"models":models}
     records = backtest(rows,cutoff,validation_end,policy=policy,retrospective=retrospective,bundle=bundle,truth_cutoff=validation_end)

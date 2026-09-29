@@ -121,7 +121,7 @@ def create_app(loader=None):
             raise HTTPException(503,detail={"code":"INVALID_MODEL_OUTPUT"})
         points = []
         for h,(target,value) in enumerate(zip(targets(request.asOf),predictions),1):
-            ref = reference(history,target,request.asOf)
+            ref = reference(history,target,request.asOf,manifest["spikeConfig"])
             points.append({"horizon":h,"targetPeriod":target,"predictedUsep":value,
                            "spikeThreshold":ref["threshold"], "spikeFlag":value>ref["threshold"] if ref["available"] else None,
                            "assessmentAvailable":ref["available"]})

@@ -75,27 +75,26 @@ public class ForecastJob {
         if (!verified) flags.add("PERIOD_MAPPING_UNVERIFIED");
         if (stale) flags.add("STALE_INPUT");
         Map<String,List<BigDecimal>> predictions=stale ? new LinkedHashMap<>() : new LinkedHashMap<>(baselines.calculate(rows,asOf));
-        List<String> ranking=repository.baselineRanking(asOf,service.mode());
+        List<String> savedRanking=repository.baselineRanking(asOf,service.mode());
+        List<String> ranking=savedRanking;
         String reason=stale ? "STALE_INPUT" : !verified ? "PERIOD_MAPPING_UNVERIFIED" : null;
         JsonNode model=null;
-        String version=null;
+        List<String> modelFlags=List.of();
         if (!stale && verified) {
             try {
                 JsonNode response=python.forecast(requestId,asOf,rows);
+                assessments.requireModelConfig(response.path("manifest").path("spikeConfig"));
                 List<BigDecimal> ai=new ArrayList<>();
                 for (JsonNode p : response.path("points")) ai.add(p.path("predictedUsep").decimalValue());
-                predictions.put("AI",ai); model=response.path("manifest"); version=response.path("modelVersion").asText();
                 ranking=List.of(mapper.convertValue(response.path("baselineRanking"),String[].class));
-                for (JsonNode flag : response.path("qualityFlags")) flags.add(flag.asText());
+                modelFlags=List.of(mapper.convertValue(response.path("qualityFlags"),String[].class));
+                predictions.put("AI",ai); model=response.path("manifest");
             } catch (RuntimeException exc) {
+                ranking=savedRanking;
                 reason="PYTHON_UNAVAILABLE_OR_INVALID";
                 LOG.warn("Python forecast unavailable; selecting Java baseline ({})",exc.getClass().getSimpleName());
             }
         }
-        if (ranking.isEmpty()) { ranking=BaselineForecastService.DEFAULT_ORDER; flags.add("BASELINE_RANKING_UNRANKED"); }
-        String selected=predictions.containsKey("AI") ? "AI" : ranking.stream().filter(predictions::containsKey).findFirst().orElse("NONE");
-        if (version==null) version=selected.equals("NONE") ? "none-v1" : selected+"-v1";
-        if (selected.equals("NONE") && !stale) reason="INSUFFICIENT_HISTORY";
         Map<String,List<Point>> candidates=new LinkedHashMap<>();
         List<Instant> targets=BaselineForecastService.targets(asOf);
         for (var entry : predictions.entrySet()) {
@@ -107,11 +106,28 @@ public class ForecastJob {
             }
             candidates.put(entry.getKey(),points);
         }
-        Run run=new Run(hash(requestId+"|"+version),asOf,clock.instant(),input,service.mode(),
-                selected.equals("AI") ? "AI" : selected.equals("NONE") ? "NONE" : "BASELINE",version,selected,
-                selected.equals("AI") ? null : reason,List.copyOf(flags),stale,selected.equals("NONE") ? "UNAVAILABLE" : "AVAILABLE",
-                candidates.getOrDefault(selected,List.of()));
-        repository.save(run,snapshot,candidates,model);
+        // At most one AI attempt and one baseline attempt, each saved atomically.
+        for (int attempt=0;attempt<2;attempt++) {
+            List<String> runFlags=new ArrayList<>(flags);
+            if (model!=null) runFlags.addAll(modelFlags);
+            if (ranking.isEmpty()) { ranking=BaselineForecastService.DEFAULT_ORDER; runFlags.add("BASELINE_RANKING_UNRANKED"); }
+            String selected=model!=null ? "AI" : ranking.stream().filter(candidates::containsKey).findFirst().orElse("NONE");
+            String version=model!=null ? model.path("version").asText() : selected.equals("NONE") ? "none-v1" : selected+"-v1";
+            if (selected.equals("NONE") && !stale) reason="INSUFFICIENT_HISTORY";
+            Run run=new Run(hash(requestId+"|"+version),asOf,clock.instant(),input,service.mode(),
+                    selected.equals("AI") ? "AI" : selected.equals("NONE") ? "NONE" : "BASELINE",version,selected,
+                    selected.equals("AI") ? null : reason,List.copyOf(runFlags),stale,selected.equals("NONE") ? "UNAVAILABLE" : "AVAILABLE",
+                    candidates.getOrDefault(selected,List.of()));
+            try {
+                repository.save(run,snapshot,candidates,model);
+                break;
+            } catch (ForecastRepository.ModelManifestConflict exc) {
+                if (model==null) throw exc;
+                LOG.warn("Python model manifest conflicts with its saved version; selecting Java baseline");
+                candidates.remove("AI"); model=null; ranking=savedRanking;
+                reason="MODEL_MANIFEST_CONFLICT";
+            }
+        }
         repository.evaluateAvailable(asOf,service.mode());
     }
     static String hash(String value) {

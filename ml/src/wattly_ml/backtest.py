@@ -5,7 +5,7 @@ from statistics import mean
 from .baselines import baselines
 from .data import as_of, truth
 from .features import features
-from .spikes import reference
+from .spikes import DEFAULT_CONFIG, reference, validate_config
 from .timebase import DAY, SGT, STEP, floor, instant, targets
 
 
@@ -43,6 +43,7 @@ def predict(bundle, history, origin):
 
 
 def backtest(rows, start, end, *, policy="PROVISIONAL", retrospective=False, bundle=None, truth_cutoff=None):
+    spike_config = validate_config(bundle["manifest"]["spikeConfig"] if bundle else DEFAULT_CONFIG)
     history = History(rows, retrospective)
     actuals = truth(rows, policy,truth_cutoff,retrospective)
     output = []
@@ -58,7 +59,7 @@ def backtest(rows, start, end, *, policy="PROVISIONAL", retrospective=False, bun
                 raise ValueError("Artifact training/selection uses the simulated future")
             predictions["AI"] = predict(bundle, past, origin) if current and not purged else None
         for h, target in enumerate(ts, 1):
-            ref = reference(past, target, origin)
+            ref = reference(past, target, origin, spike_config)
             actual = actuals.get(target)
             for method, values in predictions.items():
                 reason = ("PURGED_SPLIT_BOUNDARY" if purged else "STALE_OR_MISSING_INPUT" if not current

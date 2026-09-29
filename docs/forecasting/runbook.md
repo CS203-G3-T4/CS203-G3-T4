@@ -157,6 +157,15 @@ baseline ranking. Models and reports use immutable version directories. Load onl
 trusted local bundles: joblib is executable, and checksums detect corruption rather
 than establish trust. Dependency versions must match the lock.
 
+The artifact's `spikeConfig` also governs Python backtesting and serving. Spring's
+`FORECAST_SPIKE_MINIMUM_SAMPLES`, `FORECAST_SPIKE_K`, and
+`FORECAST_SPIKE_SPREAD_FLOOR` must match it (defaults 14, 3, 1); mismatches reject
+AI and use Java fallback. Do not edit an approved manifest to retune a threshold;
+evaluate a new version using validation data. If a previously registered version
+returns a changed manifest, Spring saves fallback with `MODEL_MANIFEST_CONFLICT`
+and preserves the original model and predictions. Correct or roll back the Python
+artifact before restarting inference.
+
 Reports contain per-origin/per-horizon predictions, actuals, exclusion reasons,
 frozen spike thresholds/labels, 24 horizon MAEs, three horizon groups, coverage,
 spike TP/FP/FN/support and precision/recall. Primary comparisons use identical pairs
@@ -231,6 +240,10 @@ node --test src/test/js/*.test.js
 WATTLY_TEST_DB_URL=jdbc:postgresql://localhost:55432/energy_market \
 WATTLY_TEST_DB_USER=energy_market WATTLY_TEST_DB_PASSWORD=energy_market \
 WATTLY_UI_SMOKE=1 ./mvnw test
+# Also launch a real, temporary FastAPI process with 24 synthetic trained models.
+WATTLY_TEST_DB_URL=jdbc:postgresql://localhost:55432/energy_market \
+WATTLY_TEST_DB_USER=energy_market WATTLY_TEST_DB_PASSWORD=energy_market \
+WATTLY_PYTHON_SMOKE_EXECUTABLE="$PWD/.venv/bin/python" WATTLY_UI_SMOKE=1 ./mvnw test
 ```
 
 The DB test creates a new `f3_test_<uuid>` schema and applies V1–V9 there; it does
@@ -241,6 +254,16 @@ explicitly skipped. The Python test suite includes a small offline 24-model
 train/save/load/serve smoke, golden parity, cutoff/availability checks, and failed
 promotion/rollback checks. Once dependencies are installed it needs no upstream
 network or long dataset.
+
+The optional Python process smoke uses `ml/tests/serve_fixture.py` in an empty
+temporary directory with explicitly synthetic approval/replay metadata. It checks
+Spring → FastAPI → PostgreSQL → public endpoint → actual page JavaScript for all
+24 AI intervals, then stops Python and checks 24 baseline intervals after new
+input. It also checks retry deduplication and retained fallback ranking. Proofs
+are `target/forecast-python-ui-proof.json` and
+`target/forecast-python-fallback-ui-proof.json`; process logs are in
+`target/forecast-python-smoke.log`. The test tears down its process and temporary
+bundle, never promotes a production model, and is not historical accuracy evidence.
 
 V9 is additive. Existing migrations and API shapes are preserved. To stop new
 forecast work during recovery, stop Spring normally; no collector changes are
