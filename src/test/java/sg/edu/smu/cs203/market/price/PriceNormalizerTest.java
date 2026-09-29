@@ -13,6 +13,26 @@ class PriceNormalizerTest {
     private final PriceNormalizer normalizer = new PriceNormalizer();
 
     @Test
+    void officialEmcEvidenceUsesCurrentPeriodEvenWithDelayedCollection() {
+        // EMC_RT_20260929_24_PERIODS: 11:31 SGT -> 11:30 SGT.
+        Instant source = Instant.parse("2026-09-29T03:31:00Z");
+        var feed = new UsepFeedResponse(source.getEpochSecond(), new BigDecimal("120.76"),
+                new BigDecimal("6481"), new BigDecimal("252.68"));
+        var price = normalizer.normalize(feed, source.plusSeconds(3600));
+        assertThat(price.intervalStart()).isEqualTo(Instant.parse("2026-09-29T03:30:00Z"));
+        assertThat(price.sourceUpdatedAt()).isEqualTo(source);
+    }
+
+    @Test
+    void officialMidnightEvidenceStaysOnSameSingaporeDate() {
+        Instant source = Instant.parse("2026-09-28T16:01:00Z");
+        var feed = new UsepFeedResponse(source.getEpochSecond(), new BigDecimal("195.94"),
+                new BigDecimal("6509"), new BigDecimal("252.68"));
+        assertThat(normalizer.normalize(feed, source.plusSeconds(5)).intervalStart())
+                .isEqualTo(Instant.parse("2026-09-28T16:00:00Z"));
+    }
+
+    @Test
     void groupsProviderTimestampIntoHalfHourInterval() {
         Instant updatedAt = Instant.parse("2026-09-23T06:31:00Z");
         UsepFeedResponse feed = new UsepFeedResponse(

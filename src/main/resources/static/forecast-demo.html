@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>F3 demonstration · Wattly</title>
+  <link rel="stylesheet" href="/css/wattly.css">
+  <link rel="stylesheet" href="/css/forecast-demo.css">
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand"><span>Wattly · F3</span></div>
+    <nav class="nav" aria-label="Demonstration">
+      <a class="active" href="#experiment">Forecast experiment</a>
+      <a href="#live">Live price &amp; fallback</a>
+      <a href="/forecast.html">Standard forecast view</a>
+    </nav>
+    <p>Standalone forecaster demonstration. All times are Singapore time (SGT).</p>
+  </aside>
+  <main class="main">
+    <header class="page-head">
+      <p class="demo-label">Experimental — limited training data.</p>
+      <h1>Can AI improve a simple price forecast?</h1>
+      <p>One untouched test day. The same forecast origins, targets and actual prices for every eligible method.</p>
+    </header>
+    <section id="experiment" class="card demo-section" aria-labelledby="experiment-title">
+      <h2 id="experiment-title">Historical experiment · 12-hour forecast</h2>
+      <p id="demo-status" role="status" aria-live="polite">Loading the saved experiment…</p>
+      <div id="demo-results" hidden>
+        <p id="demo-verdict" class="demo-verdict"></p>
+        <div class="demo-metrics">
+          <div><span>AI MAE</span><strong id="demo-ai-mae"></strong><small>SGD/MWh · lower is better</small></div>
+          <div><span id="demo-baseline-label">Selected baseline MAE</span><strong id="demo-baseline-mae"></strong><small>SGD/MWh · selected on validation</small></div>
+          <div><span>Common test pairs</span><strong id="demo-pairs"></strong><small id="demo-origins"></small></div>
+        </div>
+        <p id="demo-dates"></p>
+        <p id="demo-pair-explanation"></p>
+        <label for="demo-origin">Offline forecast origin (SGT)</label>
+        <select id="demo-origin"></select>
+        <p id="demo-window" role="status" aria-live="polite"></p>
+        <figure>
+          <svg id="demo-chart" viewBox="0 0 1000 340" role="img" aria-labelledby="demo-chart-title demo-chart-description"></svg>
+          <figcaption>The chart shows one selected origin and its 12-hour forecast: 24 half-hour predictions.
+            The shaded area marks those target intervals; actual prices span the whole test day.
+            MAE covers all eligible origins, so changing this chart does not change the reported MAE.</figcaption>
+        </figure>
+        <div class="demo-legend" aria-label="Chart legend">
+          <span class="actual">Actual provisional price</span><span class="ai">AI experiment</span>
+          <span class="b1">B1 · recent six-period mean</span><span class="b2">B2 · yesterday</span>
+          <span class="window">Selected 12-hour window</span>
+        </div>
+        <p id="demo-spikes"></p>
+        <div class="demo-table-scroll">
+          <table>
+            <caption>Test MAE uses identical eligible pairs. B3 is reported separately when seven prior days are unavailable.</caption>
+            <thead><tr><th scope="col">Method</th><th scope="col">MAE (SGD/MWh)</th><th scope="col">Eligible origins</th><th scope="col">Eligible pairs</th><th scope="col">Excluded pairs</th></tr></thead>
+            <tbody id="demo-scores"></tbody>
+          </table>
+        </div>
+        <details><summary>Actual prices and predictions for the selected origin</summary>
+          <div class="demo-table-scroll"><table>
+            <caption>Prices in SGD/MWh. Missing estimates are shown as unavailable.</caption>
+            <thead><tr><th scope="col">Target start (SGT)</th><th scope="col">Actual</th><th scope="col">AI</th><th scope="col">B1</th><th scope="col">B2</th><th scope="col">B3</th></tr></thead>
+            <tbody id="demo-points"></tbody>
+          </table></div>
+        </details>
+        <details><summary>Data coverage, exclusions and limitations</summary>
+          <p id="demo-quality"></p><p id="demo-exclusions"></p><ul id="demo-limitations"></ul>
+          <p>No model has been approved for production. This experiment does not make appliance recommendations.</p>
+          <a href="/forecast-demo.json" download>Download this experiment's data and metrics</a>
+        </details>
+      </div>
+    </section>
+    <section id="live" class="card demo-section" aria-labelledby="live-title">
+      <h2 id="live-title">Live price &amp; operational fallback</h2>
+      <p id="demo-live-price" role="status" aria-live="polite">Loading the current market price…</p>
+      <p id="demo-live-time"></p>
+      <p>The experimental model is unapproved. Live serving therefore uses an eligible statistical baseline;
+        stale or insufficient inputs remain visibly unavailable. The saved experiment above is independent of this live feed.</p>
+      <button id="demo-refresh" class="btn-ghost" type="button">Refresh live display</button>
+      <h3 id="forecast-status" role="status" aria-live="polite">Loading saved forecast…</h3>
+      <p id="forecast-metadata"></p><p id="current-assessment"></p>
+      <details><summary>12-hour live forecast · 24 half-hour predictions</summary>
+        <div class="demo-table-scroll"><table id="forecast-table" hidden>
+          <caption>12-hour forecast: 24 future half-hour starts, Singapore time</caption>
+          <thead><tr><th scope="col">Target start</th><th scope="col">SGD/MWh</th><th scope="col">cents/kWh</th><th scope="col">Spike assessment</th></tr></thead>
+          <tbody id="forecast-points"></tbody>
+        </table></div>
+      </details>
+    </section>
+  </main>
+</div>
+<script src="/js/wattly.js"></script>
+<script src="/js/forecast.js"></script>
+<script src="/js/forecast-demo.js"></script>
+</body>
+</html>

@@ -27,7 +27,8 @@ public class PriceNormalizer {
             throw new IllegalArgumentException("USEP feed update timestamp is outside the allowed range");
         }
 
-        // Bucket by source update time. EMC settlement-period attribution is pending CSDT4-11.
+        // Current real-time period verified against EMC: docs/forecasting/period-mapping-verification.md.
+        // Use publication time even when collection is delayed; prices remain provisional.
         long intervalEpoch = Math.floorDiv(feed.updated(), INTERVAL_SECONDS) * INTERVAL_SECONDS;
         return new MarketPrice(
                 SOURCE,

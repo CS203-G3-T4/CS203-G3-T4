@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Forecast · Wattly</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="/css/wattly.css">
+  <style>
+    .doc { max-width: 760px; display: flex; flex-direction: column; gap: 16px; }
+    .doc section { padding: 20px 22px; }
+    .doc h2 { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+    .doc p, .doc li { font-size: 14px; line-height: 1.6; color: var(--ink-2); max-width: 68ch; }
+    table { border-collapse: collapse; width: 100%; font-size: 13.5px; margin-top: 8px; }
+    th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--gridline); }
+    th { font-size: 12px; color: var(--muted); font-weight: 600; }
+    td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M13 2L4 14H11L10 22L20 9H13L13 2Z" stroke="#2a78d6" stroke-width="1.7" stroke-linejoin="round" fill="#eaf2fc"/></svg>
+      <span>Wattly</span>
+    </div>
+    <nav class="nav" aria-label="Main">
+      <span class="nav-soon">Dashboard <small>soon</small></span>
+      <span class="nav-soon">Recommendations <small>soon</small></span>
+      <a href="/appliances.html" data-keep-household>Appliances</a>
+      <span class="nav-soon">Spending &amp; Budget <small>soon</small></span>
+      <a class="active" href="/forecast.html" data-keep-household aria-current="page">Forecast</a>
+      <a href="/settings.html" data-keep-household>Settings</a>
+      <a href="/households.html" data-keep-household>Households</a>
+      <a href="/about-data.html" data-keep-household>About our data</a>
+    </nav>
+    <div class="spacer"></div>
+  </aside>
+
+  <main class="main">
+    <div class="page-head"><h1>Electricity forecast</h1>
+      <p>Half-hourly wholesale USEP estimates for the next 12 hours. This is not your full electricity tariff.</p></div>
+    <div class="doc">
+      <section class="card" aria-labelledby="forecast-status">
+        <h2 id="forecast-status" role="status" aria-live="polite">Loading saved forecast…</h2>
+        <p id="forecast-metadata"></p>
+        <p id="current-assessment"></p>
+        <div style="overflow-x:auto">
+          <table id="forecast-table" hidden>
+            <caption>12-hour forecast: 24 future half-hour intervals; all times are Singapore time (SGT)</caption>
+            <thead><tr><th scope="col">Interval start (SGT)</th><th scope="col">SGD/MWh</th>
+              <th scope="col">cents/kWh</th><th scope="col">Spike assessment</th></tr></thead>
+            <tbody id="forecast-points"></tbody>
+          </table>
+        </div>
+        <p>Estimates can be wrong, including during price spikes. Spike assessments require sufficient prior history.
+          Historical model performance is still being evaluated.</p>
+      </section>
+    </div>
+  </main>
+</div>
+<script src="/js/wattly.js"></script>
+<script src="/js/forecast.js"></script>
+</body>
+</html>
