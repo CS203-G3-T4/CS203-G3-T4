@@ -46,3 +46,31 @@ def test_demo_uses_only_earlier_data_and_keeps_production_guards(tmp_path, monke
     frozen = (output/'test'/'summary.json').read_bytes()
     with pytest.raises(ValueError,match='immutable'): demo.experiment(dataset,output)
     assert (output/'test'/'summary.json').read_bytes()==frozen
+
+
+def test_future_prices_and_late_revisions_cannot_change_training_inputs_or_labels(monkeypatch):
+    import numpy as np
+    from sklearn.pipeline import Pipeline
+    from wattly_ml.train import train
+    from wattly_ml.timebase import DAY
+
+    rows = history(7)
+    start = instant(rows[48]['periodStart'])
+    cutoff, end = start+2*DAY, start+3*DAY
+    fits = []
+    original_fit = Pipeline.fit
+    def observed_fit(self, x, y, **kwargs):
+        fits.append((np.array(x, copy=True), np.array(y, copy=True)))
+        return original_fit(self, x, y, **kwargs)
+    monkeypatch.setattr(Pipeline, 'fit', observed_fit)
+    manifest = {'sha256': 'synthetic', 'quality': quality(rows)}
+    train(rows, manifest, start, cutoff, end, policy='PROVISIONAL', exploratory=True, iterations=2)
+    # Change validation/test prices, plus an old period revised only after fitting.
+    changed = [{**r, 'usep': 999999} if instant(r['periodStart']) >= cutoff else r for r in rows]
+    changed.append({**rows[70], 'usep': -999999, 'revisionId': 'late-revision',
+                    'availableAt': (cutoff+STEP).isoformat()})
+    train(changed, manifest, start, cutoff, end, policy='PROVISIONAL', exploratory=True, iterations=2)
+    assert len(fits) == 48
+    for before, after in zip(fits[:24], fits[24:]):
+        for original, altered in zip(before, after):
+            np.testing.assert_allclose(original, altered, rtol=0, atol=0, equal_nan=True)

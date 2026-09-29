@@ -21,8 +21,9 @@ source /home/bryan/CS203_T4/wattly-f3-demo/runtime.env
 ```
 
 Open **http://localhost:8082/forecast-demo.html**. The ordinary forecast page is
-http://localhost:8082/forecast.html. Spring binds to loopback on 8082, demo Python
-on 8002 and the separate demo PostgreSQL server on 55440. Ports are overridable
+http://localhost:8082/forecast.html. Spring listens on 8082 (the existing local
+script binds all interfaces); demo Python uses loopback on 8002 and the separate
+demo PostgreSQL server uses loopback on 55440. Ports are overridable
 through `WATTLY_DEMO_PORT`, `WATTLY_DEMO_PYTHON_PORT`, `WATTLY_DEMO_PG_PORT`.
 
 Startup takes a fresh **read-only SQLite backup** for operational history and
@@ -54,13 +55,19 @@ the instance binds only to loopback. No production DB settings are loaded.
    This is one held-out day, not a validated claim of general accuracy.
 2. **Show the comparison.** Point to the three MAE cards and the results table.
    AI lost to B1 overall. Change the **offline forecast origin** to show actual
-   prices, AI and B1/B2 predictions across the same 24 future half-hours. This
-   changes the selected saved experiment, not the application's Clock.
+   prices, AI and B1/B2 predictions across the same **12-hour forecast: 24 half-hour
+   predictions**. The blue shading moves with the selected target window, including
+   the final interval's end. For the midnight origin it covers 00:30–12:30 SGT.
+   The chart shows **one origin**, while MAE covers **all 24 eligible origins** and
+   stays unchanged when the selection changes. This selects saved results without
+   changing the application's Clock.
 3. **Show the live boundary.** Scroll to live price and fallback. Show SGT source
    publication time, forecast origin and the 24 target starts. The experimental
    model is unapproved, so live forecasts use an eligible Java baseline. The
    live baseline remains labelled unranked: one-day experimental selection was
-   not injected into production's model registry.
+   not injected into production's model registry. Show **Insufficient history**
+   for spike assessments: the configured rule requires at least 14 matching prior
+   days; the current snapshot cannot supply them.
 4. **Demonstrate resilience.** Use the outage commands below. Spring keeps
    returning a baseline while demo Python is down. Restore Python. Explain why
    readiness remains 503: no experimental model was promoted to bypass the gate.
@@ -88,6 +95,9 @@ outage. The standard API's stale-data, insufficient-history and actionable guard
 are unchanged. If the upstream feed is unavailable or stale, show that state;
 the saved offline experiment remains usable without an upstream connection.
 The page's refresh button only reads Spring responses; it does not run a job.
+Within one half-hour, a command refresh with unchanged input can retain the same
+saved run ID and origin timestamp. This is the existing idempotent persistence
+rule; an API read does not manufacture a new forecast timestamp.
 
 ## Actual experiment results
 
@@ -147,7 +157,10 @@ that includes baselines with eligible validation pairs. B3 has insufficient
 seven-day history. The all-method common set including B3 is explicitly **zero**;
 its scores are not silently replaced with a relaxed B3 formula.
 
-There are 48 candidate origins on each evaluation day. Origins 12:00–23:30 are
+There are 48 candidate origins on each evaluation day. **00:00–11:30 SGT** gives
+24 eligible origins × 24 predictions = **576 included pairs per compared method**.
+At 11:30, the last predicted interval is 23:30–00:00 and fits inside the day.
+Origins 12:00–23:30 are
 purged because their 24-target span crosses the day's end: 24 origins × 24 targets
 = 576 excluded pairs per method. B3 also excludes the other 576 pairs for missing
 history. The 576 compared pairs contain only **47 distinct actual target periods**
@@ -169,6 +182,50 @@ Only that `public` directory is exposed through Spring's static resource support
 The artifact stays exploratory with `productionEligible=false` and no `current.json`.
 
 Dataset SHA-256: `b0797a3dfd148a8368507e08a64600154a1d660075aaaebfcd10fa6bc5bb5502`.
+
+## Final independent verification and presentation backup
+
+The final audit recalculated MAE directly from the saved records using the same
+`(origin, horizon, target timestamp)` keys for AI/B1/B2. It independently selected
+price revisions by publication **and** availability time, verified target interval
+ends against split boundaries, and checked every training pipeline's actual input
+matrix and target labels before fitting. A refit with the unchanged 40-iteration
+parameters reproduced the saved validation and test predictions. A synthetic
+regression also changes future prices and late revisions and verifies that all
+24 training matrices and label arrays stay identical.
+
+**No evaluation bug or future-data leakage was found in these checks.** The MAEs
+remain AI 273.554442529769, B1 234.31105324074073 and B2 344.30848958333337 SGD/MWh.
+No test-based tuning or replacement of the original model/report was performed.
+The audit records hashes proving the frozen dataset and experiment are unchanged.
+This verifies this retrospective experiment, not general accuracy or historical
+production availability of its model.
+
+Re-run the audit with a **new output filename**:
+
+```bash
+source /home/bryan/CS203_T4/wattly-f3-demo/runtime.env
+OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 "$WATTLY_DEMO_PYTHON" scripts/verify-forecast-demo.py \
+  "$WATTLY_DEMO_DATASET" "$WATTLY_DEMO_EXPERIMENT" /tmp/f3-evaluation-audit-new.json
+```
+
+The backup folder is
+`/home/bryan/CS203_T4/wattly-f3-demo/presentation-backup/2026-09-29-final/`:
+
+- `forecast-demo-desktop.png`: chart, highlighted window, MAEs and live overview.
+- `forecast-demo-mobile.png`: complete mobile view.
+- `forecast-demo-live.png`: expanded baseline table and insufficient-history labels.
+- `forecast-demo.json` and `results.json`: original offline data and evaluation.
+- `evaluation-audit.json`: independent numerical and leakage audit.
+- `live-outage-verification.json`: real outage/recovery, saved PostgreSQL/API
+  agreement, 24 target timestamps, input availability checks and collector identity.
+- `forecast-demo-browser-proof.json`, test logs/XML and `checks.json`: test evidence.
+- `presentation.md`: this walkthrough, usable without the running application.
+
+If the live feed is unavailable during the talk, open the desktop screenshot and
+saved results. Identify the screenshot as a saved 29 September demonstration;
+do not describe its prices as live. The application's offline experiment also
+remains usable when only the upstream feed is unavailable.
 
 ## Reproduce or inspect
 
@@ -205,12 +262,13 @@ environment file. The prepared local file contains no collector credentials.
   against B1; no production approval or safety-gate bypass.
 - Live F1 price display, 24 correctly timed baseline intervals, actual demo Python
   outage/recovery, protected admin endpoint and independent startup controls.
-- **97 Java tests passed without skips; 12 Python tests passed; all three Node
+- **97 Java tests passed without skips; 13 Python tests passed; all three Node
   test files passed.** The runnable Java 21 jar builds successfully.
 - Real Chromium desktop/mobile checks passed: four chart series, origin selection,
   24 offline and 24 live rows, no JavaScript errors or page overflow, admin 403.
-  Proof and screenshots are under `target/forecast-demo-*`.
-- The outage proof is `$WATTLY_DEMO_HOME/verification/outage.json`: Python restored
+  Final proof and screenshots are in the backup folder above; earlier captures
+  under `target/forecast-demo-*` are retained.
+- The final outage proof is the backup's `live-outage-verification.json`: Python restored
   to health 200/readiness 503, Spring PID unchanged throughout the outage, and
   collector PID **9572**, active since **23 September 19:33:41 +08:00**, unchanged.
 

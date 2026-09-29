@@ -22,6 +22,8 @@
 .demo-legend .b1::before { border-top-style: dashed; }
 .demo-legend .b2 { color: #9a5f00; }
 .demo-legend .b2::before { border-top-style: dotted; }
+.demo-legend .window::before { height: 12px; border: 1px solid #92b8e8; background: #eaf2fc; }
+#demo-window { margin-top: 12px; font-weight: 600; }
 .demo-table-scroll { overflow-x: auto; }
 .demo-section table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; margin: 12px 0; }
 .demo-section th, .demo-section td { padding: 9px; text-align: right; border-bottom: 1px solid var(--gridline); white-space: nowrap; }

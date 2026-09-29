@@ -58,6 +58,17 @@ test('saved endpoint response renders 24 rows, provenance, stale, empty and outa
   view = fixture(); view.run.fallbackReason = 'MODEL_MANIFEST_CONFLICT';
   await vm.runInContext('WattlyForecast.refresh()', context);
   assert.match(nodes['forecast-metadata'].textContent, /AI unavailable; baseline fallback/);
+  assert.equal(nodes['forecast-points'].children[0].children[3].textContent, 'Insufficient history');
+  assert.match(nodes['current-assessment'].textContent, /Insufficient history/);
+  view.run.points[0].spikeFlag = true; // A flag without its threshold cannot be displayed as an assessment.
+  await vm.runInContext('WattlyForecast.refresh()', context);
+  assert.equal(nodes['forecast-points'].children[0].children[3].textContent, 'Insufficient history');
+  view.run.points[0].spikeThreshold = -20;
+  await vm.runInContext('WattlyForecast.refresh()', context);
+  assert.equal(nodes['forecast-points'].children[0].children[3].textContent, 'Predicted spike');
+  view.run.points[0].spikeFlag = false;
+  await vm.runInContext('WattlyForecast.refresh()', context);
+  assert.equal(nodes['forecast-points'].children[0].children[3].textContent, 'Below spike threshold');
   view = { ...view, stale: true };
   await vm.runInContext('WattlyForecast.refresh()', context);
   assert.match(nodes['forecast-status'].textContent, /Stale forecast/);

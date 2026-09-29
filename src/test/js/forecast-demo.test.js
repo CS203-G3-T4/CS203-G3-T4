@@ -4,10 +4,10 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 
 class Element {
-  constructor() { this.children = []; this.textContent = ''; this.hidden = true; this.value = ''; }
+  constructor() { this.children = []; this.attributes = {}; this.textContent = ''; this.hidden = true; this.value = ''; }
   appendChild(child) { this.children.push(child); }
   replaceChildren() { this.children = []; }
-  setAttribute() {}
+  setAttribute(key, value) { this.attributes[key] = value; }
   addEventListener() {}
 }
 function fixture() {
@@ -50,6 +50,13 @@ test('presentation shows paired metrics, AI losses, 24 points and distinct live 
   assert.ok(nodes['demo-chart'].children.length > 15);
   assert.match(nodes['demo-verdict'].textContent, /more error than B1/);
   assert.equal(nodes['demo-ai-mae'].textContent, report.test.table.AI.mae.toFixed(2));
+  assert.match(nodes['demo-window'].textContent, /12-hour target window.*end exclusive/);
+  assert.match(nodes['demo-pair-explanation'].textContent, /576 included pairs.*576 excluded pairs/);
+  assert.match(nodes['demo-spikes'].textContent, /Insufficient history/);
+  const highlight = nodes['demo-chart'].children.find(n => n.attributes.id === 'demo-window-highlight');
+  assert.equal(highlight.attributes.width, 450); // Half of the 24-hour chart, including the final target interval.
+  const firstStart = Date.parse(report.origins[0].points[0].targetPeriod);
+  assert.equal(highlight.attributes.x, 72 + (firstStart - Date.parse(report.protocol.testStart)) / 86400000 * 900);
   await vm.runInContext('WattlyDemo.live()', context);
   assert.match(nodes['demo-live-price'].textContent, new RegExp(price.freshness));
   price = { ...price, price: -10, freshness: 'STALE' };
