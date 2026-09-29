@@ -1,0 +1,529 @@
+split,method,horizon,hours_to_target_start,training_samples_per_fit,common_pairs,mae_sgd_mwh
+pooled_validation,B1,1,0.5,not fitted,48,299.1584027777778
+pooled_validation,B1,2,1.0,not fitted,48,338.5161111111111
+pooled_validation,B1,3,1.5,not fitted,48,351.61159722222226
+pooled_validation,B1,4,2.0,not fitted,48,379.4738194444445
+pooled_validation,B1,5,2.5,not fitted,48,390.7317361111111
+pooled_validation,B1,6,3.0,not fitted,48,403.6871527777778
+pooled_validation,B1,7,3.5,not fitted,48,411.6488194444445
+pooled_validation,B1,8,4.0,not fitted,48,418.89395833333333
+pooled_validation,B1,9,4.5,not fitted,48,424.8078472222222
+pooled_validation,B1,10,5.0,not fitted,48,516.5336111111111
+pooled_validation,B1,11,5.5,not fitted,48,519.3781250000001
+pooled_validation,B1,12,6.0,not fitted,48,526.2134722222222
+pooled_validation,B1,13,6.5,not fitted,48,542.7888888888889
+pooled_validation,B1,14,7.0,not fitted,48,557.9295138888889
+pooled_validation,B1,15,7.5,not fitted,48,535.3395138888889
+pooled_validation,B1,16,8.0,not fitted,48,499.01736111111114
+pooled_validation,B1,17,8.5,not fitted,48,463.5965277777778
+pooled_validation,B1,18,9.0,not fitted,48,425.10243055555554
+pooled_validation,B1,19,9.5,not fitted,48,395.9773611111111
+pooled_validation,B1,20,10.0,not fitted,48,370.8965277777778
+pooled_validation,B1,21,10.5,not fitted,48,380.7790277777778
+pooled_validation,B1,22,11.0,not fitted,48,383.5722916666667
+pooled_validation,B1,23,11.5,not fitted,48,374.06083333333333
+pooled_validation,B1,24,12.0,not fitted,48,381.1403472222222
+pooled_validation,B2,1,0.5,not fitted,48,341.9822916666667
+pooled_validation,B2,2,1.0,not fitted,48,342.9272916666667
+pooled_validation,B2,3,1.5,not fitted,48,332.42875000000004
+pooled_validation,B2,4,2.0,not fitted,48,335.61604166666666
+pooled_validation,B2,5,2.5,not fitted,48,334.57666666666665
+pooled_validation,B2,6,3.0,not fitted,48,335.9035416666667
+pooled_validation,B2,7,3.5,not fitted,48,337.25770833333337
+pooled_validation,B2,8,4.0,not fitted,48,337.8225
+pooled_validation,B2,9,4.5,not fitted,48,321.5129166666667
+pooled_validation,B2,10,5.0,not fitted,48,460.68583333333333
+pooled_validation,B2,11,5.5,not fitted,48,445.51895833333333
+pooled_validation,B2,12,6.0,not fitted,48,436.1254166666667
+pooled_validation,B2,13,6.5,not fitted,48,475.1297916666667
+pooled_validation,B2,14,7.0,not fitted,48,543.6504166666667
+pooled_validation,B2,15,7.5,not fitted,48,543.4370833333334
+pooled_validation,B2,16,8.0,not fitted,48,546.2464583333333
+pooled_validation,B2,17,8.5,not fitted,48,550.5614583333333
+pooled_validation,B2,18,9.0,not fitted,48,556.82125
+pooled_validation,B2,19,9.5,not fitted,48,578.656875
+pooled_validation,B2,20,10.0,not fitted,48,604.8525
+pooled_validation,B2,21,10.5,not fitted,48,701.1922916666667
+pooled_validation,B2,22,11.0,not fitted,48,766.1329166666667
+pooled_validation,B2,23,11.5,not fitted,48,787.29375
+pooled_validation,B2,24,12.0,not fitted,48,797.9216666666667
+pooled_validation,CURRENT,1,0.5,72/120,48,301.0813791110074
+pooled_validation,CURRENT,2,1.0,72/120,48,318.0287364444711
+pooled_validation,CURRENT,3,1.5,72/120,48,313.1884146330282
+pooled_validation,CURRENT,4,2.0,72/120,48,306.0765554892633
+pooled_validation,CURRENT,5,2.5,72/120,48,316.50688985516757
+pooled_validation,CURRENT,6,3.0,72/120,48,315.7671298627488
+pooled_validation,CURRENT,7,3.5,72/120,48,311.8719068612522
+pooled_validation,CURRENT,8,4.0,72/120,48,306.15512993585844
+pooled_validation,CURRENT,9,4.5,72/120,48,289.4370509317278
+pooled_validation,CURRENT,10,5.0,72/120,48,357.9122683172674
+pooled_validation,CURRENT,11,5.5,72/120,48,374.05287961418793
+pooled_validation,CURRENT,12,6.0,72/120,48,363.3174514710115
+pooled_validation,CURRENT,13,6.5,72/120,48,357.9938796941248
+pooled_validation,CURRENT,14,7.0,72/120,48,401.6339156557314
+pooled_validation,CURRENT,15,7.5,72/120,48,388.4248209000186
+pooled_validation,CURRENT,16,8.0,72/120,48,431.48287220336834
+pooled_validation,CURRENT,17,8.5,72/120,48,434.8299271883965
+pooled_validation,CURRENT,18,9.0,72/120,48,437.3968284963797
+pooled_validation,CURRENT,19,9.5,72/120,48,452.35944676897884
+pooled_validation,CURRENT,20,10.0,72/120,48,492.2580466985997
+pooled_validation,CURRENT,21,10.5,72/120,48,549.7395723681492
+pooled_validation,CURRENT,22,11.0,72/120,48,625.7645971083857
+pooled_validation,CURRENT,23,11.5,72/120,48,629.0832207548846
+pooled_validation,CURRENT,24,12.0,72/120,48,651.3981215013305
+pooled_validation,HGB_MAE,1,0.5,72/120,48,271.75541496744995
+pooled_validation,HGB_MAE,2,1.0,72/120,48,281.0619250214285
+pooled_validation,HGB_MAE,3,1.5,72/120,48,269.25485059976154
+pooled_validation,HGB_MAE,4,2.0,72/120,48,271.72427241952
+pooled_validation,HGB_MAE,5,2.5,72/120,48,268.7638508018749
+pooled_validation,HGB_MAE,6,3.0,72/120,48,271.74485001179005
+pooled_validation,HGB_MAE,7,3.5,72/120,48,282.0697525580697
+pooled_validation,HGB_MAE,8,4.0,72/120,48,276.1585693185674
+pooled_validation,HGB_MAE,9,4.5,72/120,48,261.1853671471096
+pooled_validation,HGB_MAE,10,5.0,72/120,48,330.5307422410368
+pooled_validation,HGB_MAE,11,5.5,72/120,48,328.29900428889175
+pooled_validation,HGB_MAE,12,6.0,72/120,48,326.30804175610643
+pooled_validation,HGB_MAE,13,6.5,72/120,48,352.47753935090935
+pooled_validation,HGB_MAE,14,7.0,72/120,48,373.9779601078835
+pooled_validation,HGB_MAE,15,7.5,72/120,48,389.09701234550414
+pooled_validation,HGB_MAE,16,8.0,72/120,48,401.00706304006854
+pooled_validation,HGB_MAE,17,8.5,72/120,48,394.10009903073677
+pooled_validation,HGB_MAE,18,9.0,72/120,48,403.1420733529421
+pooled_validation,HGB_MAE,19,9.5,72/120,48,442.6290566574137
+pooled_validation,HGB_MAE,20,10.0,72/120,48,440.44386838721414
+pooled_validation,HGB_MAE,21,10.5,72/120,48,511.8558977990777
+pooled_validation,HGB_MAE,22,11.0,72/120,48,572.197724817586
+pooled_validation,HGB_MAE,23,11.5,72/120,48,570.5458115105455
+pooled_validation,HGB_MAE,24,12.0,72/120,48,586.6762971752995
+pooled_validation,MEDIAN,1,0.5,72/120,48,298.7995833333333
+pooled_validation,MEDIAN,2,1.0,72/120,48,299.8464583333333
+pooled_validation,MEDIAN,3,1.5,72/120,48,282.0527083333333
+pooled_validation,MEDIAN,4,2.0,72/120,48,275.61291666666665
+pooled_validation,MEDIAN,5,2.5,72/120,48,264.169375
+pooled_validation,MEDIAN,6,3.0,72/120,48,261.72541666666666
+pooled_validation,MEDIAN,7,3.5,72/120,48,257.89687499999997
+pooled_validation,MEDIAN,8,4.0,72/120,48,258.1925
+pooled_validation,MEDIAN,9,4.5,72/120,48,248.80374999999998
+pooled_validation,MEDIAN,10,5.0,72/120,48,319.63895833333333
+pooled_validation,MEDIAN,11,5.5,72/120,48,311.896875
+pooled_validation,MEDIAN,12,6.0,72/120,48,308.55895833333335
+pooled_validation,MEDIAN,13,6.5,72/120,48,326.12583333333333
+pooled_validation,MEDIAN,14,7.0,72/120,48,359.0995833333333
+pooled_validation,MEDIAN,15,7.5,72/120,48,358.66541666666666
+pooled_validation,MEDIAN,16,8.0,72/120,48,353.0941666666667
+pooled_validation,MEDIAN,17,8.5,72/120,48,340.15291666666667
+pooled_validation,MEDIAN,18,9.0,72/120,48,340.9922916666667
+pooled_validation,MEDIAN,19,9.5,72/120,48,355.24625
+pooled_validation,MEDIAN,20,10.0,72/120,48,369.45645833333333
+pooled_validation,MEDIAN,21,10.5,72/120,48,418.53875
+pooled_validation,MEDIAN,22,11.0,72/120,48,449.921875
+pooled_validation,MEDIAN,23,11.5,72/120,48,459.23854166666666
+pooled_validation,MEDIAN,24,12.0,72/120,48,460.90291666666667
+pooled_validation,PERSISTENCE,1,0.5,not fitted,48,207.48625
+pooled_validation,PERSISTENCE,2,1.0,not fitted,48,265.271875
+pooled_validation,PERSISTENCE,3,1.5,not fitted,48,305.52020833333336
+pooled_validation,PERSISTENCE,4,2.0,not fitted,48,324.88875
+pooled_validation,PERSISTENCE,5,2.5,not fitted,48,323.53479166666665
+pooled_validation,PERSISTENCE,6,3.0,not fitted,48,338.50666666666666
+pooled_validation,PERSISTENCE,7,3.5,not fitted,48,361.21270833333335
+pooled_validation,PERSISTENCE,8,4.0,not fitted,48,359.63958333333335
+pooled_validation,PERSISTENCE,9,4.5,not fitted,48,375.5160416666667
+pooled_validation,PERSISTENCE,10,5.0,not fitted,48,425.21333333333337
+pooled_validation,PERSISTENCE,11,5.5,not fitted,48,415.20770833333336
+pooled_validation,PERSISTENCE,12,6.0,not fitted,48,428.3727083333333
+pooled_validation,PERSISTENCE,13,6.5,not fitted,48,488.704375
+pooled_validation,PERSISTENCE,14,7.0,not fitted,48,553.4897916666666
+pooled_validation,PERSISTENCE,15,7.5,not fitted,48,562.641875
+pooled_validation,PERSISTENCE,16,8.0,not fitted,48,542.241875
+pooled_validation,PERSISTENCE,17,8.5,not fitted,48,524.498125
+pooled_validation,PERSISTENCE,18,9.0,not fitted,48,499.13145833333334
+pooled_validation,PERSISTENCE,19,9.5,not fitted,48,453.81604166666665
+pooled_validation,PERSISTENCE,20,10.0,not fitted,48,429.458125
+pooled_validation,PERSISTENCE,21,10.5,not fitted,48,426.4483333333333
+pooled_validation,PERSISTENCE,22,11.0,not fitted,48,430.3879166666667
+pooled_validation,PERSISTENCE,23,11.5,not fitted,48,400.73333333333335
+pooled_validation,PERSISTENCE,24,12.0,not fitted,48,387.0754166666667
+pooled_validation,RIDGE_CALENDAR,1,0.5,72/120,48,728.6134749153085
+pooled_validation,RIDGE_CALENDAR,2,1.0,72/120,48,704.1520684977196
+pooled_validation,RIDGE_CALENDAR,3,1.5,72/120,48,578.9581919323223
+pooled_validation,RIDGE_CALENDAR,4,2.0,72/120,48,615.3541743778208
+pooled_validation,RIDGE_CALENDAR,5,2.5,72/120,48,715.2679234515056
+pooled_validation,RIDGE_CALENDAR,6,3.0,72/120,48,701.3910827903035
+pooled_validation,RIDGE_CALENDAR,7,3.5,72/120,48,617.1552869595081
+pooled_validation,RIDGE_CALENDAR,8,4.0,72/120,48,661.13482122459
+pooled_validation,RIDGE_CALENDAR,9,4.5,72/120,48,662.2463075956028
+pooled_validation,RIDGE_CALENDAR,10,5.0,72/120,48,1685.4728753678605
+pooled_validation,RIDGE_CALENDAR,11,5.5,72/120,48,1093.2591877746463
+pooled_validation,RIDGE_CALENDAR,12,6.0,72/120,48,688.8617261004198
+pooled_validation,RIDGE_CALENDAR,13,6.5,72/120,48,1240.194515123016
+pooled_validation,RIDGE_CALENDAR,14,7.0,72/120,48,1869.8433900384894
+pooled_validation,RIDGE_CALENDAR,15,7.5,72/120,48,1535.3357286562632
+pooled_validation,RIDGE_CALENDAR,16,8.0,72/120,48,1225.3767796611053
+pooled_validation,RIDGE_CALENDAR,17,8.5,72/120,48,1542.1343809364066
+pooled_validation,RIDGE_CALENDAR,18,9.0,72/120,48,1800.2124060714018
+pooled_validation,RIDGE_CALENDAR,19,9.5,72/120,48,1206.6633834251224
+pooled_validation,RIDGE_CALENDAR,20,10.0,72/120,48,1544.759167058545
+pooled_validation,RIDGE_CALENDAR,21,10.5,72/120,48,2307.1389097572974
+pooled_validation,RIDGE_CALENDAR,22,11.0,72/120,48,2359.7098602165743
+pooled_validation,RIDGE_CALENDAR,23,11.5,72/120,48,1876.5434004641838
+pooled_validation,RIDGE_CALENDAR,24,12.0,72/120,48,2512.729610827731
+pooled_validation,RIDGE_CHANGES,1,0.5,72/120,48,860.6175584577028
+pooled_validation,RIDGE_CHANGES,2,1.0,72/120,48,889.5311924954218
+pooled_validation,RIDGE_CHANGES,3,1.5,72/120,48,741.6257646681664
+pooled_validation,RIDGE_CHANGES,4,2.0,72/120,48,756.9826676551246
+pooled_validation,RIDGE_CHANGES,5,2.5,72/120,48,782.6504336798374
+pooled_validation,RIDGE_CHANGES,6,3.0,72/120,48,746.9545496298861
+pooled_validation,RIDGE_CHANGES,7,3.5,72/120,48,653.0230284357407
+pooled_validation,RIDGE_CHANGES,8,4.0,72/120,48,710.8603262890557
+pooled_validation,RIDGE_CHANGES,9,4.5,72/120,48,753.1570304883219
+pooled_validation,RIDGE_CHANGES,10,5.0,72/120,48,1469.8359986994353
+pooled_validation,RIDGE_CHANGES,11,5.5,72/120,48,1174.3171449019799
+pooled_validation,RIDGE_CHANGES,12,6.0,72/120,48,794.5272101359404
+pooled_validation,RIDGE_CHANGES,13,6.5,72/120,48,1135.099682751249
+pooled_validation,RIDGE_CHANGES,14,7.0,72/120,48,1791.544004791374
+pooled_validation,RIDGE_CHANGES,15,7.5,72/120,48,1577.8907553266151
+pooled_validation,RIDGE_CHANGES,16,8.0,72/120,48,1318.7683092358625
+pooled_validation,RIDGE_CHANGES,17,8.5,72/120,48,1647.9796055906484
+pooled_validation,RIDGE_CHANGES,18,9.0,72/120,48,1878.6612208789827
+pooled_validation,RIDGE_CHANGES,19,9.5,72/120,48,1477.1535981749391
+pooled_validation,RIDGE_CHANGES,20,10.0,72/120,48,1769.857538530461
+pooled_validation,RIDGE_CHANGES,21,10.5,72/120,48,2502.585092119635
+pooled_validation,RIDGE_CHANGES,22,11.0,72/120,48,2586.0253372482266
+pooled_validation,RIDGE_CHANGES,23,11.5,72/120,48,2230.1819633715286
+pooled_validation,RIDGE_CHANGES,24,12.0,72/120,48,2815.2004369007946
+pooled_validation,RIDGE_DAILY,1,0.5,72/120,48,440.57315183535195
+pooled_validation,RIDGE_DAILY,2,1.0,72/120,48,529.2440902678981
+pooled_validation,RIDGE_DAILY,3,1.5,72/120,48,549.1509301493269
+pooled_validation,RIDGE_DAILY,4,2.0,72/120,48,490.08135757282855
+pooled_validation,RIDGE_DAILY,5,2.5,72/120,48,513.7112627698932
+pooled_validation,RIDGE_DAILY,6,3.0,72/120,48,494.33139482317455
+pooled_validation,RIDGE_DAILY,7,3.5,72/120,48,470.86838738300446
+pooled_validation,RIDGE_DAILY,8,4.0,72/120,48,480.2732079358667
+pooled_validation,RIDGE_DAILY,9,4.5,72/120,48,462.42986442966503
+pooled_validation,RIDGE_DAILY,10,5.0,72/120,48,993.8566271331097
+pooled_validation,RIDGE_DAILY,11,5.5,72/120,48,932.7800976825841
+pooled_validation,RIDGE_DAILY,12,6.0,72/120,48,828.6653336299572
+pooled_validation,RIDGE_DAILY,13,6.5,72/120,48,884.1021823209159
+pooled_validation,RIDGE_DAILY,14,7.0,72/120,48,942.8031246927545
+pooled_validation,RIDGE_DAILY,15,7.5,72/120,48,980.3087163503972
+pooled_validation,RIDGE_DAILY,16,8.0,72/120,48,998.0352465099601
+pooled_validation,RIDGE_DAILY,17,8.5,72/120,48,1200.3239100776577
+pooled_validation,RIDGE_DAILY,18,9.0,72/120,48,1143.617527105896
+pooled_validation,RIDGE_DAILY,19,9.5,72/120,48,1053.4083295141443
+pooled_validation,RIDGE_DAILY,20,10.0,72/120,48,1020.1050206155458
+pooled_validation,RIDGE_DAILY,21,10.5,72/120,48,1262.566784187914
+pooled_validation,RIDGE_DAILY,22,11.0,72/120,48,1560.8084081472193
+pooled_validation,RIDGE_DAILY,23,11.5,72/120,48,1534.788078150653
+pooled_validation,RIDGE_DAILY,24,12.0,72/120,48,1506.7306511174108
+pooled_validation,RIDGE_LAGS,1,0.5,72/120,48,227.1982786322501
+pooled_validation,RIDGE_LAGS,2,1.0,72/120,48,291.06188945474725
+pooled_validation,RIDGE_LAGS,3,1.5,72/120,48,307.9167664906217
+pooled_validation,RIDGE_LAGS,4,2.0,72/120,48,340.2739162777925
+pooled_validation,RIDGE_LAGS,5,2.5,72/120,48,308.69184183142943
+pooled_validation,RIDGE_LAGS,6,3.0,72/120,48,298.11940326449627
+pooled_validation,RIDGE_LAGS,7,3.5,72/120,48,276.2652823396136
+pooled_validation,RIDGE_LAGS,8,4.0,72/120,48,298.11231365371447
+pooled_validation,RIDGE_LAGS,9,4.5,72/120,48,291.56544318605563
+pooled_validation,RIDGE_LAGS,10,5.0,72/120,48,444.7248011365305
+pooled_validation,RIDGE_LAGS,11,5.5,72/120,48,430.061847860875
+pooled_validation,RIDGE_LAGS,12,6.0,72/120,48,417.38607995341846
+pooled_validation,RIDGE_LAGS,13,6.5,72/120,48,433.78842844675046
+pooled_validation,RIDGE_LAGS,14,7.0,72/120,48,478.1293464554983
+pooled_validation,RIDGE_LAGS,15,7.5,72/120,48,471.2243557424082
+pooled_validation,RIDGE_LAGS,16,8.0,72/120,48,535.6042643545549
+pooled_validation,RIDGE_LAGS,17,8.5,72/120,48,616.8548881419312
+pooled_validation,RIDGE_LAGS,18,9.0,72/120,48,502.5142434502013
+pooled_validation,RIDGE_LAGS,19,9.5,72/120,48,701.3343226477807
+pooled_validation,RIDGE_LAGS,20,10.0,72/120,48,445.3407859845857
+pooled_validation,RIDGE_LAGS,21,10.5,72/120,48,603.4093365887538
+pooled_validation,RIDGE_LAGS,22,11.0,72/120,48,631.3598855073732
+pooled_validation,RIDGE_LAGS,23,11.5,72/120,48,669.9756428492834
+pooled_validation,RIDGE_LAGS,24,12.0,72/120,48,570.3551357462615
+pooled_validation,RIDGE_ROLLING,1,0.5,72/120,48,860.4788073088877
+pooled_validation,RIDGE_ROLLING,2,1.0,72/120,48,893.3781870438432
+pooled_validation,RIDGE_ROLLING,3,1.5,72/120,48,746.2611562817433
+pooled_validation,RIDGE_ROLLING,4,2.0,72/120,48,757.8583379123952
+pooled_validation,RIDGE_ROLLING,5,2.5,72/120,48,784.9184269212997
+pooled_validation,RIDGE_ROLLING,6,3.0,72/120,48,748.8997285066375
+pooled_validation,RIDGE_ROLLING,7,3.5,72/120,48,653.595488488957
+pooled_validation,RIDGE_ROLLING,8,4.0,72/120,48,713.6272691656928
+pooled_validation,RIDGE_ROLLING,9,4.5,72/120,48,750.9925673138063
+pooled_validation,RIDGE_ROLLING,10,5.0,72/120,48,1471.2828868429062
+pooled_validation,RIDGE_ROLLING,11,5.5,72/120,48,1166.9152222022794
+pooled_validation,RIDGE_ROLLING,12,6.0,72/120,48,796.7937980605096
+pooled_validation,RIDGE_ROLLING,13,6.5,72/120,48,1129.6653055926156
+pooled_validation,RIDGE_ROLLING,14,7.0,72/120,48,1803.7813651459442
+pooled_validation,RIDGE_ROLLING,15,7.5,72/120,48,1586.0053814062821
+pooled_validation,RIDGE_ROLLING,16,8.0,72/120,48,1317.164348723582
+pooled_validation,RIDGE_ROLLING,17,8.5,72/120,48,1652.0849317739958
+pooled_validation,RIDGE_ROLLING,18,9.0,72/120,48,1898.6722342719672
+pooled_validation,RIDGE_ROLLING,19,9.5,72/120,48,1459.7222814638997
+pooled_validation,RIDGE_ROLLING,20,10.0,72/120,48,1770.9836356979306
+pooled_validation,RIDGE_ROLLING,21,10.5,72/120,48,2497.2916244035714
+pooled_validation,RIDGE_ROLLING,22,11.0,72/120,48,2601.4224776465667
+pooled_validation,RIDGE_ROLLING,23,11.5,72/120,48,2246.688990921638
+pooled_validation,RIDGE_ROLLING,24,12.0,72/120,48,2805.2838774422808
+existing_test_diagnostic,B1,1,0.5,not fitted,24,157.67743055555556
+existing_test_diagnostic,B1,2,1.0,not fitted,24,178.71506944444445
+existing_test_diagnostic,B1,3,1.5,not fitted,24,195.59756944444445
+existing_test_diagnostic,B1,4,2.0,not fitted,24,203.81770833333334
+existing_test_diagnostic,B1,5,2.5,not fitted,24,210.33604166666666
+existing_test_diagnostic,B1,6,3.0,not fitted,24,216.12826388888888
+existing_test_diagnostic,B1,7,3.5,not fitted,24,220.09645833333332
+existing_test_diagnostic,B1,8,4.0,not fitted,24,220.46965277777778
+existing_test_diagnostic,B1,9,4.5,not fitted,24,260.77715277777776
+existing_test_diagnostic,B1,10,5.0,not fitted,24,290.1634027777778
+existing_test_diagnostic,B1,11,5.5,not fitted,24,302.50520833333337
+existing_test_diagnostic,B1,12,6.0,not fitted,24,309.27493055555556
+existing_test_diagnostic,B1,13,6.5,not fitted,24,282.42881944444446
+existing_test_diagnostic,B1,14,7.0,not fitted,24,263.67673611111115
+existing_test_diagnostic,B1,15,7.5,not fitted,24,258.45534722222226
+existing_test_diagnostic,B1,16,8.0,not fitted,24,234.5709027777778
+existing_test_diagnostic,B1,17,8.5,not fitted,24,203.78493055555555
+existing_test_diagnostic,B1,18,9.0,not fitted,24,210.00659722222224
+existing_test_diagnostic,B1,19,9.5,not fitted,24,213.66604166666667
+existing_test_diagnostic,B1,20,10.0,not fitted,24,200.8621527777778
+existing_test_diagnostic,B1,21,10.5,not fitted,24,213.134375
+existing_test_diagnostic,B1,22,11.0,not fitted,24,239.36534722222223
+existing_test_diagnostic,B1,23,11.5,not fitted,24,260.45451388888887
+existing_test_diagnostic,B1,24,12.0,not fitted,24,277.500625
+existing_test_diagnostic,B2,1,0.5,not fitted,24,200.52125
+existing_test_diagnostic,B2,2,1.0,not fitted,24,201.31583333333333
+existing_test_diagnostic,B2,3,1.5,not fitted,24,203.52083333333334
+existing_test_diagnostic,B2,4,2.0,not fitted,24,205.71625
+existing_test_diagnostic,B2,5,2.5,not fitted,24,209.72750000000002
+existing_test_diagnostic,B2,6,3.0,not fitted,24,222.20875
+existing_test_diagnostic,B2,7,3.5,not fitted,24,228.75458333333336
+existing_test_diagnostic,B2,8,4.0,not fitted,24,237.39041666666668
+existing_test_diagnostic,B2,9,4.5,not fitted,24,281.6075
+existing_test_diagnostic,B2,10,5.0,not fitted,24,325.74833333333333
+existing_test_diagnostic,B2,11,5.5,not fitted,24,362.41
+existing_test_diagnostic,B2,12,6.0,not fitted,24,397.0108333333334
+existing_test_diagnostic,B2,13,6.5,not fitted,24,400.60875000000004
+existing_test_diagnostic,B2,14,7.0,not fitted,24,409.97083333333336
+existing_test_diagnostic,B2,15,7.5,not fitted,24,425.875
+existing_test_diagnostic,B2,16,8.0,not fitted,24,427.9516666666667
+existing_test_diagnostic,B2,17,8.5,not fitted,24,420.9516666666667
+existing_test_diagnostic,B2,18,9.0,not fitted,24,435.6066666666667
+existing_test_diagnostic,B2,19,9.5,not fitted,24,449.28583333333336
+existing_test_diagnostic,B2,20,10.0,not fitted,24,449.81708333333336
+existing_test_diagnostic,B2,21,10.5,not fitted,24,447.3966666666667
+existing_test_diagnostic,B2,22,11.0,not fitted,24,446.75375
+existing_test_diagnostic,B2,23,11.5,not fitted,24,447.2904166666667
+existing_test_diagnostic,B2,24,12.0,not fitted,24,425.96333333333337
+existing_test_diagnostic,CURRENT,1,0.5,120,24,169.64231528506056
+existing_test_diagnostic,CURRENT,2,1.0,120,24,173.66939817559538
+existing_test_diagnostic,CURRENT,3,1.5,120,24,169.1543309950679
+existing_test_diagnostic,CURRENT,4,2.0,120,24,161.6402228737917
+existing_test_diagnostic,CURRENT,5,2.5,120,24,156.64823437146327
+existing_test_diagnostic,CURRENT,6,3.0,120,24,167.82881008887148
+existing_test_diagnostic,CURRENT,7,3.5,120,24,157.50366509500287
+existing_test_diagnostic,CURRENT,8,4.0,120,24,162.5551439594629
+existing_test_diagnostic,CURRENT,9,4.5,120,24,200.64104065746926
+existing_test_diagnostic,CURRENT,10,5.0,120,24,364.8634437101472
+existing_test_diagnostic,CURRENT,11,5.5,120,24,376.16103057114805
+existing_test_diagnostic,CURRENT,12,6.0,120,24,376.64301201694855
+existing_test_diagnostic,CURRENT,13,6.5,120,24,338.3455903378137
+existing_test_diagnostic,CURRENT,14,7.0,120,24,280.8708602586243
+existing_test_diagnostic,CURRENT,15,7.5,120,24,302.0178624488602
+existing_test_diagnostic,CURRENT,16,8.0,120,24,272.62930466521516
+existing_test_diagnostic,CURRENT,17,8.5,120,24,239.87365444311035
+existing_test_diagnostic,CURRENT,18,9.0,120,24,280.7761349793109
+existing_test_diagnostic,CURRENT,19,9.5,120,24,326.04533802843105
+existing_test_diagnostic,CURRENT,20,10.0,120,24,281.52359828594916
+existing_test_diagnostic,CURRENT,21,10.5,120,24,338.72721104239605
+existing_test_diagnostic,CURRENT,22,11.0,120,24,401.5112263164382
+existing_test_diagnostic,CURRENT,23,11.5,120,24,430.6468382697436
+existing_test_diagnostic,CURRENT,24,12.0,120,24,435.3883538385343
+existing_test_diagnostic,HGB_MAE,1,0.5,120,24,182.76740170427234
+existing_test_diagnostic,HGB_MAE,2,1.0,120,24,169.80072067022255
+existing_test_diagnostic,HGB_MAE,3,1.5,120,24,157.8271564191532
+existing_test_diagnostic,HGB_MAE,4,2.0,120,24,147.1002399787804
+existing_test_diagnostic,HGB_MAE,5,2.5,120,24,154.31416257687007
+existing_test_diagnostic,HGB_MAE,6,3.0,120,24,138.08193732045484
+existing_test_diagnostic,HGB_MAE,7,3.5,120,24,118.04136471063399
+existing_test_diagnostic,HGB_MAE,8,4.0,120,24,115.90790368525357
+existing_test_diagnostic,HGB_MAE,9,4.5,120,24,144.54816527819054
+existing_test_diagnostic,HGB_MAE,10,5.0,120,24,193.767309746967
+existing_test_diagnostic,HGB_MAE,11,5.5,120,24,218.04716585144322
+existing_test_diagnostic,HGB_MAE,12,6.0,120,24,234.39238510855523
+existing_test_diagnostic,HGB_MAE,13,6.5,120,24,246.50306904181275
+existing_test_diagnostic,HGB_MAE,14,7.0,120,24,260.9297310547151
+existing_test_diagnostic,HGB_MAE,15,7.5,120,24,301.48104983606623
+existing_test_diagnostic,HGB_MAE,16,8.0,120,24,291.7051532343817
+existing_test_diagnostic,HGB_MAE,17,8.5,120,24,279.9926704912079
+existing_test_diagnostic,HGB_MAE,18,9.0,120,24,283.9690609920111
+existing_test_diagnostic,HGB_MAE,19,9.5,120,24,235.30098333965103
+existing_test_diagnostic,HGB_MAE,20,10.0,120,24,303.46001007944153
+existing_test_diagnostic,HGB_MAE,21,10.5,120,24,281.7536545263464
+existing_test_diagnostic,HGB_MAE,22,11.0,120,24,281.86374947918057
+existing_test_diagnostic,HGB_MAE,23,11.5,120,24,359.563369025415
+existing_test_diagnostic,HGB_MAE,24,12.0,120,24,284.6719705339898
+existing_test_diagnostic,MEDIAN,1,0.5,120,24,110.61041666666667
+existing_test_diagnostic,MEDIAN,2,1.0,120,24,111.405
+existing_test_diagnostic,MEDIAN,3,1.5,120,24,112.94208333333333
+existing_test_diagnostic,MEDIAN,4,2.0,120,24,114.48208333333334
+existing_test_diagnostic,MEDIAN,5,2.5,120,24,115.76166666666667
+existing_test_diagnostic,MEDIAN,6,3.0,120,24,117.30875
+existing_test_diagnostic,MEDIAN,7,3.5,120,24,118.80416666666667
+existing_test_diagnostic,MEDIAN,8,4.0,120,24,118.91875
+existing_test_diagnostic,MEDIAN,9,4.5,120,24,162.11791666666667
+existing_test_diagnostic,MEDIAN,10,5.0,120,24,204.29458333333335
+existing_test_diagnostic,MEDIAN,11,5.5,120,24,239.945
+existing_test_diagnostic,MEDIAN,12,6.0,120,24,273.19666666666666
+existing_test_diagnostic,MEDIAN,13,6.5,120,24,274.5058333333333
+existing_test_diagnostic,MEDIAN,14,7.0,120,24,281.77791666666667
+existing_test_diagnostic,MEDIAN,15,7.5,120,24,294.32708333333335
+existing_test_diagnostic,MEDIAN,16,8.0,120,24,286.4325
+existing_test_diagnostic,MEDIAN,17,8.5,120,24,261.77125
+existing_test_diagnostic,MEDIAN,18,9.0,120,24,267.46000000000004
+existing_test_diagnostic,MEDIAN,19,9.5,120,24,271.2758333333333
+existing_test_diagnostic,MEDIAN,20,10.0,120,24,271.19208333333336
+existing_test_diagnostic,MEDIAN,21,10.5,120,24,271.46125
+existing_test_diagnostic,MEDIAN,22,11.0,120,24,271.39375
+existing_test_diagnostic,MEDIAN,23,11.5,120,24,267.7929166666667
+existing_test_diagnostic,MEDIAN,24,12.0,120,24,267.38416666666666
+existing_test_diagnostic,PERSISTENCE,1,0.5,not fitted,24,125.26625
+existing_test_diagnostic,PERSISTENCE,2,1.0,not fitted,24,144.43
+existing_test_diagnostic,PERSISTENCE,3,1.5,not fitted,24,164.19916666666668
+existing_test_diagnostic,PERSISTENCE,4,2.0,not fitted,24,181.80791666666667
+existing_test_diagnostic,PERSISTENCE,5,2.5,not fitted,24,194.98708333333335
+existing_test_diagnostic,PERSISTENCE,6,3.0,not fitted,24,204.75791666666666
+existing_test_diagnostic,PERSISTENCE,7,3.5,not fitted,24,210.97875
+existing_test_diagnostic,PERSISTENCE,8,4.0,not fitted,24,218.56666666666666
+existing_test_diagnostic,PERSISTENCE,9,4.5,not fitted,24,266.1591666666667
+existing_test_diagnostic,PERSISTENCE,10,5.0,not fitted,24,312.79083333333335
+existing_test_diagnostic,PERSISTENCE,11,5.5,not fitted,24,348.3
+existing_test_diagnostic,PERSISTENCE,12,6.0,not fitted,24,377.065
+existing_test_diagnostic,PERSISTENCE,13,6.5,not fitted,24,364.07625
+existing_test_diagnostic,PERSISTENCE,14,7.0,not fitted,24,356.6404166666667
+existing_test_diagnostic,PERSISTENCE,15,7.5,not fitted,24,313.99958333333336
+existing_test_diagnostic,PERSISTENCE,16,8.0,not fitted,24,250.835
+existing_test_diagnostic,PERSISTENCE,17,8.5,not fitted,24,210.48875
+existing_test_diagnostic,PERSISTENCE,18,9.0,not fitted,24,200.6641666666667
+existing_test_diagnostic,PERSISTENCE,19,9.5,not fitted,24,232.08541666666667
+existing_test_diagnostic,PERSISTENCE,20,10.0,not fitted,24,259.77875
+existing_test_diagnostic,PERSISTENCE,21,10.5,not fitted,24,237.89458333333334
+existing_test_diagnostic,PERSISTENCE,22,11.0,not fitted,24,214.95041666666668
+existing_test_diagnostic,PERSISTENCE,23,11.5,not fitted,24,242.44291666666666
+existing_test_diagnostic,PERSISTENCE,24,12.0,not fitted,24,271.1766666666667
+existing_test_diagnostic,RIDGE_CALENDAR,1,0.5,120,24,234.6288432046366
+existing_test_diagnostic,RIDGE_CALENDAR,2,1.0,120,24,257.278690285296
+existing_test_diagnostic,RIDGE_CALENDAR,3,1.5,120,24,214.8252317016611
+existing_test_diagnostic,RIDGE_CALENDAR,4,2.0,120,24,206.16250541927658
+existing_test_diagnostic,RIDGE_CALENDAR,5,2.5,120,24,256.73434799775544
+existing_test_diagnostic,RIDGE_CALENDAR,6,3.0,120,24,282.5887536210078
+existing_test_diagnostic,RIDGE_CALENDAR,7,3.5,120,24,329.66448101989187
+existing_test_diagnostic,RIDGE_CALENDAR,8,4.0,120,24,328.90548315120293
+existing_test_diagnostic,RIDGE_CALENDAR,9,4.5,120,24,384.09370948649354
+existing_test_diagnostic,RIDGE_CALENDAR,10,5.0,120,24,762.5532871825824
+existing_test_diagnostic,RIDGE_CALENDAR,11,5.5,120,24,571.8603152418058
+existing_test_diagnostic,RIDGE_CALENDAR,12,6.0,120,24,503.0766852206668
+existing_test_diagnostic,RIDGE_CALENDAR,13,6.5,120,24,590.5539477040339
+existing_test_diagnostic,RIDGE_CALENDAR,14,7.0,120,24,594.1846536476648
+existing_test_diagnostic,RIDGE_CALENDAR,15,7.5,120,24,690.8691276092474
+existing_test_diagnostic,RIDGE_CALENDAR,16,8.0,120,24,711.9623465764473
+existing_test_diagnostic,RIDGE_CALENDAR,17,8.5,120,24,725.2363087727664
+existing_test_diagnostic,RIDGE_CALENDAR,18,9.0,120,24,870.2832237779228
+existing_test_diagnostic,RIDGE_CALENDAR,19,9.5,120,24,676.355791023396
+existing_test_diagnostic,RIDGE_CALENDAR,20,10.0,120,24,707.5694607631009
+existing_test_diagnostic,RIDGE_CALENDAR,21,10.5,120,24,764.8195375421158
+existing_test_diagnostic,RIDGE_CALENDAR,22,11.0,120,24,795.4664048476263
+existing_test_diagnostic,RIDGE_CALENDAR,23,11.5,120,24,717.4084019294276
+existing_test_diagnostic,RIDGE_CALENDAR,24,12.0,120,24,748.2953941274754
+existing_test_diagnostic,RIDGE_CHANGES,1,0.5,120,24,312.04391925410005
+existing_test_diagnostic,RIDGE_CHANGES,2,1.0,120,24,381.2735679411229
+existing_test_diagnostic,RIDGE_CHANGES,3,1.5,120,24,330.3651869091562
+existing_test_diagnostic,RIDGE_CHANGES,4,2.0,120,24,391.7010246724035
+existing_test_diagnostic,RIDGE_CHANGES,5,2.5,120,24,366.24236381717947
+existing_test_diagnostic,RIDGE_CHANGES,6,3.0,120,24,430.8328748943406
+existing_test_diagnostic,RIDGE_CHANGES,7,3.5,120,24,423.1883633288143
+existing_test_diagnostic,RIDGE_CHANGES,8,4.0,120,24,437.668900473799
+existing_test_diagnostic,RIDGE_CHANGES,9,4.5,120,24,458.1837311012361
+existing_test_diagnostic,RIDGE_CHANGES,10,5.0,120,24,880.974831497999
+existing_test_diagnostic,RIDGE_CHANGES,11,5.5,120,24,649.1063259071042
+existing_test_diagnostic,RIDGE_CHANGES,12,6.0,120,24,574.9264273777703
+existing_test_diagnostic,RIDGE_CHANGES,13,6.5,120,24,732.8705615799275
+existing_test_diagnostic,RIDGE_CHANGES,14,7.0,120,24,867.0278365633925
+existing_test_diagnostic,RIDGE_CHANGES,15,7.5,120,24,853.5201199047111
+existing_test_diagnostic,RIDGE_CHANGES,16,8.0,120,24,766.9393132811462
+existing_test_diagnostic,RIDGE_CHANGES,17,8.5,120,24,856.8374266905793
+existing_test_diagnostic,RIDGE_CHANGES,18,9.0,120,24,1030.2414993048988
+existing_test_diagnostic,RIDGE_CHANGES,19,9.5,120,24,674.9180565456551
+existing_test_diagnostic,RIDGE_CHANGES,20,10.0,120,24,816.4869642212195
+existing_test_diagnostic,RIDGE_CHANGES,21,10.5,120,24,962.1149777477502
+existing_test_diagnostic,RIDGE_CHANGES,22,11.0,120,24,1023.7795880165909
+existing_test_diagnostic,RIDGE_CHANGES,23,11.5,120,24,871.1399226333697
+existing_test_diagnostic,RIDGE_CHANGES,24,12.0,120,24,1006.8452564968337
+existing_test_diagnostic,RIDGE_DAILY,1,0.5,120,24,309.0791608169124
+existing_test_diagnostic,RIDGE_DAILY,2,1.0,120,24,375.67997807042235
+existing_test_diagnostic,RIDGE_DAILY,3,1.5,120,24,355.8911386669001
+existing_test_diagnostic,RIDGE_DAILY,4,2.0,120,24,360.69687159356005
+existing_test_diagnostic,RIDGE_DAILY,5,2.5,120,24,397.2597447836959
+existing_test_diagnostic,RIDGE_DAILY,6,3.0,120,24,456.4326117876005
+existing_test_diagnostic,RIDGE_DAILY,7,3.5,120,24,458.0932174641322
+existing_test_diagnostic,RIDGE_DAILY,8,4.0,120,24,486.4693737898468
+existing_test_diagnostic,RIDGE_DAILY,9,4.5,120,24,532.7845984479511
+existing_test_diagnostic,RIDGE_DAILY,10,5.0,120,24,777.3746591132011
+existing_test_diagnostic,RIDGE_DAILY,11,5.5,120,24,752.8064372869699
+existing_test_diagnostic,RIDGE_DAILY,12,6.0,120,24,703.4053293279172
+existing_test_diagnostic,RIDGE_DAILY,13,6.5,120,24,757.091701321543
+existing_test_diagnostic,RIDGE_DAILY,14,7.0,120,24,645.5276860828777
+existing_test_diagnostic,RIDGE_DAILY,15,7.5,120,24,706.1531503329378
+existing_test_diagnostic,RIDGE_DAILY,16,8.0,120,24,693.8320249719985
+existing_test_diagnostic,RIDGE_DAILY,17,8.5,120,24,783.0353345015516
+existing_test_diagnostic,RIDGE_DAILY,18,9.0,120,24,830.7606491145443
+existing_test_diagnostic,RIDGE_DAILY,19,9.5,120,24,581.5870626532301
+existing_test_diagnostic,RIDGE_DAILY,20,10.0,120,24,645.0978525441157
+existing_test_diagnostic,RIDGE_DAILY,21,10.5,120,24,651.8140401136917
+existing_test_diagnostic,RIDGE_DAILY,22,11.0,120,24,767.0878141321807
+existing_test_diagnostic,RIDGE_DAILY,23,11.5,120,24,749.7581561873627
+existing_test_diagnostic,RIDGE_DAILY,24,12.0,120,24,742.6114812880149
+existing_test_diagnostic,RIDGE_LAGS,1,0.5,120,24,111.8128176460485
+existing_test_diagnostic,RIDGE_LAGS,2,1.0,120,24,126.42708623873472
+existing_test_diagnostic,RIDGE_LAGS,3,1.5,120,24,141.33498741557398
+existing_test_diagnostic,RIDGE_LAGS,4,2.0,120,24,148.76827614793024
+existing_test_diagnostic,RIDGE_LAGS,5,2.5,120,24,148.52665694987746
+existing_test_diagnostic,RIDGE_LAGS,6,3.0,120,24,150.32777967302067
+existing_test_diagnostic,RIDGE_LAGS,7,3.5,120,24,147.51550686317717
+existing_test_diagnostic,RIDGE_LAGS,8,4.0,120,24,142.73172882064
+existing_test_diagnostic,RIDGE_LAGS,9,4.5,120,24,182.35482844136195
+existing_test_diagnostic,RIDGE_LAGS,10,5.0,120,24,202.26623169510367
+existing_test_diagnostic,RIDGE_LAGS,11,5.5,120,24,214.47428312499358
+existing_test_diagnostic,RIDGE_LAGS,12,6.0,120,24,240.91411074484688
+existing_test_diagnostic,RIDGE_LAGS,13,6.5,120,24,234.13157283451164
+existing_test_diagnostic,RIDGE_LAGS,14,7.0,120,24,247.55495180250335
+existing_test_diagnostic,RIDGE_LAGS,15,7.5,120,24,261.8516064684944
+existing_test_diagnostic,RIDGE_LAGS,16,8.0,120,24,241.9172880480612
+existing_test_diagnostic,RIDGE_LAGS,17,8.5,120,24,219.40892751675298
+existing_test_diagnostic,RIDGE_LAGS,18,9.0,120,24,239.89478860498193
+existing_test_diagnostic,RIDGE_LAGS,19,9.5,120,24,206.66400569322911
+existing_test_diagnostic,RIDGE_LAGS,20,10.0,120,24,241.0237940429576
+existing_test_diagnostic,RIDGE_LAGS,21,10.5,120,24,242.04949137609174
+existing_test_diagnostic,RIDGE_LAGS,22,11.0,120,24,283.97914023659405
+existing_test_diagnostic,RIDGE_LAGS,23,11.5,120,24,316.49427497756415
+existing_test_diagnostic,RIDGE_LAGS,24,12.0,120,24,332.73213489955134
+existing_test_diagnostic,RIDGE_ROLLING,1,0.5,120,24,314.70045354370166
+existing_test_diagnostic,RIDGE_ROLLING,2,1.0,120,24,382.0914797215855
+existing_test_diagnostic,RIDGE_ROLLING,3,1.5,120,24,330.2971868388791
+existing_test_diagnostic,RIDGE_ROLLING,4,2.0,120,24,391.99960121619165
+existing_test_diagnostic,RIDGE_ROLLING,5,2.5,120,24,367.59921388270294
+existing_test_diagnostic,RIDGE_ROLLING,6,3.0,120,24,431.27335052087955
+existing_test_diagnostic,RIDGE_ROLLING,7,3.5,120,24,424.41275490800007
+existing_test_diagnostic,RIDGE_ROLLING,8,4.0,120,24,436.95628668689915
+existing_test_diagnostic,RIDGE_ROLLING,9,4.5,120,24,458.3843282007712
+existing_test_diagnostic,RIDGE_ROLLING,10,5.0,120,24,881.9778353110792
+existing_test_diagnostic,RIDGE_ROLLING,11,5.5,120,24,653.3942003738455
+existing_test_diagnostic,RIDGE_ROLLING,12,6.0,120,24,580.40515671304
+existing_test_diagnostic,RIDGE_ROLLING,13,6.5,120,24,731.1403011893273
+existing_test_diagnostic,RIDGE_ROLLING,14,7.0,120,24,878.7123698299068
+existing_test_diagnostic,RIDGE_ROLLING,15,7.5,120,24,859.7994646072561
+existing_test_diagnostic,RIDGE_ROLLING,16,8.0,120,24,759.7424017286718
+existing_test_diagnostic,RIDGE_ROLLING,17,8.5,120,24,852.5508704295629
+existing_test_diagnostic,RIDGE_ROLLING,18,9.0,120,24,1034.7335326940563
+existing_test_diagnostic,RIDGE_ROLLING,19,9.5,120,24,670.2206220281581
+existing_test_diagnostic,RIDGE_ROLLING,20,10.0,120,24,814.6614826985409
+existing_test_diagnostic,RIDGE_ROLLING,21,10.5,120,24,962.9241662361402
+existing_test_diagnostic,RIDGE_ROLLING,22,11.0,120,24,1028.4421951012212
+existing_test_diagnostic,RIDGE_ROLLING,23,11.5,120,24,873.4320041525043
+existing_test_diagnostic,RIDGE_ROLLING,24,12.0,120,24,1005.7559980216329
