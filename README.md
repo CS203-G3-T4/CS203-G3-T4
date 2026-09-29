@@ -101,6 +101,8 @@ keys, delivered backend contracts, and acceptance criteria still requiring UI,
 team agreement, or later work. New dashboard-facing endpoints are
 `GET /api/v1/prices/current` (one-decimal cents/kWh and staleness) and
 `GET /api/v1/weather/today` (daily temperature forecast and configurable heat hint).
+The `/dashboard.html` page displays these readings, marks stale and unavailable
+states, and refreshes the market price every minute.
 The two-hour NEA collector and 66-column demo view remain available.
 
 The shared Clock lives in `common/TimeConfig` and uses Asia/Singapore. All business
