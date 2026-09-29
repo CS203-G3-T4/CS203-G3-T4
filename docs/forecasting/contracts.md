@@ -1,5 +1,10 @@
 # F3 contracts and implementation checkpoints
 
+> Update 29 September 2026: the live NEMS floor mapping is now independently verified
+> against 24 official EMC periods. See [period mapping evidence](period-mapping-verification.md).
+> Earlier mapping-blocked statements below describe the frozen evaluation checkpoint.
+> Historical performance and team integration blockers remain.
+
 Branch: `feature/f3-forecaster-baseline`, based on `4077fe1`. The initial working
 tree was clean. No ancestor or repository AGENTS.md was found. Stack: Spring Boot
 4.1.1, Java target 21, JDBC/Flyway/PostgreSQL, Jackson 3, static HTML/JavaScript.

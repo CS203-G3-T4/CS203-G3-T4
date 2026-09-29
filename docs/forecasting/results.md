@@ -1,5 +1,10 @@
 # F3 implementation results — 29 September 2026
 
+> Update 29 September 2026: the live NEMS floor mapping is now independently verified
+> against 24 official EMC periods. See [period mapping evidence](period-mapping-verification.md).
+> Earlier mapping-blocked statements below describe the frozen evaluation checkpoint.
+> Historical performance and team integration blockers remain.
+
 F3's data pipeline, baselines, training/evaluation code, internal inference service,
 Spring integration and forecast page are implemented. **Full F3 acceptance is not
 claimed:** production period alignment and the requested held-out model evidence
