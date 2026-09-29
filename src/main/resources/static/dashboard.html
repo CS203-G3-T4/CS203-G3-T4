@@ -44,6 +44,23 @@
     .dashboard-links svg { width: 16px; height: 16px; }
     .refresh-button { display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; }
     .refresh-button svg { width: 16px; height: 16px; }
+    .recommendations-panel { min-height: 0; margin-top: 16px; }
+    .source-badge { display: inline-flex; align-items: center; padding: 4px 9px; border-radius: 999px; background: var(--warning-tint); color: var(--warning); font-size: 11.5px; font-weight: 700; white-space: nowrap; }
+    .rec-note { margin: 12px 0 0; color: var(--ink-2); font-size: 13px; }
+    .rec-list { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 10px; }
+    .rec-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 16px; padding: 14px 0 0; border-top: 1px solid var(--gridline); }
+    .rec-name { font-weight: 600; }
+    .rec-when { margin-top: 2px; font-size: 14px; }
+    .rec-reason { margin-top: 4px; color: var(--muted); font-size: 12.5px; }
+    .rec-saving { align-self: start; color: var(--teal); font: 700 18px/1.2 "Space Grotesk", sans-serif; white-space: nowrap; }
+    .rec-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    .rec-override summary { cursor: pointer; color: var(--accent); font-size: 13px; font-weight: 600; }
+    .rec-override[open] { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    .rec-override input { padding: 6px 8px; border: 1px solid var(--border); border-radius: 8px; font: inherit; }
+    .rec-status { grid-column: 1 / -1; margin: 0; font-size: 13px; }
+    .rec-status.done { color: var(--teal); font-weight: 600; }
+    .rec-status.error { color: var(--critical); }
+    .rec-item.decided .rec-when, .rec-item.decided .rec-saving { opacity: .6; }
     @media (max-width: 850px) { .dashboard-grid { grid-template-columns: 1fr; } .dashboard-panel { min-height: 260px; } }
     @media (max-width: 560px) {
       .dashboard-head { align-items: start; flex-direction: column; }
@@ -136,6 +153,15 @@
       </article>
     </section>
 
+    <section class="card dashboard-panel recommendations-panel" aria-labelledby="recs-title">
+      <div class="panel-top">
+        <div><p class="panel-kicker">Suggested times</p><h2 class="panel-title" id="recs-title">Cheaper times to run your appliances</h2></div>
+        <span class="source-badge" id="recommendation-source" hidden>Demo forecast</span>
+      </div>
+      <p class="rec-note" id="recommendation-note" aria-live="polite">Checking the price forecast…</p>
+      <ul class="rec-list" id="recommendation-list"></ul>
+    </section>
+
     <nav class="dashboard-links" aria-label="Household tools">
       <a href="/appliances.html" data-keep-household><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 7h6m-6 4h6m-6 4h6"/></svg>Manage appliances</a>
       <a href="/settings.html" data-keep-household><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="m19.4 15 .1.1 1.4 1.1-1.4 2.4-1.7-.7a8 8 0 0 1-1.6.9l-.3 1.8h-2.8l-.3-1.8a8 8 0 0 1-1.6-.9l-1.7.7-1.4-2.4 1.4-1.1a7 7 0 0 1 0-1.9l-1.4-1.1 1.4-2.4 1.7.7a8 8 0 0 1 1.6-.9l.3-1.8h2.8l.3 1.8a8 8 0 0 1 1.6.9l1.7-.7 1.4 2.4-1.4 1.1a7 7 0 0 1-.1 1.8Z"/></svg>Household settings</a>
@@ -144,6 +170,7 @@
   </main>
 </div>
 <script src="/js/wattly.js"></script>
+<script src="/js/recommendations.js"></script>
 <script src="/js/dashboard.js"></script>
 </body>
 </html>
