@@ -87,7 +87,7 @@
   async function refresh() {
     const button = document.getElementById('refresh-button');
     button.disabled = true;
-    await Promise.all([loadPrice(), loadWeather()]);
+    await Promise.all([loadPrice(), loadWeather(), WattlyRecommendations.load()]);
     document.getElementById('last-refreshed').textContent = 'Checked ' + dateTime.format(new Date());
     button.disabled = false;
   }
@@ -109,6 +109,7 @@
   document.getElementById('today-label').textContent = today.format(new Date());
   document.getElementById('refresh-button').addEventListener('click', refresh);
   Wattly.keepHouseholdInLinks();
+  WattlyRecommendations.init();
   Wattly.loadHouseholdSwitcher();
   loadHousehold();
   refresh();

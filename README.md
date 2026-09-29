@@ -143,3 +143,13 @@ The current evidence is exploratory: long-history acquisition and verification o
 NEMS settlement-period mapping remain blocked. No AI improvement is claimed, and
 unverified forecasts are not actionable. The admin accuracy endpoint requires an
 ADMIN servlet role; this repository has no login integration yet.
+
+## F4: recommendations
+
+The dashboard's "Suggested times" card suggests the cheapest start for each flexible
+appliance (CSDT4-19) and lets the resident accept, pick their own time, or dismiss (CSDT4-20).
+Nothing runs automatically. Migration V10 adds `recommendation` and `recommendation_event`.
+
+By default suggestions use a **demo forecast**: the real prices of the 26 Sep 2026 replay day,
+labelled as a demo. Set `RECOMMENDATION_FORECAST_SOURCE=f3` to use F3's forecast once it is
+actionable. Why, and what's needed first: [docs/f4-recommendations.md](docs/f4-recommendations.md).
