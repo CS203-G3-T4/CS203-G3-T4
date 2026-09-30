@@ -7,6 +7,17 @@ live Spring forecast and Java fallback. It needs no F4 households, scheduling,
 F5 application replay or login. The admin accuracy endpoint remains protected.
 The offline experiment is not an approved production model.
 
+Update: the page now defaults to the saved **HGB_MAE** candidate from the accuracy
+study. Its September 28 diagnostic MAE is **224.41**, versus B1's **234.31**; the
+experiment selector retains the original AI result (**273.55**). The same saved
+candidate predictions drive both the chart and MAE. September 28 has already been
+seen and cannot provide new independent confirmation. The validation table shows
+**369.88** for HGB_MAE, **405.24** for the original model and **332.44** for the
+training median, which wins overall. Production serving still uses its approved
+model/fallback gates. Existing frozen experiment files and numerical reports are
+unchanged. Pull updated code, rebuild and restart; the original dataset archive
+can be reused because `forecast-demo-latest.json` is packaged in the application.
+
 ## Start on this WSL machine
 
 The prepared runtime, tools, database, snapshots and model are outside Git at
@@ -52,9 +63,12 @@ the instance binds only to loopback. No production DB settings are loaded.
 
 1. **Purpose and limitation.** Read the experimental label. Explain that the
    question is whether a small price/calendar model improves a simple baseline.
-   This is one held-out day, not a validated claim of general accuracy.
+   This is an already-seen diagnostic day; independent accuracy remains unproven.
 2. **Show the comparison.** Point to the three MAE cards and the results table.
-   AI lost to B1 overall. Change the **offline forecast origin** to show actual
+   The latest candidate has lower diagnostic MAE than B1. Select **Original AI**
+   to show that the original model lost to B1. Open the validation table and show
+   that the median wins overall; HGB_MAE is the best feature-based candidate.
+   Change the **offline forecast origin** to show actual
    prices, AI and B1/B2 predictions across the same **12-hour forecast: 24 half-hour
    predictions**. The blue shading moves with the selected target window, including
    the final interval's end. For the midnight origin it covers 00:30–12:30 SGT.

@@ -16,14 +16,16 @@ const path = require('node:path');
     await page.goto(base + '/forecast-demo.html');
     await page.waitForSelector('#demo-results:not([hidden])');
     await page.waitForFunction(() => !document.getElementById('forecast-status').textContent.includes('Loading'));
-    const report = await (await page.request.get(base + '/forecast-demo.json')).json();
+    const report = await (await page.request.get(base + '/forecast-demo-latest.json')).json();
     const live = await (await page.request.get(base + '/api/v1/forecast/latest')).json();
     assert.equal(await page.locator('#demo-points tr').count(), 24);
     assert.equal(await page.locator('#demo-chart polyline').count(), 4);
     assert.equal(await page.locator('#demo-scores tr').count(), 4);
     assert.equal(await page.locator('#demo-ai-mae').textContent(), report.test.table.AI.mae.toFixed(2));
     assert.match(await page.locator('#demo-status').textContent(), /Experimental — limited training data\./);
-    assert.match(await page.locator('#demo-verdict').textContent(), /more error than B1/);
+    assert.match(await page.locator('#demo-verdict').textContent(), /less error than B1.*already-seen/);
+    assert.equal(await page.locator('#demo-study-scores tr').count(), 11);
+    assert.match(await page.locator('#demo-study-verdict').textContent(), /MEDIAN wins validation/);
     assert.match(await page.locator('figcaption').textContent(), /one selected origin.*12-hour forecast/s);
     assert.match(await page.locator('figcaption').textContent(), /MAE covers all eligible origins/);
     assert.match(await page.locator('#demo-pair-explanation').textContent(), /24 eligible origins.*576 included.*24 later origins.*576 excluded/);
@@ -40,6 +42,15 @@ const path = require('node:path');
     await page.selectOption('#demo-origin', '23');
     assert.equal(Number(await window.getAttribute('x')) + Number(await window.getAttribute('width')), 972);
     await page.selectOption('#demo-origin', '0');
+    const reference = await (await page.request.get(base + '/forecast-demo.json')).json();
+    await page.selectOption('#demo-experiment', '/forecast-demo.json');
+    await page.waitForFunction(expected => document.getElementById('demo-ai-mae').textContent === expected,
+      reference.test.table.AI.mae.toFixed(2));
+    assert.match(await page.locator('#demo-verdict').textContent(), /more error than B1/);
+    await page.screenshot({ path: path.join(output, 'forecast-demo-reference.png'), fullPage: true });
+    await page.selectOption('#demo-experiment', '/forecast-demo-latest.json');
+    await page.waitForFunction(expected => document.getElementById('demo-ai-mae').textContent === expected,
+      report.test.table.AI.mae.toFixed(2));
     assert.equal(live.run.modelType, 'BASELINE');
     assert.equal(live.run.points.length, 24);
     assert.equal(await page.locator('#forecast-points tr').count(), 24);
@@ -59,6 +70,8 @@ const path = require('node:path');
       displayedOfflineRows: 24, displayedLiveRows: 24, liveModelType: live.run.modelType,
       adminStatus: 403, originSelection: 'passed', windowHighlight: '12 hours; moves with origin',
       maeUnchangedBySelection: true, insufficientSpikeHistoryLabel: 'passed',
+      diagnosticMae: report.test.table.AI.mae, referenceMae: reference.test.table.AI.mae,
+      validationMethods: report.study.methods.length, experimentSelection: 'passed',
       mobileOverflow: false, browserErrors: errors };
     fs.writeFileSync(path.join(output, 'forecast-demo-browser-proof.json'), JSON.stringify(proof, null, 2));
     console.log(JSON.stringify(proof));

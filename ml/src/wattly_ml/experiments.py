@@ -1,5 +1,6 @@
 """Fixed, offline model comparisons. No serving, promotion or UI changes."""
 from collections import Counter
+from copy import deepcopy
 from datetime import datetime, timezone
 import csv
 import json
@@ -39,6 +40,65 @@ SPECS = {
                 'parameters': {'loss': 'absolute_error', 'max_iter': 40, 'max_leaf_nodes': 15,
                                'l2_regularization': 1, 'random_state': 42}},
 }
+
+
+def presentation(study: Path, reference: Path, output: Path):
+    """Export saved candidate predictions for the demo; never train or promote."""
+    if output.exists():
+        raise ValueError('Presentation reports are immutable; choose a new output file')
+    summary = json.loads((study/'summary.json').read_text())
+    if summary['status'] != 'COMPLETE':
+        raise ValueError('Use a complete accuracy study')
+    if digest(study/'selection.json') != summary['selectionSha256']:
+        raise ValueError('Study selection changed')
+    if not all(digest(Path(p)) == checksum for p, checksum in summary['referenceFileDigests'].items()):
+        raise ValueError('Reference experiment changed')
+    report = json.loads((reference/'public/forecast-demo.json').read_text())
+    if report['protocol']['datasetDigest'] != summary['protocol']['datasetDigest']:
+        raise ValueError('Study and chart must use the same frozen dataset')
+    selected = summary['selection']['selectedLearnedModel']
+    records = [json.loads(line) for line in (study/'existing-test-diagnostic/predictions.jsonl').read_text().splitlines()]
+    eligible = [r for r in records if r['method'] == selected and r['exclusionReason'] is None]
+    points = {(instant(r['asOf']), r['horizon']): r for r in eligible}
+    chart_keys = {(instant(o['asOf']), p['horizon']) for o in report['origins'] for p in o['points']}
+    if len(points) != len(eligible) or set(points) != chart_keys:
+        raise ValueError('Candidate and reference chart pairs differ')
+    for origin in report['origins']:
+        for point in origin['points']:
+            saved = points[(instant(origin['asOf']), point['horizon'])]
+            if instant(point['targetPeriod']) != instant(saved['targetPeriod']) or point['actual'] != saved['actual']:
+                raise ValueError('Candidate and chart target/truth differ')
+            point['AI'] = saved['predictedUsep']
+    diagnostic = summary['existingTestDiagnostic']
+    score = diagnostic['table'][selected]
+    measured = mean(abs(r['predictedUsep'] - r['actual']) for r in eligible)
+    if abs(measured - score['mae']) > 1e-9 or len(eligible) != diagnostic['commonPairs']:
+        raise ValueError('Displayed candidate MAE does not match chart pairs')
+    report['test'] = deepcopy(diagnostic)
+    report['test']['table']['AI'] = deepcopy(score)
+    report['allMethods']['table']['AI'] = deepcopy(score)
+    report['exclusions']['AI'] = deepcopy(diagnostic['exclusions'][selected])
+    report['modelVersion'] = 'research-' + selected
+    report['displayModel'] = selected
+    report['evaluationPurpose'] = 'ALREADY_SEEN_DIAGNOSTIC'
+    validation = summary['selection']['validation']
+    report['validation'] = deepcopy(validation)
+    baseline = min((m for m in ('B1', 'B2', 'B3') if m in validation['table']),
+                   key=lambda m: (validation['table'][m]['mae'], m))
+    report['protocol'].update(validationSelectedBaseline=baseline,
+        comparisonRule=summary['protocol']['selectionRule'],
+        parameters=summary['protocol']['candidates'][selected]['parameters'])
+    report['study'] = {'selectedModel': selected, 'overallWinner': summary['selection']['selectedMethod'],
+        'validationPairs': validation['commonPairs'], 'diagnosticPairs': diagnostic['commonPairs'],
+        'trainingSamplesPerHorizon': [f['trainingSamplesPerHorizon'][0] for f in summary['folds']],
+        'folds': [{k: f[k] for k in ('trainingStart', 'trainingCutoff', 'validationStart', 'validationEnd')}
+                  for f in summary['folds']],
+        'methods': [{'method': m, 'validationMae': validation['table'][m]['mae'],
+                     'diagnosticMae': diagnostic['table'][m]['mae']} for m in summary['selection']['ranking']]}
+    report['limitations'].insert(0, 'September 28 was already seen. This is a post-selection diagnostic; independent accuracy remains unproven.')
+    report.update(actionable=False, productionApproved=False)
+    write_json(output, report)
+    return {'model': selected, 'diagnosticMae': measured, 'pairs': len(eligible), 'output': str(output)}
 
 
 def columns(matrix, names):

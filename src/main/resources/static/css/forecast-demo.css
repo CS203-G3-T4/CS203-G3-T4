@@ -10,7 +10,7 @@
 .demo-metrics strong { font: 700 30px/1.4 "Space Grotesk", sans-serif; }
 .demo-metrics small { color: var(--muted); }
 .demo-section label { font-weight: 600; margin-right: 12px; }
-.demo-section select { padding: 8px; font: inherit; border: 1px solid var(--gridline); border-radius: 6px; background: var(--surface); }
+.demo-section select { max-width: 100%; padding: 8px; font: inherit; border: 1px solid var(--gridline); border-radius: 6px; background: var(--surface); }
 .demo-section figure { margin: 16px 0; }
 #demo-chart { width: 100%; height: auto; min-height: 230px; }
 #demo-chart text { fill: var(--ink-2); font: 13px system-ui, sans-serif; }
