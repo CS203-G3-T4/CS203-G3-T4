@@ -35,6 +35,11 @@ public class MarketIngestionScheduler {
 
     @Scheduled(cron = "${market.feed.cron}", zone = "Asia/Singapore")
     public void pollOnSchedule() {
-        pollBoth();
+        ingestion.poll();
+    }
+
+    @Scheduled(cron = "${weather.feed.cron}", zone = "Asia/Singapore")
+    public void pollWeatherOnSchedule() {
+        weather.poll();
     }
 }
