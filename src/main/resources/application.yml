@@ -45,3 +45,9 @@ forecast:
     k: ${FORECAST_SPIKE_K:3}
     spread-floor: ${FORECAST_SPIKE_SPREAD_FLOOR:1}
     classification-band: ${FORECAST_CLASSIFICATION_BAND:1}
+
+# F4 (CSDT4-19/20). Why demo is the default: docs/f4-recommendations.md
+recommendation:
+  forecast-source: ${RECOMMENDATION_FORECAST_SOURCE:demo}
+  demo-forecast-file: ${RECOMMENDATION_DEMO_FORECAST_FILE:data/replay/2026-09-26_data(main_day).csv}
+  minimum-saving-sgd: ${RECOMMENDATION_MINIMUM_SAVING_SGD:0.01}
