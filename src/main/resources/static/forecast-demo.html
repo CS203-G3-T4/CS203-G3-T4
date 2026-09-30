@@ -22,17 +22,24 @@
     <header class="page-head">
       <p class="demo-label">Experimental — limited training data.</p>
       <h1>Can AI improve a simple price forecast?</h1>
-      <p>One untouched test day. The same forecast origins, targets and actual prices for every eligible method.</p>
+      <p>Frozen experimental results on identical forecast pairs. September 28 is an already-seen diagnostic day;
+        an unseen test is still needed to confirm accuracy.</p>
     </header>
     <section id="experiment" class="card demo-section" aria-labelledby="experiment-title">
       <h2 id="experiment-title">Historical experiment · 12-hour forecast</h2>
+      <label for="demo-experiment">Saved experiment</label>
+      <select id="demo-experiment">
+        <option value="/forecast-demo-latest.json">Latest AI candidate · absolute-error HGB</option>
+        <option value="/forecast-demo.json">Original AI · frozen reference</option>
+      </select>
       <p id="demo-status" role="status" aria-live="polite">Loading the saved experiment…</p>
       <div id="demo-results" hidden>
+        <p id="demo-model"></p>
         <p id="demo-verdict" class="demo-verdict"></p>
         <div class="demo-metrics">
-          <div><span>AI MAE</span><strong id="demo-ai-mae"></strong><small>SGD/MWh · lower is better</small></div>
+          <div><span id="demo-ai-label">AI diagnostic MAE</span><strong id="demo-ai-mae"></strong><small>SGD/MWh · lower is better</small></div>
           <div><span id="demo-baseline-label">Selected baseline MAE</span><strong id="demo-baseline-mae"></strong><small>SGD/MWh · selected on validation</small></div>
-          <div><span>Common test pairs</span><strong id="demo-pairs"></strong><small id="demo-origins"></small></div>
+          <div><span>Common diagnostic pairs</span><strong id="demo-pairs"></strong><small id="demo-origins"></small></div>
         </div>
         <p id="demo-dates"></p>
         <p id="demo-pair-explanation"></p>
@@ -46,14 +53,14 @@
             MAE covers all eligible origins, so changing this chart does not change the reported MAE.</figcaption>
         </figure>
         <div class="demo-legend" aria-label="Chart legend">
-          <span class="actual">Actual provisional price</span><span class="ai">AI experiment</span>
+          <span class="actual">Actual provisional price</span><span class="ai" id="demo-ai-legend">AI experiment</span>
           <span class="b1">B1 · recent six-period mean</span><span class="b2">B2 · yesterday</span>
           <span class="window">Selected 12-hour window</span>
         </div>
         <p id="demo-spikes"></p>
         <div class="demo-table-scroll">
           <table>
-            <caption>Test MAE uses identical eligible pairs. B3 is reported separately when seven prior days are unavailable.</caption>
+            <caption>Diagnostic MAE uses identical eligible pairs. B3 is reported separately when seven prior days are unavailable.</caption>
             <thead><tr><th scope="col">Method</th><th scope="col">MAE (SGD/MWh)</th><th scope="col">Eligible origins</th><th scope="col">Eligible pairs</th><th scope="col">Excluded pairs</th></tr></thead>
             <tbody id="demo-scores"></tbody>
           </table>
@@ -68,7 +75,18 @@
         <details><summary>Data coverage, exclusions and limitations</summary>
           <p id="demo-quality"></p><p id="demo-exclusions"></p><ul id="demo-limitations"></ul>
           <p>No model has been approved for production. This experiment does not make appliance recommendations.</p>
-          <a href="/forecast-demo.json" download>Download this experiment's data and metrics</a>
+          <a id="demo-report-download" href="/forecast-demo-latest.json" download>Download this experiment's data and metrics</a>
+        </details>
+        <details id="demo-study" hidden open>
+          <summary>Latest accuracy study · chronological validation</summary>
+          <p id="demo-study-verdict"></p><p id="demo-study-coverage"></p>
+          <div class="demo-table-scroll"><table>
+            <caption>MAE in SGD/MWh. Selection uses September 26–27 validation; September 28 is an already-seen diagnostic.</caption>
+            <thead><tr><th scope="col">Method</th><th scope="col">Validation MAE</th><th scope="col">September 28 diagnostic MAE</th></tr></thead>
+            <tbody id="demo-study-scores"></tbody>
+          </table></div>
+          <p>The training median wins validation overall. HGB_MAE is the best feature-based candidate.
+            No model is approved for live serving. Spike accuracy remains unproven.</p>
         </details>
       </div>
     </section>

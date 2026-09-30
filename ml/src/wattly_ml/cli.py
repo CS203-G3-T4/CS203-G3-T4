@@ -38,6 +38,9 @@ def main(argv=None):
     s = sub.add_parser("compare-models",help="Fixed offline candidates; validation selection and separate already-seen test diagnostics")
     s.add_argument("dataset",type=Path); s.add_argument("--reference",type=Path,required=True)
     s.add_argument("--output",type=Path,required=True)
+    s = sub.add_parser("study-demo",help="Export saved accuracy-study predictions for an unapproved presentation")
+    s.add_argument("study",type=Path); s.add_argument("--reference",type=Path,required=True)
+    s.add_argument("--output",type=Path,required=True)
     for name in ("backtest","train","evaluate","weekly"):
         s = sub.add_parser(name); s.add_argument("dataset",type=Path)
         s.add_argument("--start",type=instant,required=True); s.add_argument("--end",type=instant,required=True)
@@ -66,6 +69,9 @@ def main(argv=None):
             result = compare(args.dataset,args.reference,args.output)
             print(json.dumps({'status':result['status'],'output':str(args.output),
                               'selectedMethod':result['selection']['selectedMethod']},indent=2)); return 0
+        if args.command=="study-demo":
+            from .experiments import presentation
+            print(json.dumps(presentation(args.study,args.reference,args.output),indent=2)); return 0
         if args.command=="decisions":
             from .decisions import compare
             write_json(args.output,compare(json.loads(args.cases.read_text()))); return 0
