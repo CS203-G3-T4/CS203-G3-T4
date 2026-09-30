@@ -7,12 +7,15 @@ import static org.mockito.Mockito.*;
 
 class MarketIngestionSchedulerTest {
     @Test
-    void pollsBothAtStartupAndOnSchedule() {
+    void pollsBothAtStartupAndKeepsPriceAndWeatherSchedulesSeparate() {
         var market = mock(MarketIngestionService.class);
         var weather = mock(WeatherIngestionService.class);
         var scheduler = new MarketIngestionScheduler(market, weather);
         scheduler.pollAtStartup();
         scheduler.pollOnSchedule();
+        verify(market, times(2)).poll();
+        verify(weather).poll();
+        scheduler.pollWeatherOnSchedule();
         verify(market, times(2)).poll();
         verify(weather, times(2)).poll();
     }
@@ -22,7 +25,7 @@ class MarketIngestionSchedulerTest {
         var market = mock(MarketIngestionService.class);
         var weather = mock(WeatherIngestionService.class);
         doThrow(new IllegalStateException("database unavailable")).when(market).poll();
-        assertThatThrownBy(() -> new MarketIngestionScheduler(market, weather).pollOnSchedule())
+        assertThatThrownBy(() -> new MarketIngestionScheduler(market, weather).pollAtStartup())
                 .isInstanceOf(IllegalStateException.class);
         verify(weather).poll();
     }
