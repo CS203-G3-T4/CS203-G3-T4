@@ -22,6 +22,23 @@ The default PostgreSQL connection is `jdbc:postgresql://localhost:55432/energy_m
 
 The application applies the Flyway migration automatically. The source URL can be overridden with `USEP_FEED_URL`. Set `USEP_POLLING_ENABLED=false` to disable the startup and scheduled polls, such as when running against a prepared test database.
 
+## Run an already restored team dataset
+
+Copy `.env.team-demo.example` to `.env.team-demo`, set `DB_URL` to the restored
+database and `WATTLY_TEAM_BUNDLE` to the extracted bundle directory, then run
+`./scripts/run-team-demo.sh`. The script loads the local settings, builds the jar,
+and serves the saved chart at `/forecast-demo.html`. The database must already be
+running and restored; this command does not restore the dump.
+
+The imported dump, chart, and reports are local dataset artifacts and are ignored
+by Git. Share the original bundle separately. PostgreSQL holds the restored history;
+the `.dump` file is its backup and `public/forecast-demo.json` supplies the dated chart.
+Keep `.env.team-demo` local because it contains database credentials.
+Once the database is restored, the dump and restore-verification files can be kept
+outside this repository as backups. They are not needed to run the app. Keep
+`src/main/resources/db/migration/`: Flyway uses those versioned files to validate
+the existing schema and initialize new databases.
+
 ## API
 
 - `GET /api/v1/market-prices/latest` returns the latest stored price and `LIVE` or `STALE` freshness.
@@ -149,10 +166,20 @@ ADMIN servlet role; this repository has no login integration yet.
 
 ## F4: recommendations
 
-The dashboard's "Suggested times" card suggests the cheapest start for each flexible
+The dashboard's "Suggested times" card and `/recommendations.html` page suggest the cheapest start for each flexible
 appliance (CSDT4-19) and lets the resident accept, pick their own time, or dismiss (CSDT4-20).
 Nothing runs automatically. Migration V10 adds `recommendation` and `recommendation_event`.
 
 By default suggestions use a **demo forecast**: the real prices of the 26 Sep 2026 replay day,
 labelled as a demo. Set `RECOMMENDATION_FORECAST_SOURCE=f3` to use F3's forecast once it is
 actionable. Why, and what's needed first: [docs/f4-recommendations.md](docs/f4-recommendations.md).
+
+## Spending and budget
+
+`/spending.html` shows this month's modelled daily energy use and estimated spending.
+`GET /api/v1/households/{id}/budget` returns the current month, daily estimates, and
+the projected total. `PUT` to the same path saves `monthlyBudgetSgd` and
+`planningRateCentsPerKwh`; migration V11 stores these per household. Fixed-rate plans
+use the rate in Household Settings. Price-linked plans need a resident-entered planning
+rate before spending can be estimated. Amounts exclude taxes and fixed fees. These
+figures use F2's load model, not meter readings or a live retail bill.
