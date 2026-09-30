@@ -40,7 +40,7 @@
       document.getElementById('price-updated').textContent = '—';
       document.getElementById('interval-start').textContent = '—';
       setStatus(status, result.status === 503 ? 'Unavailable' : 'Could not load', 'unavailable');
-      return;
+      return false;
     }
 
     const data = result.data;
@@ -53,6 +53,7 @@
     document.getElementById('interval-start').textContent = formatTime(price.intervalStart);
     setStatus(status, data.stale ? 'Stale market data' : 'Live market data', data.stale ? 'stale' : '');
     staleBanner.hidden = !data.stale;
+    return data;
   }
 
   async function loadWeather() {
@@ -65,7 +66,7 @@
       document.getElementById('weather-low').textContent = '—';
       document.getElementById('weather-description').textContent = "Today's forecast is not available.";
       setStatus(status, result.ok ? 'Unavailable' : 'Could not load', 'unavailable');
-      return;
+      return false;
     }
 
     const data = result.data;
@@ -86,10 +87,30 @@
 
   async function refresh() {
     const button = document.getElementById('refresh-button');
+    if (button.disabled) return;
+    const feedback = document.getElementById('last-refreshed');
     button.disabled = true;
-    await Promise.all([loadPrice(), loadWeather(), WattlyRecommendations.load()]);
-    document.getElementById('last-refreshed').textContent = 'Checked ' + dateTime.format(new Date());
-    button.disabled = false;
+    button.setAttribute('aria-busy', 'true');
+    feedback.textContent = 'Refreshing dashboard…';
+    try {
+      const results = await Promise.allSettled([loadPrice(), loadWeather(), WattlyRecommendations.load()]);
+      const checked = new Intl.DateTimeFormat('en-SG', {
+        timeZone: 'Asia/Singapore', hour: '2-digit', minute: '2-digit', second: '2-digit'
+      }).format(new Date());
+      const price = results[0].value;
+      if (results.some(result => result.status === 'rejected' || result.value === false)) {
+        feedback.textContent = 'Checked at ' + checked + '. Some data could not be refreshed. Please try again.';
+      } else {
+        feedback.textContent = 'Checked at ' + checked + '. ' +
+          (price && price.stale
+            ? 'Latest stored price is still stale (source updated ' + formatTime(price.marketPrice.sourceUpdatedAt) +
+              '). The server checks the price feed every 5 minutes.'
+            : 'Dashboard data reloaded.');
+      }
+    } finally {
+      button.disabled = false;
+      button.removeAttribute('aria-busy');
+    }
   }
 
   async function loadHousehold() {
