@@ -12,7 +12,8 @@ market:
   feed:
     url: ${USEP_FEED_URL:https://nems.sn.sg/api/status.json}
     enabled: ${USEP_POLLING_ENABLED:true}
-    cron: ${USEP_POLL_CRON:0 2,32 * * * *}
+    # Retry regularly: NEMS can publish a new half-hour price after the :02/:32 poll.
+    cron: ${USEP_POLL_CRON:0 */5 * * * *}
     connect-timeout: 3s
     read-timeout: 5s
     stale-after: 40m
@@ -26,6 +27,7 @@ management:
 weather:
   feed:
     url: ${NEA_FEED_URL:https://api-open.data.gov.sg/v2/real-time/api/two-hr-forecast}
+    cron: ${NEA_POLL_CRON:0 2,32 * * * *}
   daily:
     url: ${NEA_DAILY_FEED_URL:https://api-open.data.gov.sg/v2/real-time/api/twenty-four-hr-forecast}
     enabled: ${NEA_DAILY_POLLING_ENABLED:${USEP_POLLING_ENABLED:true}}

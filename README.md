@@ -2,8 +2,9 @@
 
 This Spring Boot service stores half-hourly Uniform Singapore Energy Price (USEP)
 observations and Singapore two-hour weather forecasts in PostgreSQL. It polls the
-[NEMS API](https://nems.sn.sg/) and NEA when the application starts and at 02 and 32
-minutes past each hour in Singapore time. NEMS is an unofficial public service.
+[NEMS API](https://nems.sn.sg/) and NEA when the application starts. NEMS is checked
+every five minutes and the two-hour NEA feed at 02 and 32 minutes past each hour in
+Singapore time. NEMS is an unofficial public service.
 Each feed retains its saved history when an upstream fails. No CSV files are written.
 
 USEP is expressed in **SGD/MWh**. It is a wholesale market signal, not a complete household electricity tariff or bill rate.
@@ -46,8 +47,10 @@ payload, with first collection and last seen timestamps) and `weather_observatio
 (one NEA issue/update pair, with its full forecast item). Existing `market_price`,
 API endpoints, and NEMS ingestion status continue to operate.
 
-The existing scheduler calls both feeds at startup and at :02/:32 Singapore time.
-`USEP_POLL_CRON` overrides the shared schedule; `USEP_POLLING_ENABLED=false`
+The scheduler calls both feeds at startup. It then checks NEMS every five minutes,
+so a price published just after a half-hour boundary is picked up on the next retry.
+The two-hour NEA feed is still polled at :02/:32 Singapore time.
+`USEP_POLL_CRON` and `NEA_POLL_CRON` override their respective schedules; `USEP_POLLING_ENABLED=false`
 disables NEMS and both weather collectors by default (the daily collector can be enabled separately). `NEA_FEED_URL` overrides the default official endpoint:
 https://api-open.data.gov.sg/v2/real-time/api/two-hr-forecast
 Both clients use the existing bounded connection/read timeouts. Each feed is saved
