@@ -50,3 +50,19 @@ ml/dist/
 /ml/datasets/
 /ml/models/
 /ml/reports/
+
+# Imported local presentation bundle (shared separately from the source code).
+.env.team-demo
+/README copy.md
+/SHA256SUMS
+/expected-data.tsv
+/manifest.json
+/restore-verification.json
+/restored-data.tsv
+/verify.sql
+/wattly-f3.dump
+/public/forecast-demo.json
+/reports/accuracy-study-2026-09-29.json
+/reports/accuracy-study-2026-09-29.md
+/reports/accuracy-study-horizons-2026-09-29.csv
+/reports/presentation-results-2026-09-29.json
