@@ -146,10 +146,20 @@ ADMIN servlet role; this repository has no login integration yet.
 
 ## F4: recommendations
 
-The dashboard's "Suggested times" card suggests the cheapest start for each flexible
+The dashboard's "Suggested times" card and `/recommendations.html` page suggest the cheapest start for each flexible
 appliance (CSDT4-19) and lets the resident accept, pick their own time, or dismiss (CSDT4-20).
 Nothing runs automatically. Migration V10 adds `recommendation` and `recommendation_event`.
 
 By default suggestions use a **demo forecast**: the real prices of the 26 Sep 2026 replay day,
 labelled as a demo. Set `RECOMMENDATION_FORECAST_SOURCE=f3` to use F3's forecast once it is
 actionable. Why, and what's needed first: [docs/f4-recommendations.md](docs/f4-recommendations.md).
+
+## Spending and budget
+
+`/spending.html` shows this month's modelled daily energy use and estimated spending.
+`GET /api/v1/households/{id}/budget` returns the current month, daily estimates, and
+the projected total. `PUT` to the same path saves `monthlyBudgetSgd` and
+`planningRateCentsPerKwh`; migration V11 stores these per household. Fixed-rate plans
+use the rate in Household Settings. Price-linked plans need a resident-entered planning
+rate before spending can be estimated. Amounts exclude taxes and fixed fees. These
+figures use F2's load model, not meter readings or a live retail bill.
