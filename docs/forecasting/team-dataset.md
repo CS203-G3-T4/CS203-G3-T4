@@ -64,6 +64,16 @@ actuals, AI/B1/B2 predictions and evaluation metrics. These are explicitly dated
 experimental results, not live AI predictions. The archive preserves the original
 presentation experiment; the newer accuracy study is included as separate reports.
 
+After pulling the updated F3 code and rebuilding the jar, the page defaults to the
+latest HGB_MAE candidate: **224.41** diagnostic MAE versus B1's **234.31**. Its
+matching predictions and accuracy-study table are packaged in the application as
+`forecast-demo-latest.json`. Validation MAE is **369.88**; the original model's is
+**405.24**, and the training median wins overall at **332.44**. September 28 is
+already-seen diagnostic evidence, not an unseen accuracy confirmation. Use the
+experiment selector to show the preserved original model at **273.55** MAE.
+The existing archive and database restore can be reused; only the application
+needs rebuilding/restarting. The new results do not approve live AI serving.
+
 The live panel uses the restored history, the application's normal startup poll
 and subsequent half-hour polls. An absent/unapproved Python model selects an
 eligible Java baseline. Freshness and approval guards remain active. A snapshot
