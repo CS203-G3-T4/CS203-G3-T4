@@ -74,6 +74,11 @@ const WattlyRecommendations = {};
     const badge = document.getElementById('recommendation-source');
     badge.hidden = !data.demoForecast;
     const recs = data.recommendations || [];
+    const count = document.getElementById('recommendation-count');
+    const savings = document.getElementById('recommendation-savings');
+    if (count) count.textContent = String(recs.length);
+    if (savings) savings.textContent = WattlyRecommendations.money(
+      recs.reduce(function (sum, rec) { return sum + Number(rec.estSavingSgd || 0); }, 0));
     if (data.demoForecast) {
       note.textContent = 'Suggestions use a demo forecast (a replay of past prices), not a live prediction.';
     } else if (data.message) {
@@ -109,6 +114,11 @@ const WattlyRecommendations = {};
     status.className = 'rec-status done';
     item.classList.add('decided');
     item.querySelector('.rec-actions').remove();
+    const count = document.getElementById('recommendation-count');
+    const savings = document.getElementById('recommendation-savings');
+    if (count) count.textContent = String(Math.max(0, Number(count.textContent) - 1));
+    if (savings) savings.textContent = WattlyRecommendations.money(
+      Math.max(0, Number(savings.textContent.replace(/[^0-9.-]/g, '')) - Number(result.data.estSavingSgd || 0)));
     Wattly.toast(result.data.status === 'ACCEPTED' ? 'Suggestion accepted' : 'Suggestion dismissed');
   }
 
@@ -119,6 +129,10 @@ const WattlyRecommendations = {};
       '/recommendations/generate');
     if (!result.ok) {
       document.getElementById('recommendation-list').innerHTML = '';
+      const count = document.getElementById('recommendation-count');
+      const savings = document.getElementById('recommendation-savings');
+      if (count) count.textContent = '—';
+      if (savings) savings.textContent = '—';
       note.textContent = (result.data && result.data.detail) || 'Could not load suggestions.';
       return;
     }
