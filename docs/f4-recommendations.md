@@ -99,7 +99,7 @@ Both tables cascade when a household or appliance is deleted (CSDT4-62).
 
 - Scheduled generation (it currently runs when the dashboard loads), ranking across appliances
   and household guards (CSDT4-37).
-- Richer explanations (CSDT4-39) and the Recommendations page (CSDT4-40).
+- Richer explanations (CSDT4-39).
 - Realised savings from actual prices (CSDT4-53), and feeding accepted runs into F2's load
   profile.
 - Login: accept/dismiss are open to anyone until CSDT4-23.
