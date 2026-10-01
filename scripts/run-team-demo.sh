@@ -13,7 +13,7 @@ source "$config_file"
 set +a
 : "${DB_URL:?Set DB_URL in .env.team-demo to the restored database}"
 : "${DB_USER:?Set DB_USER in .env.team-demo}"
-: "${WATTLY_TEAM_BUNDLE:?Set WATTLY_TEAM_BUNDLE in .env.team-demo}"
+WATTLY_TEAM_BUNDLE=${WATTLY_TEAM_BUNDLE:-$repo_dir}
 bundle_dir=$(cd -- "$WATTLY_TEAM_BUNDLE" && pwd)
 if [[ ! -f "$bundle_dir/public/forecast-demo.json" ]]; then
   echo "Missing saved chart: $bundle_dir/public/forecast-demo.json" >&2

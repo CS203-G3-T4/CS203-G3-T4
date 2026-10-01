@@ -76,6 +76,13 @@ test('saved endpoint response renders 24 rows, provenance, stale, empty and outa
   await vm.runInContext('WattlyForecast.refresh()', context);
   assert.equal(nodes['forecast-points'].children.length, 0);
   assert.equal(nodes['forecast-table'].hidden, true);
+  assert.match(nodes['forecast-status'].textContent, /six consecutive half-hour/);
+  view = { available: false, reason: 'STALE_INPUT' };
+  await vm.runInContext('WattlyForecast.refresh()', context);
+  assert.match(nodes['forecast-status'].textContent, /upstream price is too old/);
+  view = { available: false, reason: 'PERIOD_MAPPING_UNVERIFIED' };
+  await vm.runInContext('WattlyForecast.refresh()', context);
+  assert.match(nodes['forecast-status'].textContent, /alignment needs verification/);
   context.Wattly.api = async () => ({ ok: false });
   await vm.runInContext('WattlyForecast.refresh()', context);
   assert.match(nodes['forecast-status'].textContent, /Cannot load/);
