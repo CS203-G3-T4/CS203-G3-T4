@@ -8,7 +8,13 @@ WattlyForecast.render = function (view, assessment) {
   body.replaceChildren();
   document.getElementById('forecast-table').hidden = !view.available;
   if (!view.available) {
-    status.textContent = 'Forecast unavailable. More recent, continuous price history is needed.';
+    const messages = {
+      STALE_INPUT: 'Forecast unavailable. The latest upstream price is too old; waiting for fresh data.',
+      INSUFFICIENT_HISTORY: 'Forecast unavailable. Waiting for six consecutive half-hour prices (three hours of history).',
+      PERIOD_MAPPING_UNVERIFIED: 'Forecast unavailable. Market interval alignment needs verification.',
+      NO_SAVED_FORECAST: 'Forecast unavailable. Waiting for the first forecast run.'
+    };
+    status.textContent = messages[view.reason] || 'Forecast unavailable. Check the feed and forecast status.';
     metadata.textContent = view.reason ? view.reason.replaceAll('_', ' ').toLowerCase() : '';
   } else {
     const run = view.run;

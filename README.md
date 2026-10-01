@@ -183,3 +183,19 @@ the projected total. `PUT` to the same path saves `monthlyBudgetSgd` and
 use the rate in Household Settings. Price-linked plans need a resident-entered planning
 rate before spending can be estimated. Amounts exclude taxes and fixed fees. These
 figures use F2's load model, not meter readings or a live retail bill.
+
+### Live forecast recovery
+
+Use `./scripts/run-team-demo.sh` to load `.env.team-demo` and the verified period
+mapping. A plain `./mvnw spring-boot:run` does not load that file and may connect
+to the small default database instead. An empty `WATTLY_TEAM_BUNDLE` uses the
+repository root for the saved chart.
+
+Check `/api/v1/market-prices/feed-status`, `/api/v1/prices/current`, and
+`/api/v1/forecast/latest` separately. A successful poll with a fresh price does
+not guarantee sufficient forecast history. B1 requires six consecutive recent
+half-hour periods; missing periods must arrive through continuous collection or
+a verified historical import. B2 requires all 24 target slots from yesterday.
+Keep polling enabled while history accumulates. Python is optional for Java
+baselines; an offline Python service cannot supply AI predictions. Stale inputs
+still block forecasts. The saved demo chart is separate from live predictions.
