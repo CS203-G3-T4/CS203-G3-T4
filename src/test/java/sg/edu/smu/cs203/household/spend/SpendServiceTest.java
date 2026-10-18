@@ -110,6 +110,23 @@ class SpendServiceTest {
         assertThat(spend.totalSgd()).isEqualByComparingTo("0.00");
     }
 
+    @Test
+    void dailySpendWorksOutEachDayTheSameWayIncludingLastMonthsDays() {
+        // 2 Oct at 01:00: 30 Sep and 1 Oct are full days (48 half-hours), 2 Oct has 2 so far.
+        Instant now = sg("2026-10-02T01:00");
+        when(households.get(1L)).thenReturn(household(PlanType.FIXED, new BigDecimal("30")));
+        when(loads.profile(eq(1L), any())).thenAnswer(call -> day(call.getArgument(1), "0.5"));
+
+        var days = service(now).dailySpend(1L, LocalDate.of(2026, 9, 30));
+
+        assertThat(days.keySet()).containsExactly(LocalDate.of(2026, 9, 30), LocalDate.of(2026, 10, 1),
+                LocalDate.of(2026, 10, 2));
+        // 48 x 0.5 kWh x 30 cents = S$7.20 for a full day; 2 x 0.5 x 0.30 = S$0.30 so far today.
+        assertThat(days.get(LocalDate.of(2026, 9, 30)).totalSgd()).isEqualByComparingTo("7.20");
+        assertThat(days.get(LocalDate.of(2026, 10, 2)).totalSgd()).isEqualByComparingTo("0.30");
+        assertThat(days.get(LocalDate.of(2026, 10, 2)).halfHoursSoFar()).isEqualTo(2);
+    }
+
     private SpendService service(Instant now) {
         return new SpendService(households, loads, prices, tariffs, Clock.fixed(now, SINGAPORE));
     }

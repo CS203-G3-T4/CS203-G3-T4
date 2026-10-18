@@ -1,4 +1,4 @@
-# Month-to-date spend (CSDT4-41)
+# Month-to-date spend and budget projection (CSDT4-41, CSDT4-42)
 
 "How much have I spent on electricity so far this month?" on the Spending & Budget page
 ("Spent so far this month"), from `GET /api/v1/households/{id}/spend/month-to-date`.
@@ -57,7 +57,40 @@ at 300 SGD/MWh, 07:30 0.4 kWh with no price (skipped).
 | GST 9% | | 0.0444916 |
 | **Total** | | **0.5388433 → S$0.54** |
 
-## Notes for the Spending page
+## Budget projection and over-budget alert (CSDT4-42)
 
-"Spent so far" and its breakdown come from this endpoint (`static/js/spend.js`). The projection,
-daily chart and budget comparison are still the planning-rate estimate from `BudgetService`.
+One shared projection, `GET /api/v1/households/{id}/budget-status` (`BudgetStatusService`), used by
+both the Dashboard and the Spending page so they always show the same figures:
+
+    projected = spent so far + average daily spend over the last 7 full days × days left
+
+- **Spent so far** is the month-to-date figure above.
+- **Last 7 full days** are the 7 days before today (Singapore time), so in the first week of a
+  month they include last month's days. Each day is worked out exactly like "spent so far"
+  (`SpendService.dailySpend`). A day with any half-hour missing a price is left out of the average
+  (`daysInAverage` says how many counted); with none left, there is no projection and `message`
+  says why.
+- **Days left** is the time from now to the end of the month, in days (e.g. 21.5 at noon on the
+  10th of a 31-day month).
+- **Alert** is shown when the projection is over the monthly budget and alerts are on.
+
+`PUT /api/v1/households/{id}/budget` saves `monthlyBudgetSgd` and `alertsEnabled` (V17
+`household_budget.alerts_enabled`, on by default; leaving it out keeps the saved choice). The
+planning rate is still accepted but the pages no longer use it, so its box was removed.
+
+Pages (`static/js/budget-status.js` formats the figures and banner for both):
+
+- **Spending page:** the over-budget banner; "Projected this month" with how it was worked out
+  ("S$5.00/day over the last 7 days × 21.5 days left"); the budget box ("Projected S$7.50 over");
+  a daily chart of actual spend so far, then the 7-day average for the remaining days; and the
+  budget form with a "Warn me…" checkbox.
+- **Dashboard:** the same banner, and one line with the same figures ("This month: S$50.00 spent
+  so far · projected S$157.50 · budget S$150.00").
+
+Worked example (`BudgetStatusServiceTest`, fixed Clock at noon on 10 Oct 2026): S$50.00 spent so
+far; 3-9 Oct cost 4+4+5+5+6+6+5 = S$35, an average of S$5.00/day; 21.5 days left; projection
+50 + 5 × 21.5 = **S$157.50**. Against a S$150 budget that is S$7.50 over, so the banner shows if
+alerts are on.
+
+`GET /api/v1/households/{id}/budget` (the earlier planning-rate estimate) is unchanged for
+compatibility; the pages use `budget-status` instead.
