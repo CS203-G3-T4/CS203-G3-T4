@@ -45,7 +45,7 @@ October 3 has 24 eligible origins; October 5 has 19. Each origin contributes 24 
 | HGB_REGULARISED | 131.98 | 143.99 | 187.23 |
 | MEDIAN | 135.82 | 159.79 | 180.29 |
 
-AR error increases from **162.61** at horizons 1–6 to **235.54** at horizons 13–24. This is consistent with the risk of feeding prediction errors into later predictions. Full per-horizon MAEs and true pair counts are in [the CSV](time-series-horizons-2026-10-06.csv).
+AR error increases from **162.61** at horizons 1–6 to **235.54** at horizons 13–24. This is consistent with the risk of feeding prediction errors into later predictions. Full per-horizon MAEs and true pair counts are in [the CSV](artifacts.md#retrieval).
 
 On 2,841 ordinary pairs, AR MAE is **189.22**, worse than existing HGB **161.12**. On the 97 training-defined high-tail pairs (nine distinct targets), AR scores **804.20**, better than HGB **933.12** and regularised HGB **953.01**. These sparse high-tail results do not overcome the ordinary-period losses and do not establish spike prediction quality. Tail thresholds are each fold’s training-only 95th percentile, not configured spike labels.
 
@@ -53,7 +53,7 @@ Configured spike evaluation has **zero assessed pairs and zero labelled positive
 
 ## Saved comparison view
 
-Open [the standalone comparison](time-series-comparison-2026-10-06.html) in a browser. It works from a local file without a server, external scripts or the live app. Select any of the **43 eligible diagnostic origins** to compare actual prices, selected AR(6), existing HGB, regularised HGB, median and B1. The highlighted window shows one origin; the evaluation table covers all eligible origins. All 1,032 origin/target chart points match the saved diagnostic records. Default selection is the earliest eligible origin on the latest complete diagnostic date, not the origin with the smallest error.
+Open [the standalone comparison](artifacts.md#retrieval) in a browser. It works from a local file without a server, external scripts or the live app. Select any of the **43 eligible diagnostic origins** to compare actual prices, selected AR(6), existing HGB, regularised HGB, median and B1. The highlighted window shows one origin; the evaluation table covers all eligible origins. All 1,032 origin/target chart points match the saved diagnostic records. Default selection is the earliest eligible origin on the latest complete diagnostic date, not the origin with the smallest error.
 
 The actual application frontend was not changed. This view does not serve a promoted model, override stale-data or actionable-recommendation guards, expose an admin route, or contact the collector. No current-model registry pointer was written.
 
@@ -76,8 +76,8 @@ All fitted candidates, sample timestamps, predictions, exclusions and diagnostic
 ## Verification
 
 - **Three new tests passed** in 9.08 seconds, with one existing Starlette/AnyIO deprecation warning. They cover recursive timestamp alignment, unpublished-interval bridging, negative prices, missing lags, future prices, late training revisions, training-only scaling, chronological selection before diagnostics, matching pairs, saved-HGB reuse without fitting, immutable output and changed-artifact rejection. Synthetic fixtures are used only for software checks.
-- Independent verification reconstructs ridge coefficients using the closed-form equations, training scalers, **13,299 saved AR forecasts**, exact target alignment, provisional truth availability, and overall/daily/per-horizon MAEs. Every prior reference file checksum remains unchanged. See [audit](time-series-verification-2026-10-06.json).
-- Standalone JavaScript syntax and DOM/data checks passed for all 43 origin selections: 24 points, six series, finite chart coordinates, accessible title and matching displayed MAE. This is structural verification, not a browser-layout or screenshot claim. See [view checks](time-series-view-verification-2026-10-06.json).
+- Independent verification reconstructs ridge coefficients using the closed-form equations, training scalers, **13,299 saved AR forecasts**, exact target alignment, provisional truth availability, and overall/daily/per-horizon MAEs. Every prior reference file checksum remains unchanged. See [audit](artifacts.md#retrieval).
+- Standalone JavaScript syntax and DOM/data checks passed for all 43 origin selections: 24 points, six series, finite chart coordinates, accessible title and matching displayed MAE. This is structural verification, not a browser-layout or screenshot claim. See [view checks](artifacts.md#retrieval).
 - `git diff --check` passed. No production/shared serving code changed; the existing full ML suite was not rerun in this experiment. Focused logs/XML are `wattly-f3-research/time-series-tests-final-2026-10-06.*`. The initial incomplete synthetic reference fixture failure is retained separately.
 
 **Interpretation:** this simple trained time-series model is a useful comparison, but it does not beat the current HGB benchmark overall. It provides no evidence about an untested pretrained Chronos/TimesFM model. More verified historical data and a separate untouched evaluation are still needed before any promotion claim.

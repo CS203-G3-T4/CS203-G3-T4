@@ -20,7 +20,8 @@ python -m pip install -r ml/requirements.lock
 python -m pip install --no-deps --no-build-isolation -e ml
 cp .env.example .env
 # Configure DB_URL/DB_USER/DB_PASSWORD and persistent WATTLY_ML_HOME in .env.
-# Add private WATTLY_ADMIN_USER and WATTLY_ADMIN_PASSWORD; no defaults exist.
+# Optional local/demo admin: explicitly enable WATTLY_FORECAST_LOCAL_ADMIN_ENABLED
+# and add private WATTLY_ADMIN_USER/WATTLY_ADMIN_PASSWORD; no defaults exist.
 chmod 600 .env
 set -a; . ./.env; set +a
 docker compose up -d postgres
@@ -38,10 +39,11 @@ unranked baseline, or unavailable when contiguous history is insufficient.
 Never edit a research manifest to bypass approval.
 
 Resident: `http://localhost:8080/forecast.html`. Admin:
-`http://localhost:8080/admin-forecast.html`; the browser requests Basic credentials.
-Server-side ADMIN authorization protects the page and APIs. Keep local Basic auth
-on loopback or behind HTTPS; configure secrets outside source. Existing trusted
-servlet ADMIN principals remain accepted. Public requests cannot acquire that role.
+`http://localhost:8080/admin-forecast.html`; the browser requests Basic credentials
+only when the local/demo fallback is explicitly enabled. Server-side ADMIN checks
+protect the page and APIs. Keep local demos on loopback; production uses shared
+authentication with the fallback disabled. Existing trusted ADMIN principals pass;
+an authenticated non-admin cannot be elevated by a Basic header.
 
 Price ingestion triggers the coalescing forecast worker after persistence. Import
 and first-success/recovery notifications also trigger it when a revision was already
@@ -256,13 +258,40 @@ saved history/ranking, exercises actual resident/admin pages in Chromium, perfor
 F2/F4 replay, fires an ephemeral native timer and stops only its own processes.
 `--application-only` reruns Java plus focused Python acceptance checks before the
 application proof; it skips the full Python/frontend suites, whose earlier results
-must be supplied separately. Browser prerequisites are pinned Playwright1.64.1
+must be supplied separately. Browser prerequisites for the October19 verification are pinned Playwright1.58.2
 and its Chromium installed outside source. No live DB is used. Credentials in proof
 `private-*.env` files are mode600 and excluded from delivery.
 
 V1–V9 remain unchanged; V10 is the original F4 recommendations migration from its
-cached branch; V11 is main’s unchanged household-budget migration; V12 adds operation/ranking/demand/audit support. Both fresh
+cached branch; V11 is main’s unchanged household-budget migration; V12 is main's recommendation refresh; V13 adds operation/ranking/demand/audit support. Both fresh
 migrations and PostgreSQL persistence are covered by the isolated proof. To roll
 back code, stop Spring normally and retain expanded tables; never edit applied
 migration checksums or delete saved predictions. The source/evidence delivery
-includes untracked October modules/tests, without staging or committing them.
+includes the October modules/tests. See [V13 compatibility](migration-v13.md) before upgrading an existing database.
+
+## Review correction: local auth, artifacts and recovery
+
+Forecasting's local Basic fallback now requires `WATTLY_FORECAST_LOCAL_ADMIN_ENABLED=true`
+**on Spring**, plus private `WATTLY_ADMIN_USER`/`WATTLY_ADMIN_PASSWORD`. Merely
+setting credentials no longer enables it. Disable the flag with shared auth;
+[the auth-owner decision](auth-owner-decision.md) lists exact routes and the
+remaining production machine-client/CSRF contract. Run local demos on loopback.
+
+[The artifact guide](artifacts.md) replaces tracked generated reports with a
+reproducible, verified archive. The default public demo is a small projection of
+real saved results, not a synthetic replacement or the latest live AI model.
+
+F1's `MarketObservationSaved` is a post-save availability notification: after
+canonical rows **and ingestion status** are persisted, a changed revision or the
+first successful poll after absent/non-success status can make saved/imported
+history usable. A successful duplicate recovery therefore notifies forecasting
+and main's recommendation worker once; successive successful unchanged polls do
+not. A listener failure cannot undo F1's saved data. The tests cover imported
+duplicate startup, failure recovery and repeated successful duplicates. This
+semantics is preserved for F1-owner review; no owner acknowledgement is asserted.
+
+The weekly path accepts an explicit aware `now` in Python tests. Its one captured
+scheduling instant defines the Singapore-midnight default validation end and UTC
+version timestamp; validation/training overrides remain explicit. `scheduledAt`
+is recorded separately from actual execution `trainingDate`/provenance timestamps.
+Historical replay origins/cutoffs and training-only transformations are unchanged.

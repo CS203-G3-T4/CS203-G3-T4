@@ -34,23 +34,17 @@ public class ForecastJob {
     private final ForecastService service;
     private final ObjectMapper mapper;
     private final Clock clock;
-    private ForecastOperationsRepository operations;
+    private final ForecastOperationsRepository operations;
     // ponytail: one coalescing worker per process; DB uniqueness handles retries across processes.
     private final ExecutorService worker=Executors.newSingleThreadExecutor(Thread.ofPlatform().name("forecast-worker").daemon().factory());
     private final AtomicBoolean running=new AtomicBoolean();
     private final AtomicBoolean pending=new AtomicBoolean();
 
     public ForecastJob(MarketHistoryRepository history,ForecastRepository repository,BaselineForecastService baselines,
-            CurrentAssessmentService assessments,PythonForecastClient python,ForecastService service,ObjectMapper mapper,Clock clock) {
-        this.history=history; this.repository=repository; this.baselines=baselines; this.assessments=assessments;
-        this.python=python; this.service=service; this.mapper=mapper; this.clock=clock;
-    }
-    @org.springframework.beans.factory.annotation.Autowired
-    public ForecastJob(MarketHistoryRepository history,ForecastRepository repository,BaselineForecastService baselines,
             CurrentAssessmentService assessments,PythonForecastClient python,ForecastService service,ObjectMapper mapper,Clock clock,
             ForecastOperationsRepository operations) {
-        this(history,repository,baselines,assessments,python,service,mapper,clock);
-        this.operations=operations;
+        this.history=history; this.repository=repository; this.baselines=baselines; this.assessments=assessments;
+        this.python=python; this.service=service; this.mapper=mapper; this.clock=clock; this.operations=operations;
     }
     @EventListener
     public void onObservation(MarketObservationSaved ignored) {
@@ -74,9 +68,9 @@ public class ForecastJob {
     public synchronized void runOnce() {
         Instant asOf=clock.instant();
         List<MarketRevision> rows=history.asOf(asOf);
-        var demand=operations==null ? List.<ForecastOperationsRepository.Demand>of() : operations.demand(asOf);
+        var demand=operations.demand(asOf);
         String snapshot=demand.isEmpty() ? mapper.writeValueAsString(rows) : mapper.writeValueAsString(Map.of("priceHistory",rows,"expectedDemand",demand));
-        var independentRanking=operations==null ? List.<String>of() : operations.ranking(asOf,service.mode());
+        var independentRanking=operations.ranking(asOf,service.mode());
         String input=hash(snapshot+(independentRanking.isEmpty()?"":"|validated-baselines:"+mapper.writeValueAsString(independentRanking)));
         String requestId=hash(service.mode()+"|"+BaselineForecastService.floor(asOf)+"|"+input);
         boolean stale=service.stale(rows,asOf);

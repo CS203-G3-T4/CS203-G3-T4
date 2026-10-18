@@ -20,6 +20,16 @@ const WattlyRecommendations = {};
     return '$' + Number(value).toFixed(2);
   };
 
+  WattlyRecommendations.listUrl = function (householdId) {
+    return '/api/v1/households/' + householdId + '/recommendations';
+  };
+
+  // "Updated 14:31" from the latest background recompute, or '' before the first one.
+  WattlyRecommendations.updatedText = function (refreshedAt) {
+    const time = WattlyRecommendations.localTime(refreshedAt);
+    return time ? ' Updated ' + Wattly.prettyTime(time) + '.' : '';
+  };
+
   // The request for a decision: accept, accept at the resident's own time, or dismiss.
   WattlyRecommendations.requestFor = function (id, action, startTime) {
     if (action === 'dismiss') {
@@ -92,6 +102,7 @@ const WattlyRecommendations = {};
     if (recs.length === 0 && data.demoForecast) {
       note.textContent += ' No cheaper times found right now.';
     }
+    note.textContent += WattlyRecommendations.updatedText(data.refreshedAt);
   }
 
   async function decide(item, action) {
@@ -125,8 +136,8 @@ const WattlyRecommendations = {};
   // Re-checks the forecast (safe to repeat) and shows the open suggestions.
   WattlyRecommendations.load = async function () {
     const note = document.getElementById('recommendation-note');
-    const result = await Wattly.api('POST', '/api/v1/households/' + Wattly.householdId() +
-      '/recommendations/generate');
+    // Reads only: suggestions are recomputed in the background, not on page load (CSDT4-37).
+    const result = await Wattly.api('GET', WattlyRecommendations.listUrl(Wattly.householdId()));
     if (!result.ok) {
       document.getElementById('recommendation-list').innerHTML = '';
       const count = document.getElementById('recommendation-count');

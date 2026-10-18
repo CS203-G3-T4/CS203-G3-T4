@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.Principal;
 import java.util.Base64;
+import java.util.Set;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,20 +13,28 @@ import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-/** Local admin access; disabled until credentials are provided outside source control. */
+/** Forecasting guard; optional Basic credentials are for explicitly enabled local demos only. */
 @Component
+@Order(Ordered.LOWEST_PRECEDENCE)
 public class ForecastAdminAuthentication extends OncePerRequestFilter {
+    private static final Set<String> ROUTES=Set.of("/admin-forecast.html",
+            "/api/v1/admin/forecast-accuracy", "/api/v1/admin/forecast-baseline-validation",
+            "/api/v1/admin/forecast-demand", "/api/v1/admin/forecast-training-attempts",
+            "/api/v1/admin/forecast-savings-replay");
     private final byte[] credentials;
     private final String username;
-    public ForecastAdminAuthentication(@Value("${forecast.admin.username:}") String username,
+    public ForecastAdminAuthentication(@Value("${forecast.admin.local-basic-enabled:false}") boolean localEnabled,
+            @Value("${forecast.admin.username:}") String username,
             @Value("${forecast.admin.password:}") String password) {
         this.username=username;
-        this.credentials=username.isBlank() || password.isBlank() ? null : (username+":"+password).getBytes(StandardCharsets.UTF_8);
+        this.credentials=!localEnabled || username.isBlank() || password.isBlank() ? null : (username+":"+password).getBytes(StandardCharsets.UTF_8);
     }
     @Override protected boolean shouldNotFilter(HttpServletRequest request) {
-        return !request.getRequestURI().startsWith("/api/v1/admin/") && !request.getRequestURI().equals("/admin-forecast.html");
+        return !ROUTES.contains(request.getRequestURI().substring(request.getContextPath().length()));
     }
     @Override protected void doFilterInternal(HttpServletRequest request,HttpServletResponse response,FilterChain chain)
             throws IOException,ServletException {
@@ -35,7 +44,12 @@ public class ForecastAdminAuthentication extends OncePerRequestFilter {
                     ((request.getServerPort()==80 || request.getServerPort()==443) ? "" : ":"+request.getServerPort());
             if (origin!=null && !origin.equals(own)) { response.sendError(403); return; }
         }
-        if (request.getUserPrincipal()!=null && request.isUserInRole("ADMIN")) { chain.doFilter(request,response); return; }
+        response.setHeader("Cache-Control","no-store");
+        if (request.getUserPrincipal()!=null) {
+            if (request.isUserInRole("ADMIN")) chain.doFilter(request,response);
+            else response.sendError(403);
+            return;
+        }
         byte[] supplied=new byte[0];
         String header=request.getHeader("Authorization");
         if (header!=null && header.startsWith("Basic ")) {
@@ -44,7 +58,7 @@ public class ForecastAdminAuthentication extends OncePerRequestFilter {
         if (credentials==null || !MessageDigest.isEqual(credentials,supplied)) {
             response.setHeader("Cache-Control","no-store");
             if (request.getRequestURI().endsWith(".html")) {
-                response.setHeader("WWW-Authenticate","Basic realm=\"Wattly admin\", charset=\"UTF-8\"");
+                if (credentials!=null) response.setHeader("WWW-Authenticate","Basic realm=\"Wattly local forecast admin\", charset=\"UTF-8\"");
                 response.sendError(401);
             } else response.sendError(403);
             return;

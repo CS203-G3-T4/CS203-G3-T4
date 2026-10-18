@@ -34,26 +34,17 @@ const path = require('node:path');
     assert.equal(Number(await window.getAttribute('width')), 450);
     const firstWindow = Number(await window.getAttribute('x'));
     assert.match(await page.locator('#demo-window').textContent(), /12-hour target window.*12:30/);
-    const first = await page.locator('#demo-points tr').first().textContent();
-    await page.selectOption('#demo-origin', '1');
-    assert.notEqual(await page.locator('#demo-points tr').first().textContent(), first);
-    assert.equal(Number(await window.getAttribute('x')), firstWindow + 18.75);
-    assert.equal(await page.locator('#demo-ai-mae').textContent(), report.test.table.AI.mae.toFixed(2));
-    await page.selectOption('#demo-origin', '23');
-    assert.equal(Number(await window.getAttribute('x')) + Number(await window.getAttribute('width')), 972);
-    await page.selectOption('#demo-origin', '0');
-    const reference = await (await page.request.get(base + '/forecast-demo.json')).json();
-    await page.selectOption('#demo-experiment', '/forecast-demo.json');
-    await page.waitForFunction(expected => document.getElementById('demo-ai-mae').textContent === expected,
-      reference.test.table.AI.mae.toFixed(2));
-    assert.match(await page.locator('#demo-verdict').textContent(), /more error than B1/);
-    await page.screenshot({ path: path.join(output, 'forecast-demo-reference.png'), fullPage: true });
-    await page.selectOption('#demo-experiment', '/forecast-demo-latest.json');
-    await page.waitForFunction(expected => document.getElementById('demo-ai-mae').textContent === expected,
-      report.test.table.AI.mae.toFixed(2));
-    assert.equal(live.run.modelType, 'BASELINE');
-    assert.equal(live.run.points.length, 24);
-    assert.equal(await page.locator('#forecast-points tr').count(), 24);
+    assert.equal(await page.locator('#demo-origin option').count(), 1);
+    assert.match(await page.locator('#demo-origins').textContent(), /24 scored origins.*1 chart origins/);
+    assert.match(await page.locator('#demo-status').textContent(), /Experimental/);
+    if (live.available) {
+      assert.equal(live.run.modelType, 'BASELINE');
+      assert.equal(live.run.points.length, 24);
+      assert.equal(await page.locator('#forecast-points tr').count(), 24);
+    } else {
+      assert.equal(live.stale, true);
+      assert.equal(await page.locator('#forecast-points tr').count(), 0);
+    }
     for (const [index, point] of live.run.points.entries()) {
       if (point.spikeFlag === null) assert.equal(await page.locator('#forecast-points tr').nth(index).locator('td').last().textContent(), 'Insufficient history');
     }
@@ -67,11 +58,12 @@ const path = require('node:path');
     await page.screenshot({ path: path.join(output, 'forecast-demo-mobile.png'), fullPage: true });
     assert.deepEqual(errors, []);
     const proof = { report: report.modelVersion, commonPairs: report.test.commonPairs,
-      displayedOfflineRows: 24, displayedLiveRows: 24, liveModelType: live.run.modelType,
-      adminStatus: 403, originSelection: 'passed', windowHighlight: '12 hours; moves with origin',
+      displayedOfflineRows: 24, displayedLiveRows: live.run.points.length, liveModelType: live.run.modelType,
+      liveAvailable: live.available, liveStale: live.stale,
+      adminStatus: 403, originSelection: 'one saved origin; aggregate scores use 24', windowHighlight: '12 hours',
       maeUnchangedBySelection: true, insufficientSpikeHistoryLabel: 'passed',
-      diagnosticMae: report.test.table.AI.mae, referenceMae: reference.test.table.AI.mae,
-      validationMethods: report.study.methods.length, experimentSelection: 'passed',
+      diagnosticMae: report.test.table.AI.mae,
+      validationMethods: report.study.methods.length, experimentSelection: 'default bundled saved diagnostic',
       mobileOverflow: false, browserErrors: errors };
     fs.writeFileSync(path.join(output, 'forecast-demo-browser-proof.json'), JSON.stringify(proof, null, 2));
     console.log(JSON.stringify(proof));

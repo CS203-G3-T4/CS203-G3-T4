@@ -1,11 +1,13 @@
 package sg.edu.smu.cs203.recommendation;
 
+import java.time.Instant;
 import java.util.List;
 
 /**
- * A household's open suggestions, plus what the latest generate call used.
- * forecastSource/forecastModel are null when no forecast was used (listing only, fixed-rate
- * household, or no usable forecast); message then says why, in words the page can show.
+ * A household's open suggestions, best saving first (at most 3), plus the outcome of the latest
+ * background recompute. forecastSource/forecastModel are null when no forecast was used
+ * (fixed-rate household, no usable forecast, stale price feed); message then says why, in words
+ * the page can show. refreshedAt is null until the first recompute has run.
  */
 public record RecommendationsResponse(
         long householdId,
@@ -13,5 +15,6 @@ public record RecommendationsResponse(
         String forecastModel,
         boolean demoForecast,
         String message,
-        List<RecommendationResponse> recommendations) {
+        List<RecommendationResponse> recommendations,
+        Instant refreshedAt) {
 }

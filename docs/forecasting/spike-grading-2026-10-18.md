@@ -120,7 +120,7 @@ See the [improvement report](improvement-2026-10-18.md) for future snapshot and
 confirmation commands. Do not use the already-reported October 17 test outcomes
 to retune sensitivity or select another winner.
 
-Evidence: [full grade](evidence/2026-10-18-spike-grading/summary.json),
+Evidence: [full grade](artifacts.md#retrieval),
 [CSV scoreboard](evidence/2026-10-18-spike-grading/scoreboard.csv),
 [independent verification](evidence/2026-10-18-spike-grading/verification.json) and
 [test record](evidence/2026-10-18-spike-grading/tests.json).

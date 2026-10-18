@@ -9,7 +9,7 @@ the Java baseline. Production AI still requires a separately approved model.
 The snapshot was exported with PostgreSQL 16 from the separate demo instance.
 The repository's PostgreSQL 17 Compose service can restore it. Use the F3 branch
 `feature/CSDT4-AIForecaster&BaselineEvaluator`. Current integrated code retains the
-original migration checksums and adds V10–V12 on startup. Verify the original
+original migration checksums and adds V10–V13 on startup. Verify the original
 restore fingerprints before starting that code; additional tables afterward are
 expected. See [the current runbook](runbook.md) for migration
 compatibility, setup and the unapproved-model limits.
@@ -70,11 +70,11 @@ presentation experiment; the newer accuracy study is included as separate report
 
 After pulling the updated F3 code and rebuilding the jar, the page defaults to the
 latest HGB_MAE candidate: **224.41** diagnostic MAE versus B1's **234.31**. Its
-matching predictions and accuracy-study table are packaged in the application as
+one saved chart origin, aggregate metrics and accuracy-study table are packaged in the application as
 `forecast-demo-latest.json`. Validation MAE is **369.88**; the original model's is
 **405.24**, and the training median wins overall at **332.44**. September 28 is
 already-seen diagnostic evidence, not an unseen accuracy confirmation. Use the
-experiment selector to show the preserved original model at **273.55** MAE.
+optional experiment selector after restoring the separate bundle to show the preserved original model at **273.55** MAE.
 The existing archive and database restore can be reused; only the application
 needs rebuilding/restarting. The new results do not approve live AI serving.
 

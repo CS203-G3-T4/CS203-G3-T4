@@ -92,7 +92,7 @@ All primary held-out scores use **576 common pairs = 24 origins × 24 horizons**
 
 ## Error by forecast horizon
 
-Hours denote target start relative to the half-hour forecast origin. Each held-out horizon below has 24 common pairs. Full candidate and validation results are in [the horizon CSV](accuracy-study-horizons-2026-10-05.csv).
+Hours denote target start relative to the half-hour forecast origin. Each held-out horizon below has 24 common pairs. Full candidate and validation results are in [the horizon CSV](artifacts.md#retrieval).
 
 | Horizon | Hours | Retrained HGB | Frozen HGB | B1 | B2 | Training median |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -151,7 +151,7 @@ source scripts/forecast-period-mapping.env
   --output /home/bryan/CS203_T4/wattly-f3-research/NEW_RETRAINING_RUN
 ```
 
-Independent verification recalculated every primary and B3-subset MAE, checked target/truth agreement across methods, reconstructed provisional truth by publication/receipt cutoff, checked split boundaries, recalculated each CSV horizon count and confirmed selection/reference hashes are unchanged. See [verification summary](accuracy-study-verification-2026-10-05.json).
+Independent verification recalculated every primary and B3-subset MAE, checked target/truth agreement across methods, reconstructed provisional truth by publication/receipt cutoff, checked split boundaries, recalculated each CSV horizon count and confirmed selection/reference hashes are unchanged. See [verification summary](artifacts.md#retrieval).
 
 **Checks:** all **17 ML tests passed**, with one existing dependency deprecation warning. The new counterfactual test changes held-out prices and injects a late revision of a training period, then confirms every training matrix, target vector, validation score and selection rank is unchanged. The horizon-count regression test also passed after the final helper cleanup. The full test run required local socket access for the existing FastAPI checks; the restricted run was stopped after it stalled. Logs and JUnit XML are saved as `wattly-f3-research/retraining-tests-verified-2026-10-05.*` outside Git. `git diff --check` passed.
 

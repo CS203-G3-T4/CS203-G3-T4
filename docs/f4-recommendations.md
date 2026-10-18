@@ -51,8 +51,8 @@ made-up numbers, and the label keeps it from being presented as an AI prediction
 
 | Endpoint | What it does |
 | --- | --- |
-| `POST /api/v1/households/{id}/recommendations/generate` | Re-checks the forecast and saves a suggestion per flexible appliance where a cheaper start exists. Safe to repeat (the dashboard calls it on load and on Refresh). |
-| `GET /api/v1/households/{id}/recommendations` | Open (`ACTIVE`) suggestions without re-checking. |
+| `GET /api/v1/households/{id}/recommendations` | Open (`ACTIVE`) suggestions, best saving first, plus the latest background recompute's outcome. What the pages call. |
+| `POST /api/v1/households/{id}/recommendations/generate` | Recomputes one household now. Normally done in the background (CSDT4-37). Safe to repeat. |
 | `POST /api/v1/recommendations/{recId}/accept` | Accepts. Optional body `{"startTime": "15:10"}` is the resident's own start (Singapore `HH:mm`) inside the same window. |
 | `POST /api/v1/recommendations/{recId}/dismiss` | Dismisses. The same run is not suggested again. |
 
@@ -74,7 +74,7 @@ the other because of a per-household PostgreSQL advisory lock, so they can't bot
   must finish by `mustFinishBy`. A 60-minute dryer that must finish by 21:00 can start at 20:00
   at the latest, never 21:30 (`CheapestStartCalculatorTest`).
 - A suggestion is saved only if it saves at least `RECOMMENDATION_MINIMUM_SAVING_SGD` (default
-  $0.01). Ties keep the earlier start.
+  $0.05, CSDT4-37). Ties keep the earlier start.
 - If the forecast doesn't cover the whole usual run, nothing is compared. This can happen with
   F3's 12-hour horizon late in the day.
 
@@ -95,10 +95,36 @@ Statuses:
 
 Both tables cascade when a household or appliance is deleted (CSDT4-62).
 
+## Guards, ranking and background recompute (CSDT4-37)
+
+Every suggestion passes five guards in `RecommendationService.generate`:
+
+| Guard | Rule |
+| --- | --- |
+| Time window | The run must start and finish inside the appliance's window, including windows that cross midnight (`CheapestStartCalculator`, following F2's `TimeWindow`) |
+| Past start | Never a start before now |
+| Disabled appliance | Only enabled `FLEXIBLE` appliances are considered (`HouseholdDirectory.flexibleAppliances`); a switched-off appliance's open suggestion is closed |
+| Fixed-rate household | `exposedToWholesalePrice` must be true; switching to a fixed plan closes open suggestions |
+| Stale feed | While F1's price is `STALE` (or there is no price yet), no new suggestions from F3's forecast. The labelled demo forecast doesn't use the live feed, so it is only blocked when `RECOMMENDATION_STALE_FEED_BLOCKS_DEMO=true` |
+
+**Ranking.** Each appliance's best shift is ranked by expected saving against its usual start
+(ties: earlier start first). Savings under `RECOMMENDATION_MINIMUM_SAVING_SGD` ($0.05) are skipped,
+and at most `RECOMMENDATION_MAX_ACTIVE` (3) suggestions per household are open at once. A
+suggestion pushed out of the top 3 is closed as `SUPERSEDED`. The list endpoint returns them best
+saving first.
+
+**Background recompute, not on page load.** `RecommendationRecomputeJob` recomputes every real
+household (simulated ones are skipped) on startup, when F1 saves a new price, every 30 minutes at
+:01 and :31 (`RECOMMENDATION_RECOMPUTE_CRON`), and recomputes one household when F2 announces a
+change to it or its appliances (`HouseholdChanged`, published by `HouseholdService` and
+`ApplianceService`). A new F3 forecast is picked up by the next 30-minute run. The pages only call
+`GET /households/{id}/recommendations`, which reads the open suggestions and the latest outcome
+saved in `recommendation_refresh` (V12): when it ran, which forecast it used, and why there are no
+suggestions. `POST …/generate` still exists for recomputing one household by hand (Swagger).
+Set `RECOMMENDATION_AUTO_RECOMPUTE=false` to turn the background job off.
+
 ## Not done here (later stories)
 
-- Scheduled generation (it currently runs when the dashboard loads), ranking across appliances
-  and household guards (CSDT4-37).
 - Richer explanations (CSDT4-39).
 - Realised savings from actual prices (CSDT4-53), and feeding accepted runs into F2's load
   profile.

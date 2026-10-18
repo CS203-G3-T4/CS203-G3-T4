@@ -82,10 +82,11 @@ WattlyDemo.render = function (report) {
   WattlyDemo.text('demo-baseline-label', selected + ' baseline MAE');
   WattlyDemo.text('demo-baseline-mae', WattlyDemo.number(baseline));
   WattlyDemo.text('demo-pairs', report.test.commonPairs);
-  WattlyDemo.text('demo-origins', report.origins.length + ' origins · 12 hours each · one day');
+  const aggregateOrigins = report.test.eligibleOrigins ?? report.origins.length;
+  WattlyDemo.text('demo-origins', aggregateOrigins + ' scored origins · ' + report.origins.length + ' chart origins · 12 hours each');
   const purged = report.exclusions.AI.PURGED_SPLIT_BOUNDARY || 0;
-  WattlyDemo.text('demo-pair-explanation', report.origins.length + ' eligible origins × 24 predictions = ' +
-    report.test.commonPairs + ' included pairs per compared method. ' + purged / 24 + ' later origins × 24 = ' + purged +
+  WattlyDemo.text('demo-pair-explanation', aggregateOrigins + ' eligible origins × 24 predictions = ' +
+    report.test.commonPairs + ' included pairs per compared method. The bundled chart shows ' + report.origins.length + ' saved origin(s). ' + purged / 24 + ' later origins × 24 = ' + purged +
     ' excluded pairs per method because their full forecast crosses the test-day boundary.');
   const assessed = report.test.table.AI.spikes?.assessedPairs || 0;
   WattlyDemo.text('demo-spikes', assessed ? 'Spike assessments have sufficient reference history for ' + assessed +

@@ -60,7 +60,7 @@ B3 has no eligible pairs on October 5. Full candidate-set common pairs are 576 o
 - Reused the saved final model pipelines and shared as-of evaluator. `Pipeline.fit` was replaced with a failure guard during execution to prove this diagnostic cannot train.
 - Checked model, selection and future-plan checksums before and after execution; all are unchanged.
 - Recalculated each common-pair MAE from saved predictions and actuals; checked matching target/truth across methods, target-end split boundaries and provisional truth cutoff.
-- Saved every prediction/exclusion, per-day metrics, pooled metrics and MAE/counts for every horizon. See [summary](additional-comparison-2026-10-06.json) and [horizon CSV](additional-comparison-horizons-2026-10-06.csv).
+- Saved every prediction/exclusion, per-day metrics, pooled metrics and MAE/counts for every horizon. See [summary](artifacts.md#retrieval) and [horizon CSV](artifacts.md#retrieval).
 - Existing 19 ML tests remain passed; there were no ML-code changes in this diagnostic turn.
 
 Raw artifacts and the executed script:

@@ -12,7 +12,7 @@ The **training median wins overall validation**. It loses to the selected smalle
 
 - Read-only SQLite backup acquired **6 October 2026 at 01:15:13 SGT**, including WAL. **568 rows, 552 distinct half-hour periods, 16 revisions, 0 parsing failures**, actual publication and receipt timestamps preserved. No running collector changes.
 - October 5 is now complete: 48 periods. October 4 still has only 10/48. The collector sidecar CSVs have **zero additional periods** for September 30, October 1 or October 4; they cannot repair those gaps.
-- There are **44 missing periods in September 24–October 5**: 4 on September 30, 2 on October 1 and 38 on October 4. Exact official Date/Period identifiers are in [the acquisition CSV](historical-data-needed-2026-10-06.csv). No replacement prices or receipt timestamps were invented.
+- There are **44 missing periods in September 24–October 5**: 4 on September 30, 2 on October 1 and 38 on October 4. Exact official Date/Period identifiers are in [the acquisition CSV](artifacts.md#retrieval). No replacement prices or receipt timestamps were invented.
 - Existing official cached history is still only September 20 (48 final prices, unknown historical publication/availability). It cannot extend the operational training series. The previously denied broader history download returned HTTP 403; access controls were not bypassed.
 - Existing zero-offset floor-mapping configuration is reused. The 24-period September 29 verification was reproduced in the preceding retraining audit; its limited provider/date scope and immutable manifest flags remain intact.
 
@@ -82,7 +82,7 @@ B2, B3, HGB_RESIDUAL_B2 and RIDGE_RESIDUAL_B2 each exclude **576 early pairs for
 
 ### Horizon errors and limitations
 
-Full horizon MAEs and true pair counts are in [the CSV](accuracy-study-horizons-2026-10-06.csv). Selected HGB validation group MAEs (1–6 / 7–12 / 13–24) are **141.87 / 165.80 / 215.34**. Longer horizons remain harder.
+Full horizon MAEs and true pair counts are in [the CSV](artifacts.md#retrieval). Selected HGB validation group MAEs (1–6 / 7–12 / 13–24) are **141.87 / 165.80 / 215.34**. Longer horizons remain harder.
 
 Validation high-tail MAE is **932.11** on 97 pairs, versus **158.65** on 2,841 non-tail pairs. The tail contributes **16.71%** of error from **3.30%** of pairs. This training-only 95th-percentile grouping is not a spike label.
 
@@ -146,7 +146,7 @@ The existing `--retrospective --truth-policy FINAL --exploratory` training path 
 
 ## Verification and preservation
 
-Independent recalculation confirms every validation and available-pair MAE, each horizon count, exact target/truth agreement, publication/availability cutoffs, split boundaries, unchanged reference hashes and frozen model/plan hashes. See [verification](accuracy-study-verification-2026-10-06.json).
+Independent recalculation confirms every validation and available-pair MAE, each horizon count, exact target/truth agreement, publication/availability cutoffs, split boundaries, unchanged reference hashes and frozen model/plan hashes. See [verification](artifacts.md#retrieval).
 
 **19 ML tests passed**, with one existing dependency deprecation warning. The new checks cover origin-known residual labels, missing baseline anchors, immutable outputs, held-out/late-revision counterfactuals with unchanged fit matrices and selection, refusal of early confirmation, frozen-model evaluation without fitting, and rejection of changed selection artifacts. Synthetic confirmation data is used only for these software checks, never reported as real accuracy evidence. Full logs and JUnit XML are in `wattly-f3-research/correction-full-tests.*`; focused checks are in `correction-focused-tests.*`. `git diff --check` passed.
 
