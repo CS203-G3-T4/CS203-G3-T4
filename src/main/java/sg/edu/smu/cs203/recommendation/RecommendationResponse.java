@@ -15,6 +15,9 @@ import java.time.Instant;
  * limit. confidence* say on how many of the last 28 days (with actual prices) the suggested time
  * was really cheaper; all null when there wasn't enough history. savingEstimated is true while the
  * saving comes from the forecast; realised savings from actual prices come with CSDT4-53.
+ *
+ * CSDT4-40: runMinutes (from the appliance, when known) lets the page mark both runs on the mini
+ * forecast chart; remindAt is when a snoozed suggestion comes back; deadline is when it runs out.
  */
 public record RecommendationResponse(
         long id,
@@ -40,9 +43,15 @@ public record RecommendationResponse(
         Integer confidenceCheaperDays,
         Integer confidenceDaysChecked,
         Integer confidencePercent,
-        boolean savingEstimated) {
+        boolean savingEstimated,
+        Integer runMinutes,
+        Instant deadline) {
 
     public static RecommendationResponse from(Recommendation r) {
+        return from(r, null);
+    }
+
+    public static RecommendationResponse from(Recommendation r, Integer runMinutes) {
         Integer percent = r.confidenceDaysChecked() == null ? null
                 : new BacktestConfidence.Confidence(r.confidenceCheaperDays(), r.confidenceDaysChecked()).percent();
         return new RecommendationResponse(
@@ -69,6 +78,8 @@ public record RecommendationResponse(
                 r.confidenceCheaperDays(),
                 r.confidenceDaysChecked(),
                 percent,
-                true);
+                true,
+                runMinutes,
+                r.deadline());
     }
 }
