@@ -1,0 +1,10 @@
+{
+  "status": "PASS",
+  "originSelectionsChecked": 43,
+  "pointsPerOrigin": 24,
+  "seriesPerChart": 6,
+  "displayedMaeChecked": true,
+  "allChartCoordinatesFinite": true,
+  "accessibleChartTitlePresent": true,
+  "scope": "JavaScript and DOM structure; no browser layout/screenshot claim"
+}

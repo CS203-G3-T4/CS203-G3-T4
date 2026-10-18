@@ -52,7 +52,7 @@ def experiment(dataset: Path, output: Path):
         # trainer also enforces its own training/validation availability cutoffs.
         earlier = [r for r in rows if max(instant(r[k]) for k in
                    ("periodStart","sourceUpdatedAt","availableAt")) < test_start]
-        bundle, validation = train(earlier,manifest,start,cutoff,test_start,policy="PROVISIONAL",exploratory=True)
+        bundle, validation = train(earlier,manifest,start,cutoff,test_start,policy="PROVISIONAL",exploratory=True,feature_schema=1)
         methods = ["AI"]+[m for m in ("B1","B2","B3")
                            if any(r["method"]==m and r["exclusionReason"] is None for r in validation)]
         validation_scores = scores([r for r in validation if r["method"] in methods])

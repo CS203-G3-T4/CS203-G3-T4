@@ -26,10 +26,10 @@
       <span>Wattly</span>
     </div>
     <nav class="nav" aria-label="Main">
-      <span class="nav-soon">Dashboard <small>soon</small></span>
-      <span class="nav-soon">Recommendations <small>soon</small></span>
+      <a href="/dashboard.html" data-keep-household>Dashboard</a>
+      <a href="/recommendations.html" data-keep-household>Recommendations</a>
       <a href="/appliances.html" data-keep-household>Appliances</a>
-      <span class="nav-soon">Spending &amp; Budget <small>soon</small></span>
+      <a href="/spending.html" data-keep-household>Spending &amp; Budget</a>
       <a class="active" href="/forecast.html" data-keep-household aria-current="page">Forecast</a>
       <a href="/settings.html" data-keep-household>Settings</a>
       <a href="/households.html" data-keep-household>Households</a>
@@ -46,6 +46,11 @@
         <h2 id="forecast-status" role="status" aria-live="polite">Loading saved forecast…</h2>
         <p id="forecast-metadata"></p>
         <p id="current-assessment"></p>
+        <p id="actual-coverage"></p>
+        <svg id="live-price-chart" viewBox="0 0 980 300" role="img" aria-label="Today’s actual prices and next twelve hours of forecasts, SGD/MWh" style="width:100%;height:auto"></svg>
+        <details><summary>Today’s actual prices (SGD/MWh, Singapore time)</summary>
+          <table><thead><tr><th scope="col">Interval start</th><th scope="col">SGD/MWh</th></tr></thead><tbody id="actual-points"></tbody></table>
+        </details>
         <div style="overflow-x:auto">
           <table id="forecast-table" hidden>
             <caption>12-hour forecast: 24 future half-hour intervals; all times are Singapore time (SGT)</caption>
@@ -61,6 +66,7 @@
   </main>
 </div>
 <script src="/js/wattly.js"></script>
+<script src="/js/forecast-chart.js"></script>
 <script src="/js/forecast.js"></script>
 </body>
 </html>

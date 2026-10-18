@@ -2,8 +2,9 @@
 
 This Spring Boot service stores half-hourly Uniform Singapore Energy Price (USEP)
 observations and Singapore two-hour weather forecasts in PostgreSQL. It polls the
-[NEMS API](https://nems.sn.sg/) and NEA when the application starts and at 02 and 32
-minutes past each hour in Singapore time. NEMS is an unofficial public service.
+[NEMS API](https://nems.sn.sg/) and NEA when the application starts. NEMS is checked
+every five minutes and the two-hour NEA feed at 02 and 32 minutes past each hour in
+Singapore time. NEMS is an unofficial public service.
 Each feed retains its saved history when an upstream fails. No CSV files are written.
 
 USEP is expressed in **SGD/MWh**. It is a wholesale market signal, not a complete household electricity tariff or bill rate.
@@ -20,6 +21,23 @@ docker compose up -d postgres
 The default PostgreSQL connection is `jdbc:postgresql://localhost:55432/energy_market` with local development credentials `energy_market` / `energy_market`. Override it with `DB_URL`, `DB_USER`, and `DB_PASSWORD` for another database. The container port can be changed with `POSTGRES_PORT`.
 
 The application applies the Flyway migration automatically. The source URL can be overridden with `USEP_FEED_URL`. Set `USEP_POLLING_ENABLED=false` to disable the startup and scheduled polls, such as when running against a prepared test database.
+
+## Run an already restored team dataset
+
+Copy `.env.team-demo.example` to `.env.team-demo`, set `DB_URL` to the restored
+database and `WATTLY_TEAM_BUNDLE` to the extracted bundle directory, then run
+`./scripts/run-team-demo.sh`. The script loads the local settings, builds the jar,
+and serves the saved chart at `/forecast-demo.html`. The database must already be
+running and restored; this command does not restore the dump.
+
+The imported dump, chart, and reports are local dataset artifacts and are ignored
+by Git. Share the original bundle separately. PostgreSQL holds the restored history;
+the `.dump` file is its backup and `public/forecast-demo.json` supplies the dated chart.
+Keep `.env.team-demo` local because it contains database credentials.
+Once the database is restored, the dump and restore-verification files can be kept
+outside this repository as backups. They are not needed to run the app. Keep
+`src/main/resources/db/migration/`: Flyway uses those versioned files to validate
+the existing schema and initialize new databases.
 
 ## API
 
@@ -46,8 +64,10 @@ payload, with first collection and last seen timestamps) and `weather_observatio
 (one NEA issue/update pair, with its full forecast item). Existing `market_price`,
 API endpoints, and NEMS ingestion status continue to operate.
 
-The existing scheduler calls both feeds at startup and at :02/:32 Singapore time.
-`USEP_POLL_CRON` overrides the shared schedule; `USEP_POLLING_ENABLED=false`
+The scheduler calls both feeds at startup. It then checks NEMS every five minutes,
+so a price published just after a half-hour boundary is picked up on the next retry.
+The two-hour NEA feed is still polled at :02/:32 Singapore time.
+`USEP_POLL_CRON` and `NEA_POLL_CRON` override their respective schedules; `USEP_POLLING_ENABLED=false`
 disables NEMS and both weather collectors by default (the daily collector can be enabled separately). `NEA_FEED_URL` overrides the default official endpoint:
 https://api-open.data.gov.sg/v2/real-time/api/two-hr-forecast
 Both clients use the existing bounded connection/read timeouts. Each feed is saved
@@ -101,6 +121,8 @@ keys, delivered backend contracts, and acceptance criteria still requiring UI,
 team agreement, or later work. New dashboard-facing endpoints are
 `GET /api/v1/prices/current` (one-decimal cents/kWh and staleness) and
 `GET /api/v1/weather/today` (daily temperature forecast and configurable heat hint).
+The `/dashboard.html` page displays these readings, marks stale and unavailable
+states, and refreshes the market price every minute.
 The two-hour NEA collector and 66-column demo view remain available.
 
 The shared Clock lives in `common/TimeConfig` and uses Asia/Singapore. All business
@@ -137,7 +159,59 @@ polling and F2 pages remain in place. The standalone collector is unchanged.
 Start with the [F3 runbook](docs/forecasting/runbook.md),
 [contracts](docs/forecasting/contracts.md), and
 [measured results/remaining acceptance work](docs/forecasting/results.md).
-The current evidence is exploratory: long-history acquisition and verification of
-NEMS settlement-period mapping remain blocked. No AI improvement is claimed, and
-unverified forecasts are not actionable. The admin accuracy endpoint requires an
-ADMIN servlet role; this repository has no login integration yet.
+The [18 October acceptance report](docs/forecasting/acceptance-2026-10-18.md)
+contains the current evidence and remaining dependencies. Official EMC final-price
+history now covers June 2025–September 2026. The twelve-month model and 56-day
+unseen study are explicitly retrospective; they do not establish what final prices
+or future demand forecasts were available historically. Research artifacts remain
+unapproved. Live Java baselines continue when Python is absent or invalid.
+
+### Model runtime decision (CSDT4-34)
+
+| Option | Benefits | Costs and decision |
+| --- | --- | --- |
+| A. Train/run inside Java | One application runtime | Reimplementing the existing scikit-learn training/features changes behavior and adds maintenance. Rejected for this implementation. |
+| B. Separate Python inference service | Same fitted pipeline and feature code in training, evaluation and serving; pinned supported libraries | A second local process and bounded HTTP dependency. **Selected; preserves the existing architecture.** Java owns validation, persistence and baseline fallback. |
+| C. Python training, exported Java inference | One serving runtime and potentially lower request overhead | Requires an export runtime/dependency and verified parity for 24 HGB models, missing values, holidays and demand. No validated export exists here. Deferred; no parity/performance claim. |
+
+Spring callers keep `ForecastService` and saved forecast endpoints; browsers never
+call Python. Python binds to loopback, accepts bounded provenance-bearing schema2
+JSON, and loads only trusted immutable bundles with matching feature/calendar
+checksums and dependencies. Deploy Java21, PostgreSQL15+ and the dedicated pinned
+Python3.12 environment; keep model storage persistent and inference private. The
+local reproduction uses real Spring/FastAPI HTTP and Chromium, with native
+PostgreSQL16.15 and17.11 verified; the Compose container itself was not exercised. No
+cloud deployment or performance benchmark was performed. Python reloads an atomic
+approved pointer on readiness/forecast requests; failed reloads return503 and Java
+falls back. Promotion and rollback never alter a bundle in place.
+
+Resident `/forecast.html` shows saved forecasts and today's actuals. Protected
+`/admin-forecast.html` shows seven-day forecast/actual series and common-pair MAE.
+Set `WATTLY_ADMIN_USER` and `WATTLY_ADMIN_PASSWORD` outside source to enable local
+ADMIN Basic authentication; there are no default credentials. Keep it on localhost
+or behind HTTPS in deployment. Server-side ADMIN checks remain mandatory.
+
+A configurable weekly user-systemd timer, audit/failure inspection, paired
+challenger validation, reload and rollback are documented in the
+[runbook](docs/forecasting/runbook.md). Installation is explicit; verification does
+not install a permanent timer pointing at the disposable test application.
+
+## F4: recommendations
+
+The dashboard's "Suggested times" card and `/recommendations.html` page suggest the cheapest start for each flexible
+appliance (CSDT4-19) and lets the resident accept, pick their own time, or dismiss (CSDT4-20).
+Nothing runs automatically. Migration V10 adds `recommendation` and `recommendation_event`.
+
+By default suggestions use a **demo forecast**: the real prices of the 26 Sep 2026 replay day,
+labelled as a demo. Set `RECOMMENDATION_FORECAST_SOURCE=f3` to use F3's forecast once it is
+actionable. Why, and what's needed first: [docs/f4-recommendations.md](docs/f4-recommendations.md).
+
+## Spending and budget
+
+`/spending.html` shows this month's modelled daily energy use and estimated spending.
+`GET /api/v1/households/{id}/budget` returns the current month, daily estimates, and
+the projected total. `PUT` to the same path saves `monthlyBudgetSgd` and
+`planningRateCentsPerKwh`; migration V11 stores these per household. Fixed-rate plans
+use the rate in Household Settings. Price-linked plans need a resident-entered planning
+rate before spending can be estimated. Amounts exclude taxes and fixed fees. These
+figures use F2's load model, not meter readings or a live retail bill.

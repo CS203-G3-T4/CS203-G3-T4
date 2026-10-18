@@ -18,6 +18,7 @@ from sklearn.preprocessing import StandardScaler
 from threadpoolctl import threadpool_limits
 
 from .backtest import History, backtest, scores
+from .baselines import baselines
 from .cli import report
 from .data import digest, load_dataset, truth, write_json
 from .features import FEATURES, features
@@ -101,29 +102,47 @@ def presentation(study: Path, reference: Path, output: Path):
     return {'model': selected, 'diagnosticMae': measured, 'pairs': len(eligible), 'output': str(output)}
 
 
-def columns(matrix, names):
+def columns(matrix, names, *, horizon=None):
     """The same feature selection/price differences during fitting and prediction."""
     matrix = np.asarray(matrix, dtype=float)
     values = {name: matrix[:, i] for i, name in enumerate(FEATURES)}
     for name, lag in [('change_lag1_lag2', 'lag2'), ('change_lag1_lag3', 'lag3'), ('change_lag1_lag6', 'lag6')]:
         values[name] = values['lag1'] - values[lag]
+    if 'forecast_horizon' in names:
+        if horizon is None:
+            raise ValueError('Shared-horizon models require explicit forecast horizons')
+        values['forecast_horizon'] = np.broadcast_to(horizon, len(matrix))
+        if not np.all((values['forecast_horizon'] >= 1) & (values['forecast_horizon'] <= 24)):
+            raise ValueError('Forecast horizon must be between 1 and 24')
     return np.column_stack([values[name] for name in names])
 
 
 def fit_candidates(rows, manifest, start, cutoff, end):
     # Reuse the real trainer for the reference; all other models use its exact examples.
-    current, records = train(rows, manifest, start, cutoff, end, policy='PROVISIONAL', exploratory=True)
+    current, records = train(rows, manifest, start, cutoff, end, policy='PROVISIONAL', exploratory=True, feature_schema=1)
     xs, ys, excluded = training_examples(rows, start, cutoff, policy='PROVISIONAL')
-    models = {'CURRENT': current['models']}
+    models, missing = fit_models(xs, ys, current['models'])
+    metadata = fit_metadata(rows, start, cutoff, ys, excluded, missing)
+    return current, models, records, metadata
+
+
+def fit_models(xs, ys, current=None, specs=None):
+    """Fit the fixed study candidates; preprocessing sees training examples only."""
+    if len(ys[0]) < 48:
+        raise ValueError('At least 48 complete eligible training origins required')
+    models = {'CURRENT': current} if current is not None else {}
     missing = {}
     with threadpool_limits(limits=1):
-        for name, spec in SPECS.items():
-            transformed = [columns(x, spec['features']) for x in xs]
+        for name, spec in (SPECS if specs is None else specs).items():
+            if spec['family'] == 'blend':
+                continue  # Fixed combinations have no fitted preprocessing or parameters.
+            transformed = [columns(x, spec['features'], horizon=h) for h, x in enumerate(xs, 1)]
             missing[name] = dict(zip(spec['features'], np.isnan(np.concatenate(transformed)).mean(axis=0).tolist()))
-            if name == 'CURRENT':
+            if name == 'CURRENT' and current is not None:
                 continue
             models[name] = []
-            for x, y in zip(transformed, ys):
+            pairs = [(np.concatenate(transformed), np.concatenate(ys))] if spec.get('sharedHorizons') else zip(transformed, ys)
+            for x, y in pairs:
                 imputer = SimpleImputer(strategy='median', add_indicator=True, keep_empty_features=True)
                 if spec['family'] == 'ridge':
                     model = make_pipeline(imputer, StandardScaler(), Ridge(**spec['parameters']))
@@ -132,6 +151,12 @@ def fit_candidates(rows, manifest, start, cutoff, end):
                 else:
                     model = make_pipeline(imputer, HistGradientBoostingRegressor(**spec['parameters']))
                 models[name].append(model.fit(x, y))
+            if spec.get('sharedHorizons'):
+                models[name] *= 24  # One fitted estimator, reused with an explicit horizon feature.
+    return models, missing
+
+
+def fit_metadata(rows, start, cutoff, ys, excluded, missing):
     actuals = truth(rows, 'PROVISIONAL', cutoff)
     training_prices = [v for t, v in actuals.items() if start <= t < cutoff]
     metadata = {'trainingStart': start.isoformat(), 'trainingCutoff': cutoff.isoformat(),
@@ -140,10 +165,11 @@ def fit_candidates(rows, manifest, start, cutoff, end):
                 'highPriceTailThreshold': float(np.quantile(training_prices, .95)),
                 'highPriceTailRule': 'Above training-only 95th percentile of unique price periods; NOT a spike label',
                 'productionEligible': False}
-    return current, models, records, metadata
+    return metadata
 
 
-def candidate_records(rows, baseline_records, models, metadata):
+def candidate_records(rows, baseline_records, models, metadata, specs=None):
+    specs = SPECS if specs is None else specs
     history = History(rows)
     output = [dict(r) for r in baseline_records if r['method'] != 'AI']
     ai = [r for r in baseline_records if r['method'] == 'AI']
@@ -156,14 +182,22 @@ def candidate_records(rows, baseline_records, models, metadata):
         predictions = {'CURRENT': [r['predictedUsep'] for r in template],
                        'PERSISTENCE': [past[max(past)]['usep'] if past else None]*24}
         with threadpool_limits(limits=1):
-            for name, spec in SPECS.items():
-                if name != 'CURRENT':
-                    x = columns(raw, spec['features'])
-                    predictions[name] = [float(model.predict([x[h]])[0]) for h, model in enumerate(models[name])] if eligible else [None]*24
+            for name, spec in specs.items():
+                if name != 'CURRENT' and spec['family'] != 'blend':
+                    x = columns(raw, spec['features'], horizon=np.arange(1, 25))
+                    anchor = baselines(past, origin).get(spec['baseline']) if spec.get('baseline') else [0]*24
+                    predictions[name] = [float(model.predict([x[h]])[0])+anchor[h] for h, model in enumerate(models[name])] if eligible and anchor is not None else [None]*24
+        anchors = baselines(past, origin)
+        for name, spec in specs.items():
+            if spec['family'] == 'blend':
+                left, right = spec['sources']
+                predictions[name] = blend_predictions(predictions.get(left, anchors.get(left)),
+                    predictions.get(right, anchors.get(right)), spec['weight'])
         for name, values in predictions.items():
             for r in template:
                 value = values[r['horizon']-1] if r['exclusionReason'] is None else None
                 output.append({**r, 'method': name, 'modelVersion': 'research-'+name,
+                               'exclusionReason': r['exclusionReason'] or ('INSUFFICIENT_HISTORY' if value is None else None),
                                'predictedUsep': value,
                                'spikeFlag': value > r['threshold'] if value is not None and r['threshold'] is not None else None})
     for r in output:
@@ -171,11 +205,32 @@ def candidate_records(rows, baseline_records, models, metadata):
     return output
 
 
+def blend_predictions(left, right, weight):
+    """Fixed weight on the first source; missing anchors stay unavailable."""
+    if not 0 <= weight <= 1:
+        raise ValueError('Blend weight must be between zero and one')
+    if left is None or right is None:
+        return [None]*24
+    if len(left) != 24 or len(right) != 24:
+        raise ValueError('Blends require 24 predictions from each source')
+    return [weight*a + (1-weight)*b if a is not None and b is not None else None
+            for a, b in zip(left, right)]
+
+
+def common_pairs(records, methods):
+    eligible = [{(r['asOf'], r['horizon']) for r in records
+                 if r['method'] == m and r['exclusionReason'] is None} for m in methods]
+    return set.intersection(*eligible) if eligible else set()
+
+
+def common_horizon_counts(records, methods):
+    return Counter(h for _, h in common_pairs(records, methods))
+
+
 def paired_summary(records, methods):
     subset = [r for r in records if r['method'] in methods]
     result = scores(subset)
-    eligible = [{(r['asOf'], r['horizon']) for r in subset if r['method'] == m and r['exclusionReason'] is None} for m in methods]
-    common = set.intersection(*eligible)
+    common = common_pairs(records, methods)
     result['comparisonMethods'] = methods
     result['allMethodCommonPairs'] = scores(records)['commonPairs']
     result['exclusions'] = {m: dict(Counter(r['exclusionReason'] for r in records if r['method'] == m and r['exclusionReason']))
@@ -290,11 +345,12 @@ def compare(dataset: Path, reference: Path, output: Path):
         with (output/'horizons.csv').open('w', newline='') as stream:
             writer = csv.writer(stream, lineterminator='\n')
             writer.writerow(['split', 'method', 'horizon', 'hours_to_target_start', 'training_samples_per_fit', 'common_pairs', 'mae_sgd_mwh'])
-            for label, result, counts in [('pooled_validation', validation, '/'.join(str(f['trainingSamplesPerHorizon'][0]) for f in folds)),
-                                           ('existing_test_diagnostic', diagnostic, str(folds[-1]['trainingSamplesPerHorizon'][0]))]:
+            for label, result, counts, raw in [('pooled_validation', validation, '/'.join(str(f['trainingSamplesPerHorizon'][0]) for f in folds), records),
+                                               ('existing_test_diagnostic', diagnostic, str(folds[-1]['trainingSamplesPerHorizon'][0]), diagnostic_records)]:
+                horizon_counts = common_horizon_counts(raw, methods)
                 for m in methods:
                     for h, mae in result['table'][m]['perHorizon'].items():
-                        writer.writerow([label, m, h, int(h)/2, counts if m in SPECS else 'not fitted', result['commonPairs']//24, mae])
+                        writer.writerow([label, m, h, int(h)/2, counts if m in SPECS else 'not fitted', horizon_counts[int(h)], mae])
         return summary
     except BaseException as exc:
         write_json(output/'failure.json', {'status': 'INCOMPLETE', 'reason': str(exc), 'type': type(exc).__name__,

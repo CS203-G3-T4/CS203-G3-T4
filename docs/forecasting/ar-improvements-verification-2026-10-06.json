@@ -1,0 +1,19 @@
+{
+  "status": "PASS",
+  "datasetDigest": "586a60c249be67694e407d85dddc29021d4589b0e8ff8e64d7b73ed5e43b20ce",
+  "run": "/home/bryan/CS203_T4/wattly-f3-research/2026-10-06-ar-improvements-v2",
+  "trainingEstimatorsChecked": 700,
+  "trainingLabelsChecked": 160238,
+  "reconstructedForecastPairs": 31788,
+  "maxForecastDifference": 0.0,
+  "referenceFilesChecked": 57,
+  "comparisonsChecked": 19,
+  "horizonScoresChecked": 6288,
+  "v1PredictionsAndScoresUnchanged": true,
+  "earlyConfirmationRejectedWithoutOutput": true,
+  "productionEligible": false,
+  "spikeAssessment": "Insufficient history",
+  "convergenceWarnings": 0,
+  "solverOptionWarnings": 350,
+  "preservedV1": "v1 grouped OptimizeWarning under convergenceWarnings; v2 records warning categories; same models/settings/predictions"
+}

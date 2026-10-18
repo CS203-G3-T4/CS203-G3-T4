@@ -1,3 +1,69 @@
+# Current forecasting contracts — 18 October 2026
+
+This section supersedes the historical checkpoints below. See the
+[acceptance report](acceptance-2026-10-18.md) and [runbook](runbook.md).
+
+- `ForecastPredictor` names each baseline and returns24 points or unavailable.
+  B1 is the latest six contiguous known half-hours; B2 is the target yesterday;
+  **B3 is the target's average over the previous seven days** (CSDT4-18).
+  CSDT4-35's “same time last week” conflicts with that parent definition; it is
+  not silently substituted for B3. Existing `BaselineForecastService.calculate`
+  and `ForecastService` callers/endpoints remain compatible.
+- Price inputs require period, source publication and availability <= origin.
+  Operational truth is a saved revision. Final CSVs with missing vintages require
+  explicit `--retrospective`, labelled RETROSPECTIVE_FINAL_PRICE. No target gaps
+  are filled. Chronological train/validation/test targets cannot cross split ends.
+- Active feature schema2 retains recent prices and calendar features and adds
+  Singapore holiday, origin-known target demand and its availability indicator.
+  `features` is shared by fitting/backtest/serving; fitted imputers belong to each
+  training pipeline. Legacy schema1 research remains supported explicitly.
+  Feature order, schema, MOM calendar version/digest, dependency and artifact
+  integrity checks reject incompatible bundles. Calendar source/version lives in
+  `ml/src/wattly_ml/resources/sg-public-holidays.json` (MOM2025–2027).
+- Spring sends schema2 `expectedDemand`: targetPeriod, publishedAt, availableAt,
+  demandMw, source. Timestamps must be aware; target half-hours must align;
+  publication <= availability <= origin. No target outside actual vintage coverage
+  is extrapolated from current observed demand. Missing demand remains missing.
+  Offline `prepare --demand-forecasts FILE.jsonl` uses the same shape and persists
+  sidecar checksum/combined dataset identity. Protected admin import is
+  POST `/api/v1/admin/forecast-demand`. Reusing a vintage with changed value fails.
+- Independent immutable baseline evidence is POSTed to
+  `/api/v1/admin/forecast-baseline-validation`; scores must share eligible pairs.
+  It can be persisted without AI approval or service success. Java chooses the
+  highest ranked baseline with all current inputs; no validated ranking means
+  `BASELINE_RANKING_UNRANKED`. Previously accepted AI rankings remain compatible.
+- Resident GET `/api/v1/forecast/today` reads saved canonical actuals today as of
+  the shared Clock. `/latest` and `/current-assessment` retain their contracts.
+  Current EXPENSIVE is displayed as normal (above typical); SPIKE uses the
+  same-time-of-day four-week reference, min14, k3, spread floor1. Positive typical
+  supports percentage difference; zero/negative typical uses signed SGD/MWh
+  difference, avoiding undefined or inverted percentages. Stale/unavailable is
+  explicit. Sensitivity recommendation is not team approval.
+- ADMIN authorization protects both admin page and all admin APIs. Local Basic
+  authentication is enabled only with both environment credentials; existing
+  trusted servlet ADMIN principals work. Accuracy adds chart-ready series and
+  fair common-pair MAE, selectable horizon1–24 and provisional-first/final truth.
+  Missing actuals stay null. Own-coverage legacy scores remain descriptive.
+- Durable `model_run` attempt records are written before work, then finalized as
+  SUCCESS, REJECTED or FAILED with dataset/range/scores/reason/promotion decision.
+  A local fsynced spool preserves API-outage records for `sync-runs`; completed
+  records are immutable. GET `/api/v1/admin/forecast-training-attempts?limit=20`
+  supports failure inspection. An abandoned bounded attempt is recovered safely
+  on the next sync while holding the training lock.
+- F4's unchanged `CheapestStartCalculator` and F2 `HouseholdDirectory` own feasible
+  plans. Protected `/api/v1/admin/forecast-savings-replay` uses those contracts,
+  equal household/input windows and realized prices, retaining losses and excluding
+  fixed-rate shifting. Current profiles replayed historically are counterfactuals,
+  not reconstructed historical consumption/configuration.
+- Original F4 migration V10 is preserved; additive V12 adds operation tables/audit
+  columns. Applied migrations are never edited. Application rollback retains new
+  tables and immutable evidence. Inference reload follows atomic approved pointers;
+  bad/unapproved/missing bundles fail closed into Java fallback.
+
+---
+
+## Archived earlier contract checkpoint
+
 # F3 contracts and implementation checkpoints
 
 > Update 29 September 2026: the live NEMS floor mapping is now independently verified

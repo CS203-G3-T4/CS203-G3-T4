@@ -1,0 +1,16 @@
+{
+  "targetedPython": {
+    "tests": 6,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "warning": "One upstream Starlette/AnyIO deprecation warning",
+  "javaFrontendPostgresBrowserRepeated": false,
+  "reason": "No application source, configuration or migration changed; this run only trained research artifacts",
+  "collectorModifiedOrRestarted": false,
+  "liveDatabaseUsed": false,
+  "servingPointerChanged": false,
+  "trainingAudit": "Durable local training-attempt record; API synchronization pending; no live API contacted",
+  "applicationSourceChanged": false
+}

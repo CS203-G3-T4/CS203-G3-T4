@@ -1,0 +1,140 @@
+{
+  "status": "PASS",
+  "hashesAndProtectedCutoff": true,
+  "noProductionPromotion": true,
+  "splits": {
+    "validation": {
+      "pairs": 2938,
+      "origins": 124,
+      "mae": {
+        "B1": 238.09490299523486,
+        "B2": 270.3573247106875,
+        "CURRENT": 242.08266540036436,
+        "HGB_MAE": 186.60602514248424,
+        "HGB_RESIDUAL_B1": 209.06207544713365,
+        "HGB_RESIDUAL_B2": 281.2784281024671,
+        "HGB_SMALL": 184.18535698138584,
+        "HGB_WEEKLY": 184.18537540772982,
+        "MEDIAN": 163.83796800544587,
+        "PERSISTENCE": 214.57605173587476,
+        "RIDGE_RESIDUAL_B1": 505.25335224641105,
+        "RIDGE_RESIDUAL_B2": 526.7589597963588
+      }
+    },
+    "primary_test": {
+      "pairs": 0,
+      "origins": 0,
+      "mae": {
+        "B1": null,
+        "B2": null,
+        "CURRENT": null,
+        "HGB_MAE": null,
+        "HGB_RESIDUAL_B1": null,
+        "HGB_RESIDUAL_B2": null,
+        "HGB_SMALL": null,
+        "HGB_WEEKLY": null,
+        "MEDIAN": null,
+        "PERSISTENCE": null,
+        "RIDGE_RESIDUAL_B1": null,
+        "RIDGE_RESIDUAL_B2": null,
+        "FROZEN_HGB_MAE": null
+      }
+    },
+    "pairwise_CURRENT": {
+      "pairs": 456,
+      "origins": 19,
+      "mae": {
+        "CURRENT": 125.36309737652996,
+        "HGB_MAE": 58.49320557673593,
+        "FROZEN_HGB_MAE": 58.49320557673593,
+        "B1": 176.61183479532164,
+        "MEDIAN": 100.91464912280702,
+        "PERSISTENCE": 148.5431140350877
+      }
+    },
+    "pairwise_HGB_MAE": {
+      "pairs": 456,
+      "origins": 19,
+      "mae": {
+        "HGB_MAE": 58.49320557673593,
+        "FROZEN_HGB_MAE": 58.49320557673593,
+        "B1": 176.61183479532164,
+        "MEDIAN": 100.91464912280702,
+        "PERSISTENCE": 148.5431140350877
+      }
+    },
+    "pairwise_HGB_SMALL": {
+      "pairs": 456,
+      "origins": 19,
+      "mae": {
+        "HGB_SMALL": 48.71494165384319,
+        "HGB_MAE": 58.49320557673593,
+        "FROZEN_HGB_MAE": 58.49320557673593,
+        "B1": 176.61183479532164,
+        "MEDIAN": 100.91464912280702,
+        "PERSISTENCE": 148.5431140350877
+      }
+    },
+    "pairwise_HGB_WEEKLY": {
+      "pairs": 456,
+      "origins": 19,
+      "mae": {
+        "HGB_WEEKLY": 49.78886227528817,
+        "HGB_MAE": 58.49320557673593,
+        "FROZEN_HGB_MAE": 58.49320557673593,
+        "B1": 176.61183479532164,
+        "MEDIAN": 100.91464912280702,
+        "PERSISTENCE": 148.5431140350877
+      }
+    },
+    "pairwise_HGB_RESIDUAL_B1": {
+      "pairs": 456,
+      "origins": 19,
+      "mae": {
+        "HGB_RESIDUAL_B1": 70.06150487484523,
+        "HGB_MAE": 58.49320557673593,
+        "FROZEN_HGB_MAE": 58.49320557673593,
+        "B1": 176.61183479532164,
+        "MEDIAN": 100.91464912280702,
+        "PERSISTENCE": 148.5431140350877
+      }
+    },
+    "pairwise_HGB_RESIDUAL_B2": {
+      "pairs": 0,
+      "origins": 0,
+      "mae": {
+        "HGB_RESIDUAL_B2": null,
+        "HGB_MAE": null,
+        "FROZEN_HGB_MAE": null,
+        "B1": null,
+        "MEDIAN": null,
+        "PERSISTENCE": null
+      }
+    },
+    "pairwise_RIDGE_RESIDUAL_B1": {
+      "pairs": 456,
+      "origins": 19,
+      "mae": {
+        "RIDGE_RESIDUAL_B1": 153.18209246899804,
+        "HGB_MAE": 58.49320557673593,
+        "FROZEN_HGB_MAE": 58.49320557673593,
+        "B1": 176.61183479532164,
+        "MEDIAN": 100.91464912280702,
+        "PERSISTENCE": 148.5431140350877
+      }
+    },
+    "pairwise_RIDGE_RESIDUAL_B2": {
+      "pairs": 0,
+      "origins": 0,
+      "mae": {
+        "RIDGE_RESIDUAL_B2": null,
+        "HGB_MAE": null,
+        "FROZEN_HGB_MAE": null,
+        "B1": null,
+        "MEDIAN": null,
+        "PERSISTENCE": null
+      }
+    }
+  },
+  "frozenAndRefitHgbPredictionsIdentical": true
+}
