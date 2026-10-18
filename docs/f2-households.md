@@ -18,6 +18,7 @@ Code: `src/main/java/sg/edu/smu/cs203/household` (households), `.../household/ap
 | [CSDT4-49](https://csd-t4.atlassian.net/browse/CSDT4-49) Simulated population | 100 deterministic households (V8) with `simulated = true`, hidden from `GET /api/v1/households` unless `?includeSimulated=true` |
 | [CSDT4-50](https://csd-t4.atlassian.net/browse/CSDT4-50) "About our data" page | `static/about-data.html` |
 | [CSDT4-62](https://csd-t4.atlassian.net/browse/CSDT4-62) Add and delete households | `DELETE /api/v1/households/{id}` (204; its appliances go too; simulated → 409; unknown → 404); `static/households.html` lists households with their appliance count, adds one through `POST /api/v1/households` and deletes one after an in-page confirmation. Pages whose household was deleted move to the first remaining household, or to the Households page if none are left |
+| [CSDT4-66](https://csd-t4.atlassian.net/browse/CSDT4-66) Protect household administration with CSRF and role checks | Household creation and deletion require an ADMIN account; `GET /api/v1/csrf` supplies the token used by the shared `Wattly.api` helper for unsafe requests; the Households page hides add/delete controls for residents |
 
 Still open because they depend on other features:
 
@@ -28,7 +29,6 @@ Still open because they depend on other features:
 - Household-specific reads and writes now check the signed-in account's household in the service
   layer. Residents see only their own household in listings and receive 403 for another household;
   admins may access any household.
-- Adding and deleting households remains subject to the admin-only follow-up (CSDT4-66).
 
 ## Try it
 

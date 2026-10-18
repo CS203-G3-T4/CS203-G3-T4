@@ -3,10 +3,12 @@ package sg.edu.smu.cs203.security;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.util.matcher.RequestMatcher;
@@ -22,9 +24,16 @@ public class SecurityConfiguration {
                         .permitAll()
                         .requestMatchers("/api/v1/admin/**", "/api/v1/demo/**")
                         .hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/households")
+                        .hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/households/*")
+                        .hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .exceptionHandling(exceptions -> exceptions.defaultAuthenticationEntryPointFor(
                         new HttpStatusEntryPoint(HttpStatus.FORBIDDEN), adminApiMatcher()))
+                .csrf(csrf -> csrf
+                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        .csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler()))
                 .formLogin(Customizer.withDefaults());
         return http.build();
     }
@@ -33,7 +42,10 @@ public class SecurityConfiguration {
         return request -> {
             String path = request.getServletPath();
             return path.equals("/api/v1/admin") || path.startsWith("/api/v1/admin/")
-                    || path.equals("/api/v1/demo") || path.startsWith("/api/v1/demo/");
+                    || path.equals("/api/v1/demo") || path.startsWith("/api/v1/demo/")
+                    || request.getMethod().equals("POST") && path.equals("/api/v1/households")
+                    || request.getMethod().equals("DELETE")
+                    && path.matches("/api/v1/households/[^/]+");
         };
     }
 

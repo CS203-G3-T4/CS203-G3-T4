@@ -18,6 +18,23 @@ Wattly.householdId = function () {
 // so each page can decide how to show errors.
 Wattly.api = async function (method, url, body) {
   const options = { method: method, headers: { Accept: 'application/json' } };
+  if (!['GET', 'HEAD', 'OPTIONS', 'TRACE'].includes(method.toUpperCase())) {
+    let csrfResponse;
+    try {
+      csrfResponse = await fetch('/api/v1/csrf', { headers: { Accept: 'application/json' } });
+    } catch (networkError) {
+      return { ok: false, status: 0, data: { detail: 'Cannot reach the Wattly server. Is it running?' } };
+    }
+    if (!csrfResponse.ok) {
+      return {
+        ok: false,
+        status: csrfResponse.status,
+        data: { detail: 'Could not obtain a security token. Please sign in again.' }
+      };
+    }
+    const csrf = await csrfResponse.json();
+    options.headers[csrf.headerName] = csrf.token;
+  }
   if (body !== undefined) {
     options.headers['Content-Type'] = 'application/json';
     options.body = JSON.stringify(body);
