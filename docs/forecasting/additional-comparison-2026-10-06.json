@@ -1,0 +1,5295 @@
+{
+  "status": "COMPLETE",
+  "label": "Experimental \u2014 limited training data.",
+  "purpose": "ADDITIONAL_FROZEN_DIAGNOSTICS; no new independent test day",
+  "generatedAt": "2026-10-05T19:22:06.123935+00:00",
+  "snapshotAcquiredAt": "2026-10-05T19:19:31.647460+00:00",
+  "datasetDigest": "586a60c249be67694e407d85dddc29021d4589b0e8ff8e64d7b73ed5e43b20ce",
+  "quality": {
+    "rowCount": 572,
+    "periodCount": 556,
+    "missingHalfHours": 1180,
+    "duplicateRows": 0,
+    "revisionRows": 16,
+    "staleObservations": 2,
+    "parsingFailures": [],
+    "from": "2026-08-30T15:30:00+00:00",
+    "to": "2026-10-05T19:00:00+00:00",
+    "mappingVerified": false,
+    "publicationVintages": true
+  },
+  "trainingCutoff": "2026-10-02T16:00:00+00:00",
+  "trainingSamplesByMethod": {
+    "CURRENT": {
+      "perHorizon": [
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352
+      ],
+      "excludedOrigins": 80
+    },
+    "HGB_MAE": {
+      "perHorizon": [
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352
+      ],
+      "excludedOrigins": 80
+    },
+    "MEDIAN": {
+      "perHorizon": [
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352
+      ],
+      "excludedOrigins": 80
+    },
+    "HGB_SMALL": {
+      "perHorizon": [
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352
+      ],
+      "excludedOrigins": 80
+    },
+    "HGB_WEEKLY": {
+      "perHorizon": [
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352,
+        352
+      ],
+      "excludedOrigins": 80
+    },
+    "HGB_RESIDUAL_B1": {
+      "perHorizon": [
+        342,
+        342,
+        342,
+        342,
+        342,
+        342,
+        342,
+        342,
+        342,
+        342,
+        342,
+        342,
+        342,
+        342,
+        342,
+        342,
+        342,
+        342,
+        342,
+        342,
+        342,
+        342,
+        342,
+        342
+      ],
+      "excludedOrigins": 90
+    },
+    "RIDGE_RESIDUAL_B1": {
+      "perHorizon": [
+        342,
+        342,
+        342,
+        342,
+        342,
+        342,
+        342,
+        342,
+        342,
+        342,
+        342,
+        342,
+        342,
+        342,
+        342,
+        342,
+        342,
+        342,
+        342,
+        342,
+        342,
+        342,
+        342,
+        342
+      ],
+      "excludedOrigins": 90
+    },
+    "HGB_RESIDUAL_B2": {
+      "perHorizon": [
+        304,
+        304,
+        304,
+        304,
+        304,
+        304,
+        304,
+        304,
+        304,
+        304,
+        304,
+        304,
+        304,
+        304,
+        304,
+        304,
+        304,
+        304,
+        304,
+        304,
+        304,
+        304,
+        304,
+        304
+      ],
+      "excludedOrigins": 128
+    },
+    "RIDGE_RESIDUAL_B2": {
+      "perHorizon": [
+        304,
+        304,
+        304,
+        304,
+        304,
+        304,
+        304,
+        304,
+        304,
+        304,
+        304,
+        304,
+        304,
+        304,
+        304,
+        304,
+        304,
+        304,
+        304,
+        304,
+        304,
+        304,
+        304,
+        304
+      ],
+      "excludedOrigins": 128
+    }
+  },
+  "days": [
+    {
+      "date": "2026-10-03",
+      "observedPeriods": 48,
+      "truthAvailableByDayEnd": 48,
+      "status": "COMPLETE_DAY",
+      "core": {
+        "table": {
+          "B1": {
+            "mae": 203.14320023148147,
+            "eligiblePairs": 576,
+            "commonPairs": 576,
+            "ownEligibleMae": 203.14320023148147,
+            "eligibleOrigins": 24,
+            "excludedOrigins": 24,
+            "coverage": 0.5,
+            "perHorizon": {
+              "1": 160.39645833333333,
+              "2": 159.67173611111113,
+              "3": 161.04395833333334,
+              "4": 162.40173611111112,
+              "5": 168.823125,
+              "6": 171.8545138888889,
+              "7": 175.14284722222223,
+              "8": 179.51659722222223,
+              "9": 186.25576388888888,
+              "10": 192.76659722222223,
+              "11": 201.51840277777777,
+              "12": 207.71131944444443,
+              "13": 215.62145833333332,
+              "14": 222.76645833333333,
+              "15": 234.44354166666668,
+              "16": 240.02520833333332,
+              "17": 244.14159722222223,
+              "18": 242.2332638888889,
+              "19": 239.1157638888889,
+              "20": 234.35659722222223,
+              "21": 228.54243055555557,
+              "22": 222.43118055555556,
+              "23": 215.6603472222222,
+              "24": 208.9959027777778
+            },
+            "groups": {
+              "1-6": 164.0319212962963,
+              "7-12": 190.48525462962962,
+              "13-24": 229.0278125
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 576
+            }
+          },
+          "CURRENT": {
+            "mae": 356.8732760561482,
+            "eligiblePairs": 576,
+            "commonPairs": 576,
+            "ownEligibleMae": 356.8732760561482,
+            "eligibleOrigins": 24,
+            "excludedOrigins": 24,
+            "coverage": 0.5,
+            "perHorizon": {
+              "1": 229.8930702653687,
+              "2": 233.98155513592985,
+              "3": 277.11890949187676,
+              "4": 340.54156139380484,
+              "5": 352.3681700323082,
+              "6": 490.09546379039847,
+              "7": 418.25173264769086,
+              "8": 322.538712928978,
+              "9": 323.0503935095964,
+              "10": 410.2873283448293,
+              "11": 379.559669566558,
+              "12": 386.1527950918993,
+              "13": 432.404956722546,
+              "14": 425.3826605214288,
+              "15": 357.3753826528166,
+              "16": 320.4569003852893,
+              "17": 368.1842255024613,
+              "18": 362.9702402998261,
+              "19": 339.49340568485394,
+              "20": 394.55967884540854,
+              "21": 412.85413920251705,
+              "22": 276.90240950433065,
+              "23": 350.89460612878446,
+              "24": 359.64065769805467
+            },
+            "groups": {
+              "1-6": 320.66645501828117,
+              "7-12": 373.30677201492534,
+              "13-24": 366.75993859569314
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 576
+            }
+          },
+          "HGB_MAE": {
+            "mae": 179.46661643333994,
+            "eligiblePairs": 576,
+            "commonPairs": 576,
+            "ownEligibleMae": 179.46661643333994,
+            "eligibleOrigins": 24,
+            "excludedOrigins": 24,
+            "coverage": 0.5,
+            "perHorizon": {
+              "1": 78.69531625838087,
+              "2": 137.9540143504804,
+              "3": 165.7321264220715,
+              "4": 188.53911657850765,
+              "5": 178.3072922988158,
+              "6": 207.99936869778332,
+              "7": 184.65177483755102,
+              "8": 175.02348091446953,
+              "9": 176.4104589999039,
+              "10": 174.58573315598915,
+              "11": 206.11447843919407,
+              "12": 218.07832628927156,
+              "13": 216.94512250901948,
+              "14": 229.01513845098611,
+              "15": 221.50532343857674,
+              "16": 181.15660972531427,
+              "17": 221.643708512693,
+              "18": 153.57733103334522,
+              "19": 103.02193325323869,
+              "20": 137.798088230866,
+              "21": 156.19241766118571,
+              "22": 200.981526827723,
+              "23": 156.85153900715414,
+              "24": 236.41856850763722
+            },
+            "groups": {
+              "1-6": 159.53787243433993,
+              "7-12": 189.1440421060632,
+              "13-24": 184.5922755964783
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 576
+            }
+          },
+          "HGB_RESIDUAL_B1": {
+            "mae": 191.33544297921785,
+            "eligiblePairs": 576,
+            "commonPairs": 576,
+            "ownEligibleMae": 191.33544297921785,
+            "eligibleOrigins": 24,
+            "excludedOrigins": 24,
+            "coverage": 0.5,
+            "perHorizon": {
+              "1": 79.39675107041258,
+              "2": 98.47344656957645,
+              "3": 123.90098362515666,
+              "4": 187.8208039513369,
+              "5": 162.0905624492982,
+              "6": 212.58011142047613,
+              "7": 196.6092825648567,
+              "8": 142.44514085715443,
+              "9": 123.63674078623295,
+              "10": 156.33813790705057,
+              "11": 231.48156451926133,
+              "12": 236.37809158827568,
+              "13": 266.87769165301603,
+              "14": 286.60155594682834,
+              "15": 258.37707679118336,
+              "16": 223.959731387287,
+              "17": 249.2984374891439,
+              "18": 235.7147623501806,
+              "19": 154.6184523555979,
+              "20": 240.770677297843,
+              "21": 190.2921012205516,
+              "22": 207.70205350316039,
+              "23": 172.95544259667446,
+              "24": 153.73103160067322
+            },
+            "groups": {
+              "1-6": 144.04377651437616,
+              "7-12": 181.14815970380528,
+              "13-24": 220.07491784934498
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 576
+            }
+          },
+          "HGB_SMALL": {
+            "mae": 199.08107359801008,
+            "eligiblePairs": 576,
+            "commonPairs": 576,
+            "ownEligibleMae": 199.08107359801008,
+            "eligibleOrigins": 24,
+            "excludedOrigins": 24,
+            "coverage": 0.5,
+            "perHorizon": {
+              "1": 81.29468508123988,
+              "2": 157.94687564827086,
+              "3": 156.02528228598504,
+              "4": 145.47223412216965,
+              "5": 186.4584672294849,
+              "6": 231.51657611545735,
+              "7": 228.07831247596926,
+              "8": 166.41309168967172,
+              "9": 194.6918873359387,
+              "10": 236.96169833199235,
+              "11": 218.8768266868497,
+              "12": 190.90341046677963,
+              "13": 185.05150147720437,
+              "14": 190.51957432812208,
+              "15": 241.65645584404766,
+              "16": 248.14261289578062,
+              "17": 206.38592146096144,
+              "18": 244.19401772954515,
+              "19": 185.998054295772,
+              "20": 187.48096046228474,
+              "21": 229.1785661144444,
+              "22": 229.25797409886175,
+              "23": 210.3629042874838,
+              "24": 225.077875887925
+            },
+            "groups": {
+              "1-6": 159.7856867471013,
+              "7-12": 205.98753783120023,
+              "13-24": 215.2755349068694
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 576
+            }
+          },
+          "HGB_WEEKLY": {
+            "mae": 195.65154191060276,
+            "eligiblePairs": 576,
+            "commonPairs": 576,
+            "ownEligibleMae": 195.65154191060276,
+            "eligibleOrigins": 24,
+            "excludedOrigins": 24,
+            "coverage": 0.5,
+            "perHorizon": {
+              "1": 81.29468508123988,
+              "2": 131.39014243809777,
+              "3": 140.44115376325834,
+              "4": 145.47223412216965,
+              "5": 186.4584672294849,
+              "6": 231.51657611545735,
+              "7": 228.07831247596926,
+              "8": 207.62166687598835,
+              "9": 194.6918873359387,
+              "10": 236.96169833199235,
+              "11": 218.8768266868497,
+              "12": 166.67098184967475,
+              "13": 179.96630705959632,
+              "14": 180.41638457211454,
+              "15": 234.0738551152833,
+              "16": 248.14261289578062,
+              "17": 206.38592146096144,
+              "18": 244.19401772954515,
+              "19": 185.998054295772,
+              "20": 180.70997217087606,
+              "21": 229.1785661144444,
+              "22": 229.63088599980526,
+              "23": 187.53896774278056,
+              "24": 219.92682839138567
+            },
+            "groups": {
+              "1-6": 152.76220979161798,
+              "7-12": 208.81689559273553,
+              "13-24": 210.51353112902876
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 576
+            }
+          },
+          "MEDIAN": {
+            "mae": 100.72312500000001,
+            "eligiblePairs": 576,
+            "commonPairs": 576,
+            "ownEligibleMae": 100.72312500000001,
+            "eligibleOrigins": 24,
+            "excludedOrigins": 24,
+            "coverage": 0.5,
+            "perHorizon": {
+              "1": 122.265,
+              "2": 103.6575,
+              "3": 91.06708333333333,
+              "4": 88.82833333333333,
+              "5": 92.65166666666667,
+              "6": 95.39083333333333,
+              "7": 100.24041666666666,
+              "8": 104.61416666666666,
+              "9": 108.56041666666667,
+              "10": 112.30666666666666,
+              "11": 114.78416666666666,
+              "12": 110.62333333333335,
+              "13": 111.50583333333336,
+              "14": 107.90666666666668,
+              "15": 111.40625,
+              "16": 99.31250000000001,
+              "17": 96.09750000000001,
+              "18": 94.80458333333334,
+              "19": 95.01208333333335,
+              "20": 95.06791666666668,
+              "21": 93.39958333333334,
+              "22": 91.45500000000001,
+              "23": 88.8525,
+              "24": 87.545
+            },
+            "groups": {
+              "1-6": 98.97673611111111,
+              "7-12": 108.52152777777778,
+              "13-24": 97.69711805555556
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 576
+            }
+          },
+          "PERSISTENCE": {
+            "mae": 203.34118055555555,
+            "eligiblePairs": 576,
+            "commonPairs": 576,
+            "ownEligibleMae": 203.34118055555555,
+            "eligibleOrigins": 24,
+            "excludedOrigins": 24,
+            "coverage": 0.5,
+            "perHorizon": {
+              "1": 121.22208333333333,
+              "2": 149.62208333333334,
+              "3": 154.02166666666668,
+              "4": 162.61708333333334,
+              "5": 168.90208333333334,
+              "6": 174.22666666666666,
+              "7": 174.69708333333332,
+              "8": 177.58833333333334,
+              "9": 175.22,
+              "10": 177.78166666666667,
+              "11": 189.00375,
+              "12": 194.8975,
+              "13": 206.56791666666666,
+              "14": 216.54125,
+              "15": 229.4475,
+              "16": 239.23541666666668,
+              "17": 248.82541666666668,
+              "18": 252.89208333333335,
+              "19": 256.3333333333333,
+              "20": 254.40083333333334,
+              "21": 248.6025,
+              "22": 242.51208333333332,
+              "23": 235.74291666666667,
+              "24": 229.28708333333333
+            },
+            "groups": {
+              "1-6": 155.10194444444446,
+              "7-12": 181.5313888888889,
+              "13-24": 238.36569444444444
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 576
+            }
+          },
+          "RIDGE_RESIDUAL_B1": {
+            "mae": 475.1325478249959,
+            "eligiblePairs": 576,
+            "commonPairs": 576,
+            "ownEligibleMae": 475.1325478249959,
+            "eligibleOrigins": 24,
+            "excludedOrigins": 24,
+            "coverage": 0.5,
+            "perHorizon": {
+              "1": 277.81056254807254,
+              "2": 314.9368922293609,
+              "3": 350.42778558504494,
+              "4": 401.88891772045497,
+              "5": 425.8220490211367,
+              "6": 446.7302249740609,
+              "7": 471.0912400564015,
+              "8": 486.2486369739515,
+              "9": 495.80501178635575,
+              "10": 495.4578353316785,
+              "11": 521.6549408482152,
+              "12": 539.7083935564203,
+              "13": 543.6613317409204,
+              "14": 545.454579023582,
+              "15": 536.307109676855,
+              "16": 533.7719830180098,
+              "17": 532.6191774639562,
+              "18": 525.5452569990049,
+              "19": 521.064557784222,
+              "20": 513.0338860373423,
+              "21": 501.75345185322226,
+              "22": 490.2616885456903,
+              "23": 474.21445436659604,
+              "24": 457.91118065934666
+            },
+            "groups": {
+              "1-6": 369.6027386796885,
+              "7-12": 501.6610097588371,
+              "13-24": 514.633221430729
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 576
+            }
+          }
+        },
+        "selectedBaseline": "B1",
+        "skill": null,
+        "skillUndefinedReason": "Missing common pairs or zero baseline MAE",
+        "commonPairs": 576,
+        "task": "forecast-spike prediction (origin-frozen thresholds)",
+        "commonOriginDays": 1,
+        "observedAnomalyTask": "operational classification; no independent physical-cause labels",
+        "weeklyBlockDifference95": {
+          "interval": null,
+          "reason": "Fewer than eight weeks of paired errors"
+        },
+        "comparisonMethods": [
+          "HGB_SMALL",
+          "HGB_MAE",
+          "CURRENT",
+          "MEDIAN",
+          "PERSISTENCE",
+          "B1",
+          "HGB_WEEKLY",
+          "HGB_RESIDUAL_B1",
+          "RIDGE_RESIDUAL_B1"
+        ],
+        "allMethodCommonPairs": 312,
+        "exclusions": {
+          "B1": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "B2": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "B3": {
+            "INSUFFICIENT_HISTORY": 264,
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "CURRENT": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "HGB_MAE": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "HGB_RESIDUAL_B1": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "HGB_RESIDUAL_B2": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "HGB_SMALL": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "HGB_WEEKLY": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "MEDIAN": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "PERSISTENCE": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "RIDGE_RESIDUAL_B1": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "RIDGE_RESIDUAL_B2": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          }
+        },
+        "coverage": {
+          "B1": {
+            "eligiblePairs": 576
+          },
+          "B2": {
+            "eligiblePairs": 576
+          },
+          "B3": {
+            "eligiblePairs": 312
+          },
+          "CURRENT": {
+            "eligiblePairs": 576
+          },
+          "HGB_MAE": {
+            "eligiblePairs": 576
+          },
+          "HGB_RESIDUAL_B1": {
+            "eligiblePairs": 576
+          },
+          "HGB_RESIDUAL_B2": {
+            "eligiblePairs": 576
+          },
+          "HGB_SMALL": {
+            "eligiblePairs": 576
+          },
+          "HGB_WEEKLY": {
+            "eligiblePairs": 576
+          },
+          "MEDIAN": {
+            "eligiblePairs": 576
+          },
+          "PERSISTENCE": {
+            "eligiblePairs": 576
+          },
+          "RIDGE_RESIDUAL_B1": {
+            "eligiblePairs": 576
+          },
+          "RIDGE_RESIDUAL_B2": {
+            "eligiblePairs": 576
+          }
+        },
+        "errorByPriceRegime": {
+          "HGB_SMALL": {
+            "NON_TAIL": {
+              "pairs": 576,
+              "distinctTargets": 47,
+              "mae": 199.08107359801008,
+              "absoluteErrorShare": 1.0
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": 0.0
+            }
+          },
+          "HGB_MAE": {
+            "NON_TAIL": {
+              "pairs": 576,
+              "distinctTargets": 47,
+              "mae": 179.46661643333994,
+              "absoluteErrorShare": 1.0
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": 0.0
+            }
+          },
+          "CURRENT": {
+            "NON_TAIL": {
+              "pairs": 576,
+              "distinctTargets": 47,
+              "mae": 356.8732760561482,
+              "absoluteErrorShare": 1.0
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": 0.0
+            }
+          },
+          "MEDIAN": {
+            "NON_TAIL": {
+              "pairs": 576,
+              "distinctTargets": 47,
+              "mae": 100.72312500000001,
+              "absoluteErrorShare": 1.0
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": 0.0
+            }
+          },
+          "PERSISTENCE": {
+            "NON_TAIL": {
+              "pairs": 576,
+              "distinctTargets": 47,
+              "mae": 203.34118055555555,
+              "absoluteErrorShare": 1.0
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": 0.0
+            }
+          },
+          "B1": {
+            "NON_TAIL": {
+              "pairs": 576,
+              "distinctTargets": 47,
+              "mae": 203.14320023148147,
+              "absoluteErrorShare": 1.0
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": 0.0
+            }
+          },
+          "HGB_WEEKLY": {
+            "NON_TAIL": {
+              "pairs": 576,
+              "distinctTargets": 47,
+              "mae": 195.65154191060276,
+              "absoluteErrorShare": 1.0
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": 0.0
+            }
+          },
+          "HGB_RESIDUAL_B1": {
+            "NON_TAIL": {
+              "pairs": 576,
+              "distinctTargets": 47,
+              "mae": 191.33544297921785,
+              "absoluteErrorShare": 1.0
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": 0.0
+            }
+          },
+          "RIDGE_RESIDUAL_B1": {
+            "NON_TAIL": {
+              "pairs": 576,
+              "distinctTargets": 47,
+              "mae": 475.1325478249959,
+              "absoluteErrorShare": 1.0
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": 0.0
+            }
+          }
+        },
+        "distinctTargets": 47
+      },
+      "seasonal": {
+        "table": {
+          "B1": {
+            "mae": 271.7915918803419,
+            "eligiblePairs": 576,
+            "commonPairs": 312,
+            "ownEligibleMae": 203.14320023148147,
+            "eligibleOrigins": 24,
+            "excludedOrigins": 24,
+            "coverage": 0.5,
+            "perHorizon": {
+              "1": 224.19102564102565,
+              "2": 206.4171794871795,
+              "3": 197.12358974358975,
+              "4": 184.0397435897436,
+              "5": 189.26384615384617,
+              "6": 191.9994871794872,
+              "7": 193.94410256410256,
+              "8": 200.72794871794872,
+              "9": 211.9317948717949,
+              "10": 224.38333333333335,
+              "11": 243.3474358974359,
+              "12": 256.6694871794872,
+              "13": 277.69897435897434,
+              "14": 292.8751282051282,
+              "15": 314.7766666666667,
+              "16": 328.8494871794872,
+              "17": 342.56102564102565,
+              "18": 346.6879487179487,
+              "19": 347.9802564102564,
+              "20": 351.6517948717949,
+              "21": 352.9433333333333,
+              "22": 352.5171794871795,
+              "23": 348.18333333333334,
+              "24": 342.23410256410256
+            },
+            "groups": {
+              "1-6": 198.83914529914531,
+              "7-12": 221.8340170940171,
+              "13-24": 333.24660256410255
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 312
+            }
+          },
+          "B2": {
+            "mae": 49.10208333333333,
+            "eligiblePairs": 576,
+            "commonPairs": 312,
+            "ownEligibleMae": 46.309045138888884,
+            "eligibleOrigins": 24,
+            "excludedOrigins": 24,
+            "coverage": 0.5,
+            "perHorizon": {
+              "1": 138.33307692307693,
+              "2": 89.57692307692307,
+              "3": 64.45461538461538,
+              "4": 62.077692307692296,
+              "5": 62.07999999999999,
+              "6": 61.02999999999999,
+              "7": 57.80846153846153,
+              "8": 29.844615384615377,
+              "9": 26.874615384615375,
+              "10": 27.217692307692303,
+              "11": 29.85461538461538,
+              "12": 28.473846153846154,
+              "13": 31.790769230769232,
+              "14": 31.38923076923077,
+              "15": 35.57076923076923,
+              "16": 39.591538461538455,
+              "17": 38.3276923076923,
+              "18": 37.29,
+              "19": 38.16153846153846,
+              "20": 41.963846153846156,
+              "21": 43.67769230769231,
+              "22": 52.862307692307695,
+              "23": 51.56076923076923,
+              "24": 58.637692307692305
+            },
+            "groups": {
+              "1-6": 79.59205128205127,
+              "7-12": 33.34564102564102,
+              "13-24": 41.735320512820515
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 312
+            }
+          },
+          "B3": {
+            "mae": 140.47595238095238,
+            "eligiblePairs": 312,
+            "commonPairs": 312,
+            "ownEligibleMae": 140.47595238095238,
+            "eligibleOrigins": 13,
+            "excludedOrigins": 35,
+            "coverage": 0.2708333333333333,
+            "perHorizon": {
+              "1": 133.62142857142857,
+              "2": 101.06527472527472,
+              "3": 110.97395604395605,
+              "4": 131.60901098901098,
+              "5": 135.90373626373628,
+              "6": 140.01527472527474,
+              "7": 133.4432967032967,
+              "8": 126.20395604395605,
+              "9": 126.9478021978022,
+              "10": 124.32384615384616,
+              "11": 127.32593406593408,
+              "12": 132.8710989010989,
+              "13": 137.71142857142857,
+              "14": 141.30296703296705,
+              "15": 141.35747252747254,
+              "16": 126.06956043956043,
+              "17": 108.30945054945055,
+              "18": 101.09934065934065,
+              "19": 112.80780219780219,
+              "20": 128.51999999999998,
+              "21": 186.0845054945055,
+              "22": 200.51472527472527,
+              "23": 226.00978021978023,
+              "24": 237.33120879120878
+            },
+            "groups": {
+              "1-6": 125.53144688644689,
+              "7-12": 128.51932234432235,
+              "13-24": 153.92652014652015
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 312
+            }
+          },
+          "HGB_MAE": {
+            "mae": 181.75655459946955,
+            "eligiblePairs": 576,
+            "commonPairs": 312,
+            "ownEligibleMae": 179.46661643333994,
+            "eligibleOrigins": 24,
+            "excludedOrigins": 24,
+            "coverage": 0.5,
+            "perHorizon": {
+              "1": 102.2777123479279,
+              "2": 196.98114207778178,
+              "3": 209.13878440095618,
+              "4": 237.23373228554436,
+              "5": 240.0449365003168,
+              "6": 268.50082730273357,
+              "7": 266.1671082209855,
+              "8": 254.74606933460046,
+              "9": 198.40597096777046,
+              "10": 196.798570343824,
+              "11": 207.86814984841487,
+              "12": 180.524505819369,
+              "13": 141.52619016988203,
+              "14": 156.82749362796707,
+              "15": 149.70131824336528,
+              "16": 142.68281908032375,
+              "17": 154.72204358965448,
+              "18": 141.5779696670812,
+              "19": 82.77251316678802,
+              "20": 115.37161661994679,
+              "21": 139.50277501174648,
+              "22": 164.15618594324462,
+              "23": 165.1340059942468,
+              "24": 249.49486982279774
+            },
+            "groups": {
+              "1-6": 209.02952248587675,
+              "7-12": 217.4183957558274,
+              "13-24": 150.289150078087
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 312
+            }
+          },
+          "HGB_SMALL": {
+            "mae": 190.53536835243054,
+            "eligiblePairs": 576,
+            "commonPairs": 312,
+            "ownEligibleMae": 199.08107359801008,
+            "eligibleOrigins": 24,
+            "excludedOrigins": 24,
+            "coverage": 0.5,
+            "perHorizon": {
+              "1": 108.78727073861253,
+              "2": 194.182759678221,
+              "3": 214.18626172541468,
+              "4": 177.11874591660202,
+              "5": 238.92927137422254,
+              "6": 301.4302493289748,
+              "7": 307.6343189002001,
+              "8": 225.37519321878247,
+              "9": 235.13953258609223,
+              "10": 251.53922852211142,
+              "11": 225.757277341784,
+              "12": 129.71511478832048,
+              "13": 121.90263663192623,
+              "14": 133.87982797982602,
+              "15": 164.40584647780796,
+              "16": 175.0568945963395,
+              "17": 150.67848175277982,
+              "18": 172.19443401109052,
+              "19": 120.93640966771065,
+              "20": 130.05778630304957,
+              "21": 195.08327234083973,
+              "22": 174.98834026963874,
+              "23": 186.75979079157662,
+              "24": 237.10989551640935
+            },
+            "groups": {
+              "1-6": 205.77242646034125,
+              "7-12": 229.19344422621512,
+              "13-24": 163.58780136158288
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 312
+            }
+          }
+        },
+        "selectedBaseline": "B1",
+        "skill": null,
+        "skillUndefinedReason": "Missing common pairs or zero baseline MAE",
+        "commonPairs": 312,
+        "task": "forecast-spike prediction (origin-frozen thresholds)",
+        "commonOriginDays": 1,
+        "observedAnomalyTask": "operational classification; no independent physical-cause labels",
+        "weeklyBlockDifference95": {
+          "interval": null,
+          "reason": "Fewer than eight weeks of paired errors"
+        },
+        "comparisonMethods": [
+          "HGB_SMALL",
+          "HGB_MAE",
+          "B1",
+          "B2",
+          "B3"
+        ],
+        "allMethodCommonPairs": 312,
+        "exclusions": {
+          "B1": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "B2": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "B3": {
+            "INSUFFICIENT_HISTORY": 264,
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "CURRENT": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "HGB_MAE": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "HGB_RESIDUAL_B1": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "HGB_RESIDUAL_B2": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "HGB_SMALL": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "HGB_WEEKLY": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "MEDIAN": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "PERSISTENCE": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "RIDGE_RESIDUAL_B1": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "RIDGE_RESIDUAL_B2": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          }
+        },
+        "coverage": {
+          "B1": {
+            "eligiblePairs": 576
+          },
+          "B2": {
+            "eligiblePairs": 576
+          },
+          "B3": {
+            "eligiblePairs": 312
+          },
+          "CURRENT": {
+            "eligiblePairs": 576
+          },
+          "HGB_MAE": {
+            "eligiblePairs": 576
+          },
+          "HGB_RESIDUAL_B1": {
+            "eligiblePairs": 576
+          },
+          "HGB_RESIDUAL_B2": {
+            "eligiblePairs": 576
+          },
+          "HGB_SMALL": {
+            "eligiblePairs": 576
+          },
+          "HGB_WEEKLY": {
+            "eligiblePairs": 576
+          },
+          "MEDIAN": {
+            "eligiblePairs": 576
+          },
+          "PERSISTENCE": {
+            "eligiblePairs": 576
+          },
+          "RIDGE_RESIDUAL_B1": {
+            "eligiblePairs": 576
+          },
+          "RIDGE_RESIDUAL_B2": {
+            "eligiblePairs": 576
+          }
+        },
+        "errorByPriceRegime": {
+          "HGB_SMALL": {
+            "NON_TAIL": {
+              "pairs": 312,
+              "distinctTargets": 36,
+              "mae": 190.53536835243054,
+              "absoluteErrorShare": 1.0
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": 0.0
+            }
+          },
+          "HGB_MAE": {
+            "NON_TAIL": {
+              "pairs": 312,
+              "distinctTargets": 36,
+              "mae": 181.75655459946955,
+              "absoluteErrorShare": 1.0
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": 0.0
+            }
+          },
+          "B1": {
+            "NON_TAIL": {
+              "pairs": 312,
+              "distinctTargets": 36,
+              "mae": 271.7915918803419,
+              "absoluteErrorShare": 1.0
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": 0.0
+            }
+          },
+          "B2": {
+            "NON_TAIL": {
+              "pairs": 312,
+              "distinctTargets": 36,
+              "mae": 49.10208333333333,
+              "absoluteErrorShare": 1.0
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": 0.0
+            }
+          },
+          "B3": {
+            "NON_TAIL": {
+              "pairs": 312,
+              "distinctTargets": 36,
+              "mae": 140.47595238095238,
+              "absoluteErrorShare": 1.0
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": 0.0
+            }
+          }
+        },
+        "distinctTargets": 36
+      },
+      "full": {
+        "table": {
+          "B1": {
+            "mae": 203.14320023148147,
+            "eligiblePairs": 576,
+            "commonPairs": 576,
+            "ownEligibleMae": 203.14320023148147,
+            "eligibleOrigins": 24,
+            "excludedOrigins": 24,
+            "coverage": 0.5,
+            "perHorizon": {
+              "1": 160.39645833333333,
+              "2": 159.67173611111113,
+              "3": 161.04395833333334,
+              "4": 162.40173611111112,
+              "5": 168.823125,
+              "6": 171.8545138888889,
+              "7": 175.14284722222223,
+              "8": 179.51659722222223,
+              "9": 186.25576388888888,
+              "10": 192.76659722222223,
+              "11": 201.51840277777777,
+              "12": 207.71131944444443,
+              "13": 215.62145833333332,
+              "14": 222.76645833333333,
+              "15": 234.44354166666668,
+              "16": 240.02520833333332,
+              "17": 244.14159722222223,
+              "18": 242.2332638888889,
+              "19": 239.1157638888889,
+              "20": 234.35659722222223,
+              "21": 228.54243055555557,
+              "22": 222.43118055555556,
+              "23": 215.6603472222222,
+              "24": 208.9959027777778
+            },
+            "groups": {
+              "1-6": 164.0319212962963,
+              "7-12": 190.48525462962962,
+              "13-24": 229.0278125
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 576
+            }
+          },
+          "B2": {
+            "mae": 46.309045138888884,
+            "eligiblePairs": 576,
+            "commonPairs": 576,
+            "ownEligibleMae": 46.309045138888884,
+            "eligibleOrigins": 24,
+            "excludedOrigins": 24,
+            "coverage": 0.5,
+            "perHorizon": {
+              "1": 88.0975,
+              "2": 63.260416666666664,
+              "3": 51.307916666666664,
+              "4": 50.42666666666666,
+              "5": 49.927499999999995,
+              "6": 49.23,
+              "7": 49.502916666666664,
+              "8": 35.054583333333326,
+              "9": 35.67583333333333,
+              "10": 37.308749999999996,
+              "11": 42.45708333333333,
+              "12": 40.42958333333333,
+              "13": 45.64833333333333,
+              "14": 45.474583333333335,
+              "15": 45.18875,
+              "16": 44.916666666666664,
+              "17": 43.204166666666666,
+              "18": 40.26291666666666,
+              "19": 42.871249999999996,
+              "20": 42.85125,
+              "21": 42.85041666666667,
+              "22": 42.63708333333333,
+              "23": 41.76583333333333,
+              "24": 41.067083333333336
+            },
+            "groups": {
+              "1-6": 58.70833333333333,
+              "7-12": 40.07145833333333,
+              "13-24": 43.22819444444444
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 576
+            }
+          },
+          "CURRENT": {
+            "mae": 356.8732760561482,
+            "eligiblePairs": 576,
+            "commonPairs": 576,
+            "ownEligibleMae": 356.8732760561482,
+            "eligibleOrigins": 24,
+            "excludedOrigins": 24,
+            "coverage": 0.5,
+            "perHorizon": {
+              "1": 229.8930702653687,
+              "2": 233.98155513592985,
+              "3": 277.11890949187676,
+              "4": 340.54156139380484,
+              "5": 352.3681700323082,
+              "6": 490.09546379039847,
+              "7": 418.25173264769086,
+              "8": 322.538712928978,
+              "9": 323.0503935095964,
+              "10": 410.2873283448293,
+              "11": 379.559669566558,
+              "12": 386.1527950918993,
+              "13": 432.404956722546,
+              "14": 425.3826605214288,
+              "15": 357.3753826528166,
+              "16": 320.4569003852893,
+              "17": 368.1842255024613,
+              "18": 362.9702402998261,
+              "19": 339.49340568485394,
+              "20": 394.55967884540854,
+              "21": 412.85413920251705,
+              "22": 276.90240950433065,
+              "23": 350.89460612878446,
+              "24": 359.64065769805467
+            },
+            "groups": {
+              "1-6": 320.66645501828117,
+              "7-12": 373.30677201492534,
+              "13-24": 366.75993859569314
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 576
+            }
+          },
+          "HGB_MAE": {
+            "mae": 179.46661643333994,
+            "eligiblePairs": 576,
+            "commonPairs": 576,
+            "ownEligibleMae": 179.46661643333994,
+            "eligibleOrigins": 24,
+            "excludedOrigins": 24,
+            "coverage": 0.5,
+            "perHorizon": {
+              "1": 78.69531625838087,
+              "2": 137.9540143504804,
+              "3": 165.7321264220715,
+              "4": 188.53911657850765,
+              "5": 178.3072922988158,
+              "6": 207.99936869778332,
+              "7": 184.65177483755102,
+              "8": 175.02348091446953,
+              "9": 176.4104589999039,
+              "10": 174.58573315598915,
+              "11": 206.11447843919407,
+              "12": 218.07832628927156,
+              "13": 216.94512250901948,
+              "14": 229.01513845098611,
+              "15": 221.50532343857674,
+              "16": 181.15660972531427,
+              "17": 221.643708512693,
+              "18": 153.57733103334522,
+              "19": 103.02193325323869,
+              "20": 137.798088230866,
+              "21": 156.19241766118571,
+              "22": 200.981526827723,
+              "23": 156.85153900715414,
+              "24": 236.41856850763722
+            },
+            "groups": {
+              "1-6": 159.53787243433993,
+              "7-12": 189.1440421060632,
+              "13-24": 184.5922755964783
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 576
+            }
+          },
+          "HGB_RESIDUAL_B1": {
+            "mae": 191.33544297921785,
+            "eligiblePairs": 576,
+            "commonPairs": 576,
+            "ownEligibleMae": 191.33544297921785,
+            "eligibleOrigins": 24,
+            "excludedOrigins": 24,
+            "coverage": 0.5,
+            "perHorizon": {
+              "1": 79.39675107041258,
+              "2": 98.47344656957645,
+              "3": 123.90098362515666,
+              "4": 187.8208039513369,
+              "5": 162.0905624492982,
+              "6": 212.58011142047613,
+              "7": 196.6092825648567,
+              "8": 142.44514085715443,
+              "9": 123.63674078623295,
+              "10": 156.33813790705057,
+              "11": 231.48156451926133,
+              "12": 236.37809158827568,
+              "13": 266.87769165301603,
+              "14": 286.60155594682834,
+              "15": 258.37707679118336,
+              "16": 223.959731387287,
+              "17": 249.2984374891439,
+              "18": 235.7147623501806,
+              "19": 154.6184523555979,
+              "20": 240.770677297843,
+              "21": 190.2921012205516,
+              "22": 207.70205350316039,
+              "23": 172.95544259667446,
+              "24": 153.73103160067322
+            },
+            "groups": {
+              "1-6": 144.04377651437616,
+              "7-12": 181.14815970380528,
+              "13-24": 220.07491784934498
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 576
+            }
+          },
+          "HGB_RESIDUAL_B2": {
+            "mae": 221.75718391198626,
+            "eligiblePairs": 576,
+            "commonPairs": 576,
+            "ownEligibleMae": 221.75718391198626,
+            "eligibleOrigins": 24,
+            "excludedOrigins": 24,
+            "coverage": 0.5,
+            "perHorizon": {
+              "1": 102.08530561874524,
+              "2": 137.53549734798574,
+              "3": 191.65042506706482,
+              "4": 244.2387744831017,
+              "5": 205.99054428018349,
+              "6": 240.01773311060882,
+              "7": 253.690687417974,
+              "8": 185.26649548712524,
+              "9": 217.4381666957172,
+              "10": 265.62061474453816,
+              "11": 292.1407347768902,
+              "12": 269.0894705066791,
+              "13": 288.453572682543,
+              "14": 262.4761004198903,
+              "15": 286.5401138735999,
+              "16": 260.58938203860805,
+              "17": 282.22870732981596,
+              "18": 248.1462724531014,
+              "19": 150.4101065272772,
+              "20": 162.40167447851294,
+              "21": 180.36822259162435,
+              "22": 185.20829105268717,
+              "23": 182.21070020912646,
+              "24": 228.37482069426957
+            },
+            "groups": {
+              "1-6": 186.9197133179483,
+              "7-12": 247.207694938154,
+              "13-24": 226.45066369592138
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 576
+            }
+          },
+          "HGB_SMALL": {
+            "mae": 199.08107359801008,
+            "eligiblePairs": 576,
+            "commonPairs": 576,
+            "ownEligibleMae": 199.08107359801008,
+            "eligibleOrigins": 24,
+            "excludedOrigins": 24,
+            "coverage": 0.5,
+            "perHorizon": {
+              "1": 81.29468508123988,
+              "2": 157.94687564827086,
+              "3": 156.02528228598504,
+              "4": 145.47223412216965,
+              "5": 186.4584672294849,
+              "6": 231.51657611545735,
+              "7": 228.07831247596926,
+              "8": 166.41309168967172,
+              "9": 194.6918873359387,
+              "10": 236.96169833199235,
+              "11": 218.8768266868497,
+              "12": 190.90341046677963,
+              "13": 185.05150147720437,
+              "14": 190.51957432812208,
+              "15": 241.65645584404766,
+              "16": 248.14261289578062,
+              "17": 206.38592146096144,
+              "18": 244.19401772954515,
+              "19": 185.998054295772,
+              "20": 187.48096046228474,
+              "21": 229.1785661144444,
+              "22": 229.25797409886175,
+              "23": 210.3629042874838,
+              "24": 225.077875887925
+            },
+            "groups": {
+              "1-6": 159.7856867471013,
+              "7-12": 205.98753783120023,
+              "13-24": 215.2755349068694
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 576
+            }
+          },
+          "HGB_WEEKLY": {
+            "mae": 195.65154191060276,
+            "eligiblePairs": 576,
+            "commonPairs": 576,
+            "ownEligibleMae": 195.65154191060276,
+            "eligibleOrigins": 24,
+            "excludedOrigins": 24,
+            "coverage": 0.5,
+            "perHorizon": {
+              "1": 81.29468508123988,
+              "2": 131.39014243809777,
+              "3": 140.44115376325834,
+              "4": 145.47223412216965,
+              "5": 186.4584672294849,
+              "6": 231.51657611545735,
+              "7": 228.07831247596926,
+              "8": 207.62166687598835,
+              "9": 194.6918873359387,
+              "10": 236.96169833199235,
+              "11": 218.8768266868497,
+              "12": 166.67098184967475,
+              "13": 179.96630705959632,
+              "14": 180.41638457211454,
+              "15": 234.0738551152833,
+              "16": 248.14261289578062,
+              "17": 206.38592146096144,
+              "18": 244.19401772954515,
+              "19": 185.998054295772,
+              "20": 180.70997217087606,
+              "21": 229.1785661144444,
+              "22": 229.63088599980526,
+              "23": 187.53896774278056,
+              "24": 219.92682839138567
+            },
+            "groups": {
+              "1-6": 152.76220979161798,
+              "7-12": 208.81689559273553,
+              "13-24": 210.51353112902876
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 576
+            }
+          },
+          "MEDIAN": {
+            "mae": 100.72312500000001,
+            "eligiblePairs": 576,
+            "commonPairs": 576,
+            "ownEligibleMae": 100.72312500000001,
+            "eligibleOrigins": 24,
+            "excludedOrigins": 24,
+            "coverage": 0.5,
+            "perHorizon": {
+              "1": 122.265,
+              "2": 103.6575,
+              "3": 91.06708333333333,
+              "4": 88.82833333333333,
+              "5": 92.65166666666667,
+              "6": 95.39083333333333,
+              "7": 100.24041666666666,
+              "8": 104.61416666666666,
+              "9": 108.56041666666667,
+              "10": 112.30666666666666,
+              "11": 114.78416666666666,
+              "12": 110.62333333333335,
+              "13": 111.50583333333336,
+              "14": 107.90666666666668,
+              "15": 111.40625,
+              "16": 99.31250000000001,
+              "17": 96.09750000000001,
+              "18": 94.80458333333334,
+              "19": 95.01208333333335,
+              "20": 95.06791666666668,
+              "21": 93.39958333333334,
+              "22": 91.45500000000001,
+              "23": 88.8525,
+              "24": 87.545
+            },
+            "groups": {
+              "1-6": 98.97673611111111,
+              "7-12": 108.52152777777778,
+              "13-24": 97.69711805555556
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 576
+            }
+          },
+          "PERSISTENCE": {
+            "mae": 203.34118055555555,
+            "eligiblePairs": 576,
+            "commonPairs": 576,
+            "ownEligibleMae": 203.34118055555555,
+            "eligibleOrigins": 24,
+            "excludedOrigins": 24,
+            "coverage": 0.5,
+            "perHorizon": {
+              "1": 121.22208333333333,
+              "2": 149.62208333333334,
+              "3": 154.02166666666668,
+              "4": 162.61708333333334,
+              "5": 168.90208333333334,
+              "6": 174.22666666666666,
+              "7": 174.69708333333332,
+              "8": 177.58833333333334,
+              "9": 175.22,
+              "10": 177.78166666666667,
+              "11": 189.00375,
+              "12": 194.8975,
+              "13": 206.56791666666666,
+              "14": 216.54125,
+              "15": 229.4475,
+              "16": 239.23541666666668,
+              "17": 248.82541666666668,
+              "18": 252.89208333333335,
+              "19": 256.3333333333333,
+              "20": 254.40083333333334,
+              "21": 248.6025,
+              "22": 242.51208333333332,
+              "23": 235.74291666666667,
+              "24": 229.28708333333333
+            },
+            "groups": {
+              "1-6": 155.10194444444446,
+              "7-12": 181.5313888888889,
+              "13-24": 238.36569444444444
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 576
+            }
+          },
+          "RIDGE_RESIDUAL_B1": {
+            "mae": 475.1325478249959,
+            "eligiblePairs": 576,
+            "commonPairs": 576,
+            "ownEligibleMae": 475.1325478249959,
+            "eligibleOrigins": 24,
+            "excludedOrigins": 24,
+            "coverage": 0.5,
+            "perHorizon": {
+              "1": 277.81056254807254,
+              "2": 314.9368922293609,
+              "3": 350.42778558504494,
+              "4": 401.88891772045497,
+              "5": 425.8220490211367,
+              "6": 446.7302249740609,
+              "7": 471.0912400564015,
+              "8": 486.2486369739515,
+              "9": 495.80501178635575,
+              "10": 495.4578353316785,
+              "11": 521.6549408482152,
+              "12": 539.7083935564203,
+              "13": 543.6613317409204,
+              "14": 545.454579023582,
+              "15": 536.307109676855,
+              "16": 533.7719830180098,
+              "17": 532.6191774639562,
+              "18": 525.5452569990049,
+              "19": 521.064557784222,
+              "20": 513.0338860373423,
+              "21": 501.75345185322226,
+              "22": 490.2616885456903,
+              "23": 474.21445436659604,
+              "24": 457.91118065934666
+            },
+            "groups": {
+              "1-6": 369.6027386796885,
+              "7-12": 501.6610097588371,
+              "13-24": 514.633221430729
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 576
+            }
+          },
+          "RIDGE_RESIDUAL_B2": {
+            "mae": 472.008055061441,
+            "eligiblePairs": 576,
+            "commonPairs": 576,
+            "ownEligibleMae": 472.008055061441,
+            "eligibleOrigins": 24,
+            "excludedOrigins": 24,
+            "coverage": 0.5,
+            "perHorizon": {
+              "1": 274.6286081800926,
+              "2": 309.6001203753551,
+              "3": 344.5732081415517,
+              "4": 397.6313605143615,
+              "5": 422.4400841743417,
+              "6": 442.6142584747365,
+              "7": 466.4518924132925,
+              "8": 481.3225606686784,
+              "9": 492.1329778082887,
+              "10": 492.4120056629737,
+              "11": 518.9707262528736,
+              "12": 535.5420480418418,
+              "13": 539.3520926562793,
+              "14": 541.8470683112042,
+              "15": 533.0434051370826,
+              "16": 530.7403445958745,
+              "17": 528.9280507243203,
+              "18": 522.7081016237682,
+              "19": 518.2676200327127,
+              "20": 511.1051485858355,
+              "21": 501.0640905803077,
+              "22": 490.66607163861363,
+              "23": 474.2384297763587,
+              "24": 457.913047103838
+            },
+            "groups": {
+              "1-6": 365.2479399767399,
+              "7-12": 497.8053684746581,
+              "13-24": 512.4894558971829
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 576
+            }
+          }
+        },
+        "selectedBaseline": "B1",
+        "skill": null,
+        "skillUndefinedReason": "Missing common pairs or zero baseline MAE",
+        "commonPairs": 576,
+        "task": "forecast-spike prediction (origin-frozen thresholds)",
+        "commonOriginDays": 1,
+        "observedAnomalyTask": "operational classification; no independent physical-cause labels",
+        "weeklyBlockDifference95": {
+          "interval": null,
+          "reason": "Fewer than eight weeks of paired errors"
+        },
+        "comparisonMethods": [
+          "CURRENT",
+          "HGB_MAE",
+          "MEDIAN",
+          "HGB_SMALL",
+          "HGB_WEEKLY",
+          "HGB_RESIDUAL_B1",
+          "HGB_RESIDUAL_B2",
+          "RIDGE_RESIDUAL_B1",
+          "RIDGE_RESIDUAL_B2",
+          "PERSISTENCE",
+          "B1",
+          "B2"
+        ],
+        "allMethodCommonPairs": 312,
+        "exclusions": {
+          "B1": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "B2": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "B3": {
+            "INSUFFICIENT_HISTORY": 264,
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "CURRENT": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "HGB_MAE": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "HGB_RESIDUAL_B1": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "HGB_RESIDUAL_B2": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "HGB_SMALL": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "HGB_WEEKLY": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "MEDIAN": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "PERSISTENCE": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "RIDGE_RESIDUAL_B1": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "RIDGE_RESIDUAL_B2": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          }
+        },
+        "coverage": {
+          "B1": {
+            "eligiblePairs": 576
+          },
+          "B2": {
+            "eligiblePairs": 576
+          },
+          "B3": {
+            "eligiblePairs": 312
+          },
+          "CURRENT": {
+            "eligiblePairs": 576
+          },
+          "HGB_MAE": {
+            "eligiblePairs": 576
+          },
+          "HGB_RESIDUAL_B1": {
+            "eligiblePairs": 576
+          },
+          "HGB_RESIDUAL_B2": {
+            "eligiblePairs": 576
+          },
+          "HGB_SMALL": {
+            "eligiblePairs": 576
+          },
+          "HGB_WEEKLY": {
+            "eligiblePairs": 576
+          },
+          "MEDIAN": {
+            "eligiblePairs": 576
+          },
+          "PERSISTENCE": {
+            "eligiblePairs": 576
+          },
+          "RIDGE_RESIDUAL_B1": {
+            "eligiblePairs": 576
+          },
+          "RIDGE_RESIDUAL_B2": {
+            "eligiblePairs": 576
+          }
+        },
+        "errorByPriceRegime": {
+          "CURRENT": {
+            "NON_TAIL": {
+              "pairs": 576,
+              "distinctTargets": 47,
+              "mae": 356.8732760561482,
+              "absoluteErrorShare": 1.0
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": 0.0
+            }
+          },
+          "HGB_MAE": {
+            "NON_TAIL": {
+              "pairs": 576,
+              "distinctTargets": 47,
+              "mae": 179.46661643333994,
+              "absoluteErrorShare": 1.0
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": 0.0
+            }
+          },
+          "MEDIAN": {
+            "NON_TAIL": {
+              "pairs": 576,
+              "distinctTargets": 47,
+              "mae": 100.72312500000001,
+              "absoluteErrorShare": 1.0
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": 0.0
+            }
+          },
+          "HGB_SMALL": {
+            "NON_TAIL": {
+              "pairs": 576,
+              "distinctTargets": 47,
+              "mae": 199.08107359801008,
+              "absoluteErrorShare": 1.0
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": 0.0
+            }
+          },
+          "HGB_WEEKLY": {
+            "NON_TAIL": {
+              "pairs": 576,
+              "distinctTargets": 47,
+              "mae": 195.65154191060276,
+              "absoluteErrorShare": 1.0
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": 0.0
+            }
+          },
+          "HGB_RESIDUAL_B1": {
+            "NON_TAIL": {
+              "pairs": 576,
+              "distinctTargets": 47,
+              "mae": 191.33544297921785,
+              "absoluteErrorShare": 1.0
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": 0.0
+            }
+          },
+          "HGB_RESIDUAL_B2": {
+            "NON_TAIL": {
+              "pairs": 576,
+              "distinctTargets": 47,
+              "mae": 221.75718391198626,
+              "absoluteErrorShare": 1.0
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": 0.0
+            }
+          },
+          "RIDGE_RESIDUAL_B1": {
+            "NON_TAIL": {
+              "pairs": 576,
+              "distinctTargets": 47,
+              "mae": 475.1325478249959,
+              "absoluteErrorShare": 1.0
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": 0.0
+            }
+          },
+          "RIDGE_RESIDUAL_B2": {
+            "NON_TAIL": {
+              "pairs": 576,
+              "distinctTargets": 47,
+              "mae": 472.008055061441,
+              "absoluteErrorShare": 1.0
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": 0.0
+            }
+          },
+          "PERSISTENCE": {
+            "NON_TAIL": {
+              "pairs": 576,
+              "distinctTargets": 47,
+              "mae": 203.34118055555555,
+              "absoluteErrorShare": 1.0
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": 0.0
+            }
+          },
+          "B1": {
+            "NON_TAIL": {
+              "pairs": 576,
+              "distinctTargets": 47,
+              "mae": 203.14320023148147,
+              "absoluteErrorShare": 1.0
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": 0.0
+            }
+          },
+          "B2": {
+            "NON_TAIL": {
+              "pairs": 576,
+              "distinctTargets": 47,
+              "mae": 46.309045138888884,
+              "absoluteErrorShare": 1.0
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": 0.0
+            }
+          }
+        },
+        "distinctTargets": 47
+      },
+      "evaluationPurpose": "ALREADY_SEEN_DIAGNOSTIC"
+    },
+    {
+      "date": "2026-10-04",
+      "observedPeriods": 10,
+      "truthAvailableByDayEnd": 10,
+      "status": "INCOMPLETE_ELAPSED_DAY"
+    },
+    {
+      "date": "2026-10-05",
+      "observedPeriods": 48,
+      "truthAvailableByDayEnd": 48,
+      "status": "COMPLETE_DAY",
+      "core": {
+        "table": {
+          "B1": {
+            "mae": 176.61183479532164,
+            "eligiblePairs": 456,
+            "commonPairs": 456,
+            "ownEligibleMae": 176.61183479532164,
+            "eligibleOrigins": 19,
+            "excludedOrigins": 29,
+            "coverage": 0.3958333333333333,
+            "perHorizon": {
+              "1": 96.38912280701754,
+              "2": 107.2301754385965,
+              "3": 119.38701754385966,
+              "4": 131.78157894736842,
+              "5": 146.21561403508773,
+              "6": 154.4621052631579,
+              "7": 160.26473684210526,
+              "8": 169.84192982456142,
+              "9": 179.71929824561403,
+              "10": 193.19491228070177,
+              "11": 204.86,
+              "12": 212.4101754385965,
+              "13": 219.1861403508772,
+              "14": 237.020350877193,
+              "15": 231.46912280701756,
+              "16": 225.10175438596494,
+              "17": 221.38754385964913,
+              "18": 212.42245614035087,
+              "19": 200.67315789473685,
+              "20": 188.06543859649122,
+              "21": 176.4378947368421,
+              "22": 160.69228070175438,
+              "23": 148.61122807017546,
+              "24": 141.86
+            },
+            "groups": {
+              "1-6": 125.91093567251463,
+              "7-12": 186.7151754385965,
+              "13-24": 196.91061403508772
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 456
+            }
+          },
+          "CURRENT": {
+            "mae": 125.36309737652996,
+            "eligiblePairs": 576,
+            "commonPairs": 456,
+            "ownEligibleMae": 114.12740542128952,
+            "eligibleOrigins": 24,
+            "excludedOrigins": 24,
+            "coverage": 0.5,
+            "perHorizon": {
+              "1": 85.33889561064674,
+              "2": 107.85040013487443,
+              "3": 87.66422407052417,
+              "4": 76.1829214652236,
+              "5": 92.57129553577992,
+              "6": 82.05203731390131,
+              "7": 134.04560282940767,
+              "8": 99.05602803009377,
+              "9": 126.0076464077225,
+              "10": 198.42716316521023,
+              "11": 110.38989543450904,
+              "12": 177.74179360668884,
+              "13": 186.96937079083193,
+              "14": 247.4987437719533,
+              "15": 159.58624929232886,
+              "16": 106.10272537340211,
+              "17": 99.74562233083799,
+              "18": 184.76257413156495,
+              "19": 166.34928790877862,
+              "20": 99.8208377055428,
+              "21": 95.03004754946375,
+              "22": 93.70977893565234,
+              "23": 91.22108561377985,
+              "24": 100.59011002800048
+            },
+            "groups": {
+              "1-6": 88.60996235515836,
+              "7-12": 140.94468824560533,
+              "13-24": 135.94886945267808
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 456
+            }
+          },
+          "HGB_MAE": {
+            "mae": 58.49320557673593,
+            "eligiblePairs": 576,
+            "commonPairs": 456,
+            "ownEligibleMae": 57.81987826886813,
+            "eligibleOrigins": 24,
+            "excludedOrigins": 24,
+            "coverage": 0.5,
+            "perHorizon": {
+              "1": 50.04628413203407,
+              "2": 42.58610172011408,
+              "3": 35.33332203005543,
+              "4": 46.587880237757304,
+              "5": 33.56725105825767,
+              "6": 44.48494690440763,
+              "7": 30.252010281852897,
+              "8": 54.281074924436595,
+              "9": 48.86100189484424,
+              "10": 33.71280065183779,
+              "11": 40.69213286648517,
+              "12": 47.98846979062377,
+              "13": 74.9246816413993,
+              "14": 84.8919707844123,
+              "15": 112.2007271583573,
+              "16": 91.5316617375469,
+              "17": 79.84868337128978,
+              "18": 75.14157942200065,
+              "19": 75.20852959108797,
+              "20": 63.87713733917564,
+              "21": 56.284281083095344,
+              "22": 55.505646676799444,
+              "23": 56.123173654563765,
+              "24": 69.90558488922734
+            },
+            "groups": {
+              "1-6": 42.100964347104366,
+              "7-12": 42.631248401680075,
+              "13-24": 74.62030477907965
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 456
+            }
+          },
+          "HGB_RESIDUAL_B1": {
+            "mae": 70.06150487484523,
+            "eligiblePairs": 456,
+            "commonPairs": 456,
+            "ownEligibleMae": 70.06150487484523,
+            "eligibleOrigins": 19,
+            "excludedOrigins": 29,
+            "coverage": 0.3958333333333333,
+            "perHorizon": {
+              "1": 53.61316902955732,
+              "2": 49.428587074086295,
+              "3": 39.77032555335691,
+              "4": 64.5134196109457,
+              "5": 72.43380097095913,
+              "6": 74.28198874675853,
+              "7": 87.36900794096591,
+              "8": 40.73075802752956,
+              "9": 34.27961097220843,
+              "10": 41.07242505775394,
+              "11": 39.251090062127226,
+              "12": 38.002633402658724,
+              "13": 43.501291952686984,
+              "14": 84.92248662783466,
+              "15": 85.09981819289241,
+              "16": 90.97861135791362,
+              "17": 103.02348118956975,
+              "18": 96.60160674757932,
+              "19": 113.54346147454604,
+              "20": 94.66028563123704,
+              "21": 85.94857383582082,
+              "22": 84.5973214225121,
+              "23": 88.27571469701407,
+              "24": 75.5766474177711
+            },
+            "groups": {
+              "1-6": 59.00688183094398,
+              "7-12": 46.78425424387397,
+              "13-24": 87.22744171228149
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 456
+            }
+          },
+          "HGB_SMALL": {
+            "mae": 48.71494165384319,
+            "eligiblePairs": 576,
+            "commonPairs": 456,
+            "ownEligibleMae": 50.5623944916137,
+            "eligibleOrigins": 24,
+            "excludedOrigins": 24,
+            "coverage": 0.5,
+            "perHorizon": {
+              "1": 57.60784795238565,
+              "2": 51.09667862686646,
+              "3": 39.84978878759137,
+              "4": 40.48484249704414,
+              "5": 43.34815900059087,
+              "6": 35.0618753079406,
+              "7": 38.49092579828531,
+              "8": 32.235440266083195,
+              "9": 31.933541609681935,
+              "10": 23.255716228100727,
+              "11": 26.214779326782285,
+              "12": 38.05128577353285,
+              "13": 43.04062026072423,
+              "14": 55.459323820125604,
+              "15": 41.17164758945849,
+              "16": 97.45559453221409,
+              "17": 64.35177587858759,
+              "18": 68.87077448271828,
+              "19": 59.95920742596916,
+              "20": 55.25951665290717,
+              "21": 66.35325981772607,
+              "22": 59.61722136737395,
+              "23": 49.556215379577814,
+              "24": 50.43256130996876
+            },
+            "groups": {
+              "1-6": 44.57486536206985,
+              "7-12": 31.696948167077718,
+              "13-24": 59.2939765431126
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 456
+            }
+          },
+          "HGB_WEEKLY": {
+            "mae": 49.78886227528817,
+            "eligiblePairs": 576,
+            "commonPairs": 456,
+            "ownEligibleMae": 51.612197276630965,
+            "eligibleOrigins": 24,
+            "excludedOrigins": 24,
+            "coverage": 0.5,
+            "perHorizon": {
+              "1": 57.60784795238565,
+              "2": 51.274710863972444,
+              "3": 37.219527536239454,
+              "4": 40.48484249704414,
+              "5": 43.34815900059087,
+              "6": 35.0618753079406,
+              "7": 38.49092579828531,
+              "8": 44.7240280756146,
+              "9": 31.933541609681935,
+              "10": 23.255716228100727,
+              "11": 26.214779326782285,
+              "12": 38.01598723237016,
+              "13": 30.45564554582953,
+              "14": 58.080926877555456,
+              "15": 48.36620371163068,
+              "16": 97.45559453221409,
+              "17": 64.35177587858759,
+              "18": 68.87077448271828,
+              "19": 59.95920742596916,
+              "20": 54.10620091270514,
+              "21": 66.35325981772607,
+              "22": 58.76808165546763,
+              "23": 59.549646235879514,
+              "24": 60.983436101624726
+            },
+            "groups": {
+              "1-6": 44.1661605263622,
+              "7-12": 33.7724963784725,
+              "13-24": 60.60839609815899
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 456
+            }
+          },
+          "MEDIAN": {
+            "mae": 100.91464912280702,
+            "eligiblePairs": 576,
+            "commonPairs": 456,
+            "ownEligibleMae": 102.85310763888889,
+            "eligibleOrigins": 24,
+            "excludedOrigins": 24,
+            "coverage": 0.5,
+            "perHorizon": {
+              "1": 98.235,
+              "2": 99.8221052631579,
+              "3": 101.59236842105263,
+              "4": 102.67368421052632,
+              "5": 99.30947368421053,
+              "6": 104.53078947368421,
+              "7": 107.57973684210526,
+              "8": 107.78921052631578,
+              "9": 105.86552631578947,
+              "10": 100.41289473684209,
+              "11": 92.28894736842105,
+              "12": 87.81500000000001,
+              "13": 89.60500000000002,
+              "14": 108.80815789473687,
+              "15": 111.00105263157894,
+              "16": 104.78552631578948,
+              "17": 106.38263157894738,
+              "18": 106.58868421052632,
+              "19": 105.73052631578948,
+              "20": 103.0678947368421,
+              "21": 100.28894736842106,
+              "22": 96.38157894736842,
+              "23": 94.23157894736842,
+              "24": 87.16526315789473
+            },
+            "groups": {
+              "1-6": 101.02723684210527,
+              "7-12": 100.29188596491228,
+              "13-24": 101.16973684210527
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 456
+            }
+          },
+          "PERSISTENCE": {
+            "mae": 148.5431140350877,
+            "eligiblePairs": 576,
+            "commonPairs": 456,
+            "ownEligibleMae": 181.01729166666667,
+            "eligibleOrigins": 24,
+            "excludedOrigins": 24,
+            "coverage": 0.5,
+            "perHorizon": {
+              "1": 63.24105263157894,
+              "2": 73.91526315789474,
+              "3": 84.61,
+              "4": 85.96263157894737,
+              "5": 87.84842105263156,
+              "6": 102.18526315789474,
+              "7": 114.23789473684211,
+              "8": 125.24052631578947,
+              "9": 135.2642105263158,
+              "10": 142.32526315789474,
+              "11": 157.8684210526316,
+              "12": 172.06894736842105,
+              "13": 183.7178947368421,
+              "14": 209.4478947368421,
+              "15": 206.47947368421052,
+              "16": 212.7605263157895,
+              "17": 212.6263157894737,
+              "18": 205.4884210526316,
+              "19": 197.35000000000002,
+              "20": 187.02894736842106,
+              "21": 161.10368421052632,
+              "22": 159.58052631578948,
+              "23": 148.72210526315789,
+              "24": 135.96105263157895
+            },
+            "groups": {
+              "1-6": 82.96043859649123,
+              "7-12": 141.16754385964913,
+              "13-24": 185.02223684210526
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 456
+            }
+          },
+          "RIDGE_RESIDUAL_B1": {
+            "mae": 153.18209246899804,
+            "eligiblePairs": 456,
+            "commonPairs": 456,
+            "ownEligibleMae": 153.18209246899804,
+            "eligibleOrigins": 19,
+            "excludedOrigins": 29,
+            "coverage": 0.3958333333333333,
+            "perHorizon": {
+              "1": 83.77675554719349,
+              "2": 99.16262718541816,
+              "3": 101.97885758109834,
+              "4": 106.32750406679911,
+              "5": 129.77942584950108,
+              "6": 130.30107625244574,
+              "7": 134.93781009056292,
+              "8": 136.3427970116137,
+              "9": 119.94936945011433,
+              "10": 124.06022351133784,
+              "11": 146.23082731760815,
+              "12": 153.62667230424472,
+              "13": 153.8553991773521,
+              "14": 162.09029857233162,
+              "15": 163.80548468550936,
+              "16": 170.25091994791416,
+              "17": 176.67702348795126,
+              "18": 173.93688897193084,
+              "19": 186.6512452361266,
+              "20": 162.2628835930781,
+              "21": 164.87266968177548,
+              "22": 169.50036826841762,
+              "23": 239.79098034515587,
+              "24": 286.2021111204722
+            },
+            "groups": {
+              "1-6": 108.55437441374265,
+              "7-12": 135.85794994758027,
+              "13-24": 184.1580227573346
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 456
+            }
+          }
+        },
+        "selectedBaseline": "B1",
+        "skill": null,
+        "skillUndefinedReason": "Missing common pairs or zero baseline MAE",
+        "commonPairs": 456,
+        "task": "forecast-spike prediction (origin-frozen thresholds)",
+        "commonOriginDays": 1,
+        "observedAnomalyTask": "operational classification; no independent physical-cause labels",
+        "weeklyBlockDifference95": {
+          "interval": null,
+          "reason": "Fewer than eight weeks of paired errors"
+        },
+        "comparisonMethods": [
+          "HGB_SMALL",
+          "HGB_MAE",
+          "CURRENT",
+          "MEDIAN",
+          "PERSISTENCE",
+          "B1",
+          "HGB_WEEKLY",
+          "HGB_RESIDUAL_B1",
+          "RIDGE_RESIDUAL_B1"
+        ],
+        "allMethodCommonPairs": 0,
+        "exclusions": {
+          "B1": {
+            "INSUFFICIENT_HISTORY": 120,
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "B2": {
+            "INSUFFICIENT_HISTORY": 576,
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "B3": {
+            "INSUFFICIENT_HISTORY": 576,
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "CURRENT": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "HGB_MAE": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "HGB_RESIDUAL_B1": {
+            "INSUFFICIENT_HISTORY": 120,
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "HGB_RESIDUAL_B2": {
+            "INSUFFICIENT_HISTORY": 576,
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "HGB_SMALL": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "HGB_WEEKLY": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "MEDIAN": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "PERSISTENCE": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "RIDGE_RESIDUAL_B1": {
+            "INSUFFICIENT_HISTORY": 120,
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "RIDGE_RESIDUAL_B2": {
+            "INSUFFICIENT_HISTORY": 576,
+            "PURGED_SPLIT_BOUNDARY": 576
+          }
+        },
+        "coverage": {
+          "B1": {
+            "eligiblePairs": 456
+          },
+          "B2": {
+            "eligiblePairs": 0
+          },
+          "B3": {
+            "eligiblePairs": 0
+          },
+          "CURRENT": {
+            "eligiblePairs": 576
+          },
+          "HGB_MAE": {
+            "eligiblePairs": 576
+          },
+          "HGB_RESIDUAL_B1": {
+            "eligiblePairs": 456
+          },
+          "HGB_RESIDUAL_B2": {
+            "eligiblePairs": 0
+          },
+          "HGB_SMALL": {
+            "eligiblePairs": 576
+          },
+          "HGB_WEEKLY": {
+            "eligiblePairs": 576
+          },
+          "MEDIAN": {
+            "eligiblePairs": 576
+          },
+          "PERSISTENCE": {
+            "eligiblePairs": 576
+          },
+          "RIDGE_RESIDUAL_B1": {
+            "eligiblePairs": 456
+          },
+          "RIDGE_RESIDUAL_B2": {
+            "eligiblePairs": 0
+          }
+        },
+        "errorByPriceRegime": {
+          "HGB_SMALL": {
+            "NON_TAIL": {
+              "pairs": 456,
+              "distinctTargets": 42,
+              "mae": 48.71494165384319,
+              "absoluteErrorShare": 1.0
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": 0.0
+            }
+          },
+          "HGB_MAE": {
+            "NON_TAIL": {
+              "pairs": 456,
+              "distinctTargets": 42,
+              "mae": 58.49320557673593,
+              "absoluteErrorShare": 1.0
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": 0.0
+            }
+          },
+          "CURRENT": {
+            "NON_TAIL": {
+              "pairs": 456,
+              "distinctTargets": 42,
+              "mae": 125.36309737652996,
+              "absoluteErrorShare": 1.0
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": 0.0
+            }
+          },
+          "MEDIAN": {
+            "NON_TAIL": {
+              "pairs": 456,
+              "distinctTargets": 42,
+              "mae": 100.91464912280702,
+              "absoluteErrorShare": 1.0
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": 0.0
+            }
+          },
+          "PERSISTENCE": {
+            "NON_TAIL": {
+              "pairs": 456,
+              "distinctTargets": 42,
+              "mae": 148.5431140350877,
+              "absoluteErrorShare": 1.0
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": 0.0
+            }
+          },
+          "B1": {
+            "NON_TAIL": {
+              "pairs": 456,
+              "distinctTargets": 42,
+              "mae": 176.61183479532164,
+              "absoluteErrorShare": 1.0
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": 0.0
+            }
+          },
+          "HGB_WEEKLY": {
+            "NON_TAIL": {
+              "pairs": 456,
+              "distinctTargets": 42,
+              "mae": 49.78886227528817,
+              "absoluteErrorShare": 1.0
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": 0.0
+            }
+          },
+          "HGB_RESIDUAL_B1": {
+            "NON_TAIL": {
+              "pairs": 456,
+              "distinctTargets": 42,
+              "mae": 70.06150487484523,
+              "absoluteErrorShare": 1.0
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": 0.0
+            }
+          },
+          "RIDGE_RESIDUAL_B1": {
+            "NON_TAIL": {
+              "pairs": 456,
+              "distinctTargets": 42,
+              "mae": 153.18209246899804,
+              "absoluteErrorShare": 1.0
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": 0.0
+            }
+          }
+        },
+        "distinctTargets": 42
+      },
+      "seasonal": {
+        "table": {
+          "B1": {
+            "mae": null,
+            "eligiblePairs": 456,
+            "commonPairs": 0,
+            "ownEligibleMae": 176.61183479532164,
+            "eligibleOrigins": 19,
+            "excludedOrigins": 29,
+            "coverage": 0.3958333333333333,
+            "perHorizon": {
+              "1": null,
+              "2": null,
+              "3": null,
+              "4": null,
+              "5": null,
+              "6": null,
+              "7": null,
+              "8": null,
+              "9": null,
+              "10": null,
+              "11": null,
+              "12": null,
+              "13": null,
+              "14": null,
+              "15": null,
+              "16": null,
+              "17": null,
+              "18": null,
+              "19": null,
+              "20": null,
+              "21": null,
+              "22": null,
+              "23": null,
+              "24": null
+            },
+            "groups": {
+              "1-6": null,
+              "7-12": null,
+              "13-24": null
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 0
+            }
+          },
+          "B2": {
+            "mae": null,
+            "eligiblePairs": 0,
+            "commonPairs": 0,
+            "ownEligibleMae": null,
+            "eligibleOrigins": 0,
+            "excludedOrigins": 48,
+            "coverage": 0.0,
+            "perHorizon": {
+              "1": null,
+              "2": null,
+              "3": null,
+              "4": null,
+              "5": null,
+              "6": null,
+              "7": null,
+              "8": null,
+              "9": null,
+              "10": null,
+              "11": null,
+              "12": null,
+              "13": null,
+              "14": null,
+              "15": null,
+              "16": null,
+              "17": null,
+              "18": null,
+              "19": null,
+              "20": null,
+              "21": null,
+              "22": null,
+              "23": null,
+              "24": null
+            },
+            "groups": {
+              "1-6": null,
+              "7-12": null,
+              "13-24": null
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 0
+            }
+          },
+          "B3": {
+            "mae": null,
+            "eligiblePairs": 0,
+            "commonPairs": 0,
+            "ownEligibleMae": null,
+            "eligibleOrigins": 0,
+            "excludedOrigins": 48,
+            "coverage": 0.0,
+            "perHorizon": {
+              "1": null,
+              "2": null,
+              "3": null,
+              "4": null,
+              "5": null,
+              "6": null,
+              "7": null,
+              "8": null,
+              "9": null,
+              "10": null,
+              "11": null,
+              "12": null,
+              "13": null,
+              "14": null,
+              "15": null,
+              "16": null,
+              "17": null,
+              "18": null,
+              "19": null,
+              "20": null,
+              "21": null,
+              "22": null,
+              "23": null,
+              "24": null
+            },
+            "groups": {
+              "1-6": null,
+              "7-12": null,
+              "13-24": null
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 0
+            }
+          },
+          "HGB_MAE": {
+            "mae": null,
+            "eligiblePairs": 576,
+            "commonPairs": 0,
+            "ownEligibleMae": 57.81987826886813,
+            "eligibleOrigins": 24,
+            "excludedOrigins": 24,
+            "coverage": 0.5,
+            "perHorizon": {
+              "1": null,
+              "2": null,
+              "3": null,
+              "4": null,
+              "5": null,
+              "6": null,
+              "7": null,
+              "8": null,
+              "9": null,
+              "10": null,
+              "11": null,
+              "12": null,
+              "13": null,
+              "14": null,
+              "15": null,
+              "16": null,
+              "17": null,
+              "18": null,
+              "19": null,
+              "20": null,
+              "21": null,
+              "22": null,
+              "23": null,
+              "24": null
+            },
+            "groups": {
+              "1-6": null,
+              "7-12": null,
+              "13-24": null
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 0
+            }
+          },
+          "HGB_SMALL": {
+            "mae": null,
+            "eligiblePairs": 576,
+            "commonPairs": 0,
+            "ownEligibleMae": 50.5623944916137,
+            "eligibleOrigins": 24,
+            "excludedOrigins": 24,
+            "coverage": 0.5,
+            "perHorizon": {
+              "1": null,
+              "2": null,
+              "3": null,
+              "4": null,
+              "5": null,
+              "6": null,
+              "7": null,
+              "8": null,
+              "9": null,
+              "10": null,
+              "11": null,
+              "12": null,
+              "13": null,
+              "14": null,
+              "15": null,
+              "16": null,
+              "17": null,
+              "18": null,
+              "19": null,
+              "20": null,
+              "21": null,
+              "22": null,
+              "23": null,
+              "24": null
+            },
+            "groups": {
+              "1-6": null,
+              "7-12": null,
+              "13-24": null
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 0
+            }
+          }
+        },
+        "selectedBaseline": "B1",
+        "skill": null,
+        "skillUndefinedReason": "Missing common pairs or zero baseline MAE",
+        "commonPairs": 0,
+        "task": "forecast-spike prediction (origin-frozen thresholds)",
+        "commonOriginDays": 0,
+        "observedAnomalyTask": "operational classification; no independent physical-cause labels",
+        "weeklyBlockDifference95": {
+          "interval": null,
+          "reason": "Fewer than eight weeks of paired errors"
+        },
+        "comparisonMethods": [
+          "HGB_SMALL",
+          "HGB_MAE",
+          "B1",
+          "B2",
+          "B3"
+        ],
+        "allMethodCommonPairs": 0,
+        "exclusions": {
+          "B1": {
+            "INSUFFICIENT_HISTORY": 120,
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "B2": {
+            "INSUFFICIENT_HISTORY": 576,
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "B3": {
+            "INSUFFICIENT_HISTORY": 576,
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "CURRENT": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "HGB_MAE": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "HGB_RESIDUAL_B1": {
+            "INSUFFICIENT_HISTORY": 120,
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "HGB_RESIDUAL_B2": {
+            "INSUFFICIENT_HISTORY": 576,
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "HGB_SMALL": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "HGB_WEEKLY": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "MEDIAN": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "PERSISTENCE": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "RIDGE_RESIDUAL_B1": {
+            "INSUFFICIENT_HISTORY": 120,
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "RIDGE_RESIDUAL_B2": {
+            "INSUFFICIENT_HISTORY": 576,
+            "PURGED_SPLIT_BOUNDARY": 576
+          }
+        },
+        "coverage": {
+          "B1": {
+            "eligiblePairs": 456
+          },
+          "B2": {
+            "eligiblePairs": 0
+          },
+          "B3": {
+            "eligiblePairs": 0
+          },
+          "CURRENT": {
+            "eligiblePairs": 576
+          },
+          "HGB_MAE": {
+            "eligiblePairs": 576
+          },
+          "HGB_RESIDUAL_B1": {
+            "eligiblePairs": 456
+          },
+          "HGB_RESIDUAL_B2": {
+            "eligiblePairs": 0
+          },
+          "HGB_SMALL": {
+            "eligiblePairs": 576
+          },
+          "HGB_WEEKLY": {
+            "eligiblePairs": 576
+          },
+          "MEDIAN": {
+            "eligiblePairs": 576
+          },
+          "PERSISTENCE": {
+            "eligiblePairs": 576
+          },
+          "RIDGE_RESIDUAL_B1": {
+            "eligiblePairs": 456
+          },
+          "RIDGE_RESIDUAL_B2": {
+            "eligiblePairs": 0
+          }
+        },
+        "errorByPriceRegime": {
+          "HGB_SMALL": {
+            "NON_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": null
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": null
+            }
+          },
+          "HGB_MAE": {
+            "NON_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": null
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": null
+            }
+          },
+          "B1": {
+            "NON_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": null
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": null
+            }
+          },
+          "B2": {
+            "NON_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": null
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": null
+            }
+          },
+          "B3": {
+            "NON_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": null
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": null
+            }
+          }
+        },
+        "distinctTargets": 0
+      },
+      "full": {
+        "table": {
+          "B1": {
+            "mae": null,
+            "eligiblePairs": 456,
+            "commonPairs": 0,
+            "ownEligibleMae": 176.61183479532164,
+            "eligibleOrigins": 19,
+            "excludedOrigins": 29,
+            "coverage": 0.3958333333333333,
+            "perHorizon": {
+              "1": null,
+              "2": null,
+              "3": null,
+              "4": null,
+              "5": null,
+              "6": null,
+              "7": null,
+              "8": null,
+              "9": null,
+              "10": null,
+              "11": null,
+              "12": null,
+              "13": null,
+              "14": null,
+              "15": null,
+              "16": null,
+              "17": null,
+              "18": null,
+              "19": null,
+              "20": null,
+              "21": null,
+              "22": null,
+              "23": null,
+              "24": null
+            },
+            "groups": {
+              "1-6": null,
+              "7-12": null,
+              "13-24": null
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 0
+            }
+          },
+          "B2": {
+            "mae": null,
+            "eligiblePairs": 0,
+            "commonPairs": 0,
+            "ownEligibleMae": null,
+            "eligibleOrigins": 0,
+            "excludedOrigins": 48,
+            "coverage": 0.0,
+            "perHorizon": {
+              "1": null,
+              "2": null,
+              "3": null,
+              "4": null,
+              "5": null,
+              "6": null,
+              "7": null,
+              "8": null,
+              "9": null,
+              "10": null,
+              "11": null,
+              "12": null,
+              "13": null,
+              "14": null,
+              "15": null,
+              "16": null,
+              "17": null,
+              "18": null,
+              "19": null,
+              "20": null,
+              "21": null,
+              "22": null,
+              "23": null,
+              "24": null
+            },
+            "groups": {
+              "1-6": null,
+              "7-12": null,
+              "13-24": null
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 0
+            }
+          },
+          "CURRENT": {
+            "mae": null,
+            "eligiblePairs": 576,
+            "commonPairs": 0,
+            "ownEligibleMae": 114.12740542128952,
+            "eligibleOrigins": 24,
+            "excludedOrigins": 24,
+            "coverage": 0.5,
+            "perHorizon": {
+              "1": null,
+              "2": null,
+              "3": null,
+              "4": null,
+              "5": null,
+              "6": null,
+              "7": null,
+              "8": null,
+              "9": null,
+              "10": null,
+              "11": null,
+              "12": null,
+              "13": null,
+              "14": null,
+              "15": null,
+              "16": null,
+              "17": null,
+              "18": null,
+              "19": null,
+              "20": null,
+              "21": null,
+              "22": null,
+              "23": null,
+              "24": null
+            },
+            "groups": {
+              "1-6": null,
+              "7-12": null,
+              "13-24": null
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 0
+            }
+          },
+          "HGB_MAE": {
+            "mae": null,
+            "eligiblePairs": 576,
+            "commonPairs": 0,
+            "ownEligibleMae": 57.81987826886813,
+            "eligibleOrigins": 24,
+            "excludedOrigins": 24,
+            "coverage": 0.5,
+            "perHorizon": {
+              "1": null,
+              "2": null,
+              "3": null,
+              "4": null,
+              "5": null,
+              "6": null,
+              "7": null,
+              "8": null,
+              "9": null,
+              "10": null,
+              "11": null,
+              "12": null,
+              "13": null,
+              "14": null,
+              "15": null,
+              "16": null,
+              "17": null,
+              "18": null,
+              "19": null,
+              "20": null,
+              "21": null,
+              "22": null,
+              "23": null,
+              "24": null
+            },
+            "groups": {
+              "1-6": null,
+              "7-12": null,
+              "13-24": null
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 0
+            }
+          },
+          "HGB_RESIDUAL_B1": {
+            "mae": null,
+            "eligiblePairs": 456,
+            "commonPairs": 0,
+            "ownEligibleMae": 70.06150487484523,
+            "eligibleOrigins": 19,
+            "excludedOrigins": 29,
+            "coverage": 0.3958333333333333,
+            "perHorizon": {
+              "1": null,
+              "2": null,
+              "3": null,
+              "4": null,
+              "5": null,
+              "6": null,
+              "7": null,
+              "8": null,
+              "9": null,
+              "10": null,
+              "11": null,
+              "12": null,
+              "13": null,
+              "14": null,
+              "15": null,
+              "16": null,
+              "17": null,
+              "18": null,
+              "19": null,
+              "20": null,
+              "21": null,
+              "22": null,
+              "23": null,
+              "24": null
+            },
+            "groups": {
+              "1-6": null,
+              "7-12": null,
+              "13-24": null
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 0
+            }
+          },
+          "HGB_RESIDUAL_B2": {
+            "mae": null,
+            "eligiblePairs": 0,
+            "commonPairs": 0,
+            "ownEligibleMae": null,
+            "eligibleOrigins": 0,
+            "excludedOrigins": 48,
+            "coverage": 0.0,
+            "perHorizon": {
+              "1": null,
+              "2": null,
+              "3": null,
+              "4": null,
+              "5": null,
+              "6": null,
+              "7": null,
+              "8": null,
+              "9": null,
+              "10": null,
+              "11": null,
+              "12": null,
+              "13": null,
+              "14": null,
+              "15": null,
+              "16": null,
+              "17": null,
+              "18": null,
+              "19": null,
+              "20": null,
+              "21": null,
+              "22": null,
+              "23": null,
+              "24": null
+            },
+            "groups": {
+              "1-6": null,
+              "7-12": null,
+              "13-24": null
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 0
+            }
+          },
+          "HGB_SMALL": {
+            "mae": null,
+            "eligiblePairs": 576,
+            "commonPairs": 0,
+            "ownEligibleMae": 50.5623944916137,
+            "eligibleOrigins": 24,
+            "excludedOrigins": 24,
+            "coverage": 0.5,
+            "perHorizon": {
+              "1": null,
+              "2": null,
+              "3": null,
+              "4": null,
+              "5": null,
+              "6": null,
+              "7": null,
+              "8": null,
+              "9": null,
+              "10": null,
+              "11": null,
+              "12": null,
+              "13": null,
+              "14": null,
+              "15": null,
+              "16": null,
+              "17": null,
+              "18": null,
+              "19": null,
+              "20": null,
+              "21": null,
+              "22": null,
+              "23": null,
+              "24": null
+            },
+            "groups": {
+              "1-6": null,
+              "7-12": null,
+              "13-24": null
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 0
+            }
+          },
+          "HGB_WEEKLY": {
+            "mae": null,
+            "eligiblePairs": 576,
+            "commonPairs": 0,
+            "ownEligibleMae": 51.612197276630965,
+            "eligibleOrigins": 24,
+            "excludedOrigins": 24,
+            "coverage": 0.5,
+            "perHorizon": {
+              "1": null,
+              "2": null,
+              "3": null,
+              "4": null,
+              "5": null,
+              "6": null,
+              "7": null,
+              "8": null,
+              "9": null,
+              "10": null,
+              "11": null,
+              "12": null,
+              "13": null,
+              "14": null,
+              "15": null,
+              "16": null,
+              "17": null,
+              "18": null,
+              "19": null,
+              "20": null,
+              "21": null,
+              "22": null,
+              "23": null,
+              "24": null
+            },
+            "groups": {
+              "1-6": null,
+              "7-12": null,
+              "13-24": null
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 0
+            }
+          },
+          "MEDIAN": {
+            "mae": null,
+            "eligiblePairs": 576,
+            "commonPairs": 0,
+            "ownEligibleMae": 102.85310763888889,
+            "eligibleOrigins": 24,
+            "excludedOrigins": 24,
+            "coverage": 0.5,
+            "perHorizon": {
+              "1": null,
+              "2": null,
+              "3": null,
+              "4": null,
+              "5": null,
+              "6": null,
+              "7": null,
+              "8": null,
+              "9": null,
+              "10": null,
+              "11": null,
+              "12": null,
+              "13": null,
+              "14": null,
+              "15": null,
+              "16": null,
+              "17": null,
+              "18": null,
+              "19": null,
+              "20": null,
+              "21": null,
+              "22": null,
+              "23": null,
+              "24": null
+            },
+            "groups": {
+              "1-6": null,
+              "7-12": null,
+              "13-24": null
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 0
+            }
+          },
+          "PERSISTENCE": {
+            "mae": null,
+            "eligiblePairs": 576,
+            "commonPairs": 0,
+            "ownEligibleMae": 181.01729166666667,
+            "eligibleOrigins": 24,
+            "excludedOrigins": 24,
+            "coverage": 0.5,
+            "perHorizon": {
+              "1": null,
+              "2": null,
+              "3": null,
+              "4": null,
+              "5": null,
+              "6": null,
+              "7": null,
+              "8": null,
+              "9": null,
+              "10": null,
+              "11": null,
+              "12": null,
+              "13": null,
+              "14": null,
+              "15": null,
+              "16": null,
+              "17": null,
+              "18": null,
+              "19": null,
+              "20": null,
+              "21": null,
+              "22": null,
+              "23": null,
+              "24": null
+            },
+            "groups": {
+              "1-6": null,
+              "7-12": null,
+              "13-24": null
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 0
+            }
+          },
+          "RIDGE_RESIDUAL_B1": {
+            "mae": null,
+            "eligiblePairs": 456,
+            "commonPairs": 0,
+            "ownEligibleMae": 153.18209246899804,
+            "eligibleOrigins": 19,
+            "excludedOrigins": 29,
+            "coverage": 0.3958333333333333,
+            "perHorizon": {
+              "1": null,
+              "2": null,
+              "3": null,
+              "4": null,
+              "5": null,
+              "6": null,
+              "7": null,
+              "8": null,
+              "9": null,
+              "10": null,
+              "11": null,
+              "12": null,
+              "13": null,
+              "14": null,
+              "15": null,
+              "16": null,
+              "17": null,
+              "18": null,
+              "19": null,
+              "20": null,
+              "21": null,
+              "22": null,
+              "23": null,
+              "24": null
+            },
+            "groups": {
+              "1-6": null,
+              "7-12": null,
+              "13-24": null
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 0
+            }
+          },
+          "RIDGE_RESIDUAL_B2": {
+            "mae": null,
+            "eligiblePairs": 0,
+            "commonPairs": 0,
+            "ownEligibleMae": null,
+            "eligibleOrigins": 0,
+            "excludedOrigins": 48,
+            "coverage": 0.0,
+            "perHorizon": {
+              "1": null,
+              "2": null,
+              "3": null,
+              "4": null,
+              "5": null,
+              "6": null,
+              "7": null,
+              "8": null,
+              "9": null,
+              "10": null,
+              "11": null,
+              "12": null,
+              "13": null,
+              "14": null,
+              "15": null,
+              "16": null,
+              "17": null,
+              "18": null,
+              "19": null,
+              "20": null,
+              "21": null,
+              "22": null,
+              "23": null,
+              "24": null
+            },
+            "groups": {
+              "1-6": null,
+              "7-12": null,
+              "13-24": null
+            },
+            "spikes": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 0,
+              "support": 0,
+              "falseAlarms": 0,
+              "precision": null,
+              "recall": null,
+              "assessedPairs": 0,
+              "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+              "labelledPositiveTargets": 0,
+              "labelledNegativeTargets": 0,
+              "unassessedPairs": 0
+            }
+          }
+        },
+        "selectedBaseline": "B1",
+        "skill": null,
+        "skillUndefinedReason": "Missing common pairs or zero baseline MAE",
+        "commonPairs": 0,
+        "task": "forecast-spike prediction (origin-frozen thresholds)",
+        "commonOriginDays": 0,
+        "observedAnomalyTask": "operational classification; no independent physical-cause labels",
+        "weeklyBlockDifference95": {
+          "interval": null,
+          "reason": "Fewer than eight weeks of paired errors"
+        },
+        "comparisonMethods": [
+          "CURRENT",
+          "HGB_MAE",
+          "MEDIAN",
+          "HGB_SMALL",
+          "HGB_WEEKLY",
+          "HGB_RESIDUAL_B1",
+          "HGB_RESIDUAL_B2",
+          "RIDGE_RESIDUAL_B1",
+          "RIDGE_RESIDUAL_B2",
+          "PERSISTENCE",
+          "B1",
+          "B2"
+        ],
+        "allMethodCommonPairs": 0,
+        "exclusions": {
+          "B1": {
+            "INSUFFICIENT_HISTORY": 120,
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "B2": {
+            "INSUFFICIENT_HISTORY": 576,
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "B3": {
+            "INSUFFICIENT_HISTORY": 576,
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "CURRENT": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "HGB_MAE": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "HGB_RESIDUAL_B1": {
+            "INSUFFICIENT_HISTORY": 120,
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "HGB_RESIDUAL_B2": {
+            "INSUFFICIENT_HISTORY": 576,
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "HGB_SMALL": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "HGB_WEEKLY": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "MEDIAN": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "PERSISTENCE": {
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "RIDGE_RESIDUAL_B1": {
+            "INSUFFICIENT_HISTORY": 120,
+            "PURGED_SPLIT_BOUNDARY": 576
+          },
+          "RIDGE_RESIDUAL_B2": {
+            "INSUFFICIENT_HISTORY": 576,
+            "PURGED_SPLIT_BOUNDARY": 576
+          }
+        },
+        "coverage": {
+          "B1": {
+            "eligiblePairs": 456
+          },
+          "B2": {
+            "eligiblePairs": 0
+          },
+          "B3": {
+            "eligiblePairs": 0
+          },
+          "CURRENT": {
+            "eligiblePairs": 576
+          },
+          "HGB_MAE": {
+            "eligiblePairs": 576
+          },
+          "HGB_RESIDUAL_B1": {
+            "eligiblePairs": 456
+          },
+          "HGB_RESIDUAL_B2": {
+            "eligiblePairs": 0
+          },
+          "HGB_SMALL": {
+            "eligiblePairs": 576
+          },
+          "HGB_WEEKLY": {
+            "eligiblePairs": 576
+          },
+          "MEDIAN": {
+            "eligiblePairs": 576
+          },
+          "PERSISTENCE": {
+            "eligiblePairs": 576
+          },
+          "RIDGE_RESIDUAL_B1": {
+            "eligiblePairs": 456
+          },
+          "RIDGE_RESIDUAL_B2": {
+            "eligiblePairs": 0
+          }
+        },
+        "errorByPriceRegime": {
+          "CURRENT": {
+            "NON_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": null
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": null
+            }
+          },
+          "HGB_MAE": {
+            "NON_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": null
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": null
+            }
+          },
+          "MEDIAN": {
+            "NON_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": null
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": null
+            }
+          },
+          "HGB_SMALL": {
+            "NON_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": null
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": null
+            }
+          },
+          "HGB_WEEKLY": {
+            "NON_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": null
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": null
+            }
+          },
+          "HGB_RESIDUAL_B1": {
+            "NON_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": null
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": null
+            }
+          },
+          "HGB_RESIDUAL_B2": {
+            "NON_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": null
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": null
+            }
+          },
+          "RIDGE_RESIDUAL_B1": {
+            "NON_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": null
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": null
+            }
+          },
+          "RIDGE_RESIDUAL_B2": {
+            "NON_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": null
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": null
+            }
+          },
+          "PERSISTENCE": {
+            "NON_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": null
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": null
+            }
+          },
+          "B1": {
+            "NON_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": null
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": null
+            }
+          },
+          "B2": {
+            "NON_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": null
+            },
+            "HIGH_PRICE_TAIL": {
+              "pairs": 0,
+              "distinctTargets": 0,
+              "mae": null,
+              "absoluteErrorShare": null
+            }
+          }
+        },
+        "distinctTargets": 0
+      },
+      "evaluationPurpose": "REPEATED_HELD_OUT_CHECK"
+    },
+    {
+      "date": "2026-10-06",
+      "observedPeriods": 7,
+      "truthAvailableByDayEnd": 7,
+      "status": "CURRENT_INCOMPLETE_DAY"
+    }
+  ],
+  "pooledDiagnostics": {
+    "table": {
+      "B1": {
+        "mae": 191.42003875968993,
+        "eligiblePairs": 1032,
+        "commonPairs": 1032,
+        "ownEligibleMae": 191.42003875968993,
+        "eligibleOrigins": 43,
+        "excludedOrigins": 53,
+        "coverage": 0.4479166666666667,
+        "perHorizon": {
+          "1": 132.11414728682172,
+          "2": 136.49988372093023,
+          "3": 142.6374031007752,
+          "4": 148.8718992248062,
+          "5": 158.8337596899225,
+          "6": 164.169496124031,
+          "7": 168.56879844961242,
+          "8": 175.2417441860465,
+          "9": 183.36755813953488,
+          "10": 192.9558527131783,
+          "11": 202.99492248062015,
+          "12": 209.7875581395349,
+          "13": 217.19655038759691,
+          "14": 229.06468992248062,
+          "15": 233.12926356589148,
+          "16": 233.43112403100776,
+          "17": 234.08748062015505,
+          "18": 229.06104651162792,
+          "19": 222.12949612403102,
+          "20": 213.90236434108527,
+          "21": 205.519496124031,
+          "22": 195.1512015503876,
+          "23": 186.03399224806202,
+          "24": 179.3312015503876
+        },
+        "groups": {
+          "1-6": 147.18776485788115,
+          "7-12": 188.8194056847545,
+          "13-24": 214.83649224806203
+        },
+        "spikes": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "support": 0,
+          "falseAlarms": 0,
+          "precision": null,
+          "recall": null,
+          "assessedPairs": 0,
+          "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+          "labelledPositiveTargets": 0,
+          "labelledNegativeTargets": 0,
+          "unassessedPairs": 1032
+        }
+      },
+      "CURRENT": {
+        "mae": 254.5780808256192,
+        "eligiblePairs": 1152,
+        "commonPairs": 1032,
+        "ownEligibleMae": 235.50034073871885,
+        "eligibleOrigins": 48,
+        "excludedOrigins": 48,
+        "coverage": 0.5,
+        "perHorizon": {
+          "1": 166.02029541793343,
+          "2": 178.24918432151,
+          "3": 193.40637407313957,
+          "4": 223.731929797455,
+          "5": 237.57420223151664,
+          "6": 309.7972055798532,
+          "7": 292.67227993728665,
+          "8": 223.79054983412217,
+          "9": 235.98499362737306,
+          "10": 316.6746972189511,
+          "11": 260.6241879733271,
+          "12": 294.06421304029465,
+          "13": 323.95667456667235,
+          "14": 346.7827903298001,
+          "15": 269.98018419120575,
+          "16": 225.74226491492055,
+          "17": 249.57181944988355,
+          "18": 284.2273180394316,
+          "19": 262.98786527216953,
+          "20": 264.3262374115144,
+          "21": 272.42023823954,
+          "22": 195.95682855537976,
+          "23": 236.15514357564288,
+          "24": 245.1764622159377
+        },
+        "groups": {
+          "1-6": 218.1298652369013,
+          "7-12": 270.6351536052258,
+          "13-24": 264.77365223017483
+        },
+        "spikes": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "support": 0,
+          "falseAlarms": 0,
+          "precision": null,
+          "recall": null,
+          "assessedPairs": 0,
+          "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+          "labelledPositiveTargets": 0,
+          "labelledNegativeTargets": 0,
+          "unassessedPairs": 1032
+        }
+      },
+      "HGB_MAE": {
+        "mae": 126.01324884553816,
+        "eligiblePairs": 1152,
+        "commonPairs": 1032,
+        "ownEligibleMae": 118.64324735110402,
+        "eligibleOrigins": 48,
+        "excludedOrigins": 48,
+        "coverage": 0.5,
+        "perHorizon": {
+          "1": 66.03644159790205,
+          "2": 95.81470411845807,
+          "3": 108.11405006280859,
+          "4": 125.81647726515284,
+          "5": 114.35239035531336,
+          "6": 135.7488102309429,
+          "7": 116.42862305712626,
+          "8": 121.67218524445498,
+          "9": 120.05139655813336,
+          "10": 112.33955367741063,
+          "11": 133.02088388381105,
+          "12": 142.92234318521787,
+          "13": 154.19190445123382,
+          "14": 165.33280855180234,
+          "15": 173.20794368685188,
+          "16": 141.55488852141707,
+          "17": 158.9900927525381,
+          "18": 118.91967334461158,
+          "19": 90.73228977461395,
+          "20": 105.13534248802607,
+          "21": 112.04696196388997,
+          "22": 136.70148676103585,
+          "23": 112.34365664205608,
+          "24": 162.84306411810726
+        },
+        "groups": {
+          "1-6": 107.6471456050963,
+          "7-12": 124.40583093435903,
+          "13-24": 136.00000942134866
+        },
+        "spikes": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "support": 0,
+          "falseAlarms": 0,
+          "precision": null,
+          "recall": null,
+          "assessedPairs": 0,
+          "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+          "labelledPositiveTargets": 0,
+          "labelledNegativeTargets": 0,
+          "unassessedPairs": 1032
+        }
+      },
+      "HGB_RESIDUAL_B1": {
+        "mae": 137.74928428193692,
+        "eligiblePairs": 1032,
+        "commonPairs": 1032,
+        "ownEligibleMae": 137.74928428193692,
+        "eligibleOrigins": 43,
+        "excludedOrigins": 53,
+        "coverage": 0.4479166666666667,
+        "perHorizon": {
+          "1": 68.00400551747653,
+          "2": 76.80246214133662,
+          "3": 86.72697191901258,
+          "4": 133.33614575441985,
+          "5": 122.47478412166,
+          "6": 151.47163861115905,
+          "7": 148.34032401011427,
+          "8": 97.50157635104111,
+          "9": 84.15335784515234,
+          "10": 105.4067764155009,
+          "11": 146.54251766610903,
+          "12": 148.723819366724,
+          "13": 168.1764917854288,
+          "14": 197.48754857331951,
+          "15": 181.81270671286876,
+          "16": 165.20063183942435,
+          "17": 184.66531726375067,
+          "18": 174.2461587118219,
+          "19": 136.4690377802494,
+          "20": 176.2102716777148,
+          "21": 144.18682167846126,
+          "22": 153.30693932799022,
+          "23": 135.53881864101058,
+          "24": 119.19769905473973
+        },
+        "groups": {
+          "1-6": 106.46933467751077,
+          "7-12": 121.77806194244027,
+          "13-24": 161.37487025389834
+        },
+        "spikes": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "support": 0,
+          "falseAlarms": 0,
+          "precision": null,
+          "recall": null,
+          "assessedPairs": 0,
+          "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+          "labelledPositiveTargets": 0,
+          "labelledNegativeTargets": 0,
+          "unassessedPairs": 1032
+        }
+      },
+      "HGB_SMALL": {
+        "mae": 132.64022459942473,
+        "eligiblePairs": 1152,
+        "commonPairs": 1032,
+        "ownEligibleMae": 124.82173404481189,
+        "eligibleOrigins": 48,
+        "excludedOrigins": 48,
+        "coverage": 0.5,
+        "perHorizon": {
+          "1": 70.8284082103508,
+          "2": 110.73399789462705,
+          "3": 104.69192469367157,
+          "4": 99.08245642734676,
+          "5": 123.22367987253173,
+          "6": 144.71101064236856,
+          "7": 144.307141618388,
+          "8": 107.12529222343493,
+          "9": 122.77540899177873,
+          "10": 142.5334736814356,
+          "11": 133.74708483007572,
+          "12": 123.36409955581013,
+          "13": 122.3025074513178,
+          "14": 130.8417892199376,
+          "15": 153.07014521992687,
+          "16": 181.55997687466984,
+          "17": 143.62664783154045,
+          "18": 166.72560792280768,
+          "19": 130.30647079516146,
+          "20": 129.05753180232722,
+          "21": 157.23250054147584,
+          "22": 154.30043219425087,
+          "23": 139.30878593282765,
+          "24": 147.90901595813037
+        },
+        "groups": {
+          "1-6": 108.87857962348275,
+          "7-12": 128.9754168168205,
+          "13-24": 146.3534509786978
+        },
+        "spikes": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "support": 0,
+          "falseAlarms": 0,
+          "precision": null,
+          "recall": null,
+          "assessedPairs": 0,
+          "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+          "labelledPositiveTargets": 0,
+          "labelledNegativeTargets": 0,
+          "unassessedPairs": 1032
+        }
+      },
+      "HGB_WEEKLY": {
+        "mae": 131.20059044383586,
+        "eligiblePairs": 1152,
+        "commonPairs": 1032,
+        "ownEligibleMae": 123.63186959361687,
+        "eligibleOrigins": 48,
+        "excludedOrigins": 48,
+        "coverage": 0.5,
+        "perHorizon": {
+          "1": 70.8284082103508,
+          "2": 95.99030057976333,
+          "3": 94.83159798852907,
+          "4": 99.08245642734676,
+          "5": 123.22367987253173,
+          "6": 144.71101064236856,
+          "7": 144.307141618388,
+          "8": 135.64364042931157,
+          "9": 122.77540899177873,
+          "10": 142.5334736814356,
+          "11": 133.74708483007572,
+          "12": 109.82342608854016,
+          "13": 113.90345662328076,
+          "14": 126.36118233498378,
+          "15": 152.01698589041354,
+          "16": 181.55997687466984,
+          "17": 143.62664783154045,
+          "18": 166.72560792280768,
+          "19": 130.30647079516146,
+          "20": 124.76877091726564,
+          "21": 157.23250054147584,
+          "22": 154.13336780114446,
+          "23": 130.98554661182428,
+          "24": 149.6960271470727
+        },
+        "groups": {
+          "1-6": 104.77790895348171,
+          "7-12": 131.47169593992163,
+          "13-24": 144.27637844097003
+        },
+        "spikes": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "support": 0,
+          "falseAlarms": 0,
+          "precision": null,
+          "recall": null,
+          "assessedPairs": 0,
+          "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+          "labelledPositiveTargets": 0,
+          "labelledNegativeTargets": 0,
+          "unassessedPairs": 1032
+        }
+      },
+      "MEDIAN": {
+        "mae": 100.8077519379845,
+        "eligiblePairs": 1152,
+        "commonPairs": 1032,
+        "ownEligibleMae": 101.78811631944444,
+        "eligibleOrigins": 48,
+        "excludedOrigins": 48,
+        "coverage": 0.5,
+        "perHorizon": {
+          "1": 111.6470930232558,
+          "2": 101.96279069767442,
+          "3": 95.71779069767442,
+          "4": 94.94604651162791,
+          "5": 95.59348837209302,
+          "6": 99.42941860465116,
+          "7": 103.48337209302325,
+          "8": 106.01709302325581,
+          "9": 107.36965116279069,
+          "10": 107.05127906976743,
+          "11": 104.84441860465115,
+          "12": 100.54523255813955,
+          "13": 101.82872093023258,
+          "14": 108.30500000000002,
+          "15": 111.22720930232558,
+          "16": 101.73081395348838,
+          "17": 100.64209302325582,
+          "18": 100.01151162790698,
+          "19": 99.74813953488373,
+          "20": 98.60279069767442,
+          "21": 96.44372093023256,
+          "22": 93.63186046511629,
+          "23": 91.2293023255814,
+          "24": 87.37720930232558
+        },
+        "groups": {
+          "1-6": 99.88277131782945,
+          "7-12": 104.88517441860465,
+          "13-24": 99.23153100775194
+        },
+        "spikes": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "support": 0,
+          "falseAlarms": 0,
+          "precision": null,
+          "recall": null,
+          "assessedPairs": 0,
+          "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+          "labelledPositiveTargets": 0,
+          "labelledNegativeTargets": 0,
+          "unassessedPairs": 1032
+        }
+      },
+      "PERSISTENCE": {
+        "mae": 179.12808139534883,
+        "eligiblePairs": 1152,
+        "commonPairs": 1032,
+        "ownEligibleMae": 192.17923611111112,
+        "eligibleOrigins": 48,
+        "excludedOrigins": 48,
+        "coverage": 0.5,
+        "perHorizon": {
+          "1": 95.60255813953488,
+          "2": 116.17023255813953,
+          "3": 123.35139534883722,
+          "4": 128.74651162790698,
+          "5": 133.08767441860465,
+          "6": 142.39441860465115,
+          "7": 147.9825581395349,
+          "8": 154.4579069767442,
+          "9": 157.56511627906977,
+          "10": 162.11488372093024,
+          "11": 175.24627906976744,
+          "12": 184.81046511627906,
+          "13": 196.4713953488372,
+          "14": 213.40697674418604,
+          "15": 219.29883720930232,
+          "16": 227.53720930232558,
+          "17": 232.83046511627907,
+          "18": 231.94627906976746,
+          "19": 230.27093023255816,
+          "20": 224.6318604651163,
+          "21": 209.94023255813954,
+          "22": 205.8679069767442,
+          "23": 197.2918604651163,
+          "24": 188.05
+        },
+        "groups": {
+          "1-6": 123.22546511627907,
+          "7-12": 163.6962015503876,
+          "13-24": 214.79532945736435
+        },
+        "spikes": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "support": 0,
+          "falseAlarms": 0,
+          "precision": null,
+          "recall": null,
+          "assessedPairs": 0,
+          "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+          "labelledPositiveTargets": 0,
+          "labelledNegativeTargets": 0,
+          "unassessedPairs": 1032
+        }
+      },
+      "RIDGE_RESIDUAL_B1": {
+        "mae": 332.87536987699684,
+        "eligiblePairs": 1032,
+        "commonPairs": 1032,
+        "ownEligibleMae": 332.87536987699684,
+        "eligibleOrigins": 43,
+        "excludedOrigins": 53,
+        "coverage": 0.4479166666666667,
+        "perHorizon": {
+          "1": 192.07469433838182,
+          "2": 219.59477511692108,
+          "3": 240.64802669958019,
+          "4": 271.29201401302566,
+          "5": 295.01251785227447,
+          "6": 306.91269414357976,
+          "7": 322.5583291412635,
+          "8": 331.6390797812906,
+          "9": 329.7292628470863,
+          "10": 331.3519138296675,
+          "11": 355.7698674277144,
+          "12": 369.1141446310404,
+          "13": 371.42150107329724,
+          "14": 376.0610597544249,
+          "15": 371.7133684016093,
+          "16": 373.14639701029313,
+          "17": 375.3424117536285,
+          "18": 370.1834199637861,
+          "19": 373.300535960645,
+          "20": 358.0420477480163,
+          "21": 352.8991527542109,
+          "22": 348.5299423766628,
+          "23": 370.63198910130853,
+          "24": 382.0397313282161
+        },
+        "groups": {
+          "1-6": 254.25578702729382,
+          "7-12": 340.0270996096771,
+          "13-24": 368.6092964355082
+        },
+        "spikes": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "support": 0,
+          "falseAlarms": 0,
+          "precision": null,
+          "recall": null,
+          "assessedPairs": 0,
+          "undefinedReason": "Fewer than 20 distinct labelled positive and negative targets; no spike accuracy claim",
+          "labelledPositiveTargets": 0,
+          "labelledNegativeTargets": 0,
+          "unassessedPairs": 1032
+        }
+      }
+    },
+    "selectedBaseline": "B1",
+    "skill": null,
+    "skillUndefinedReason": "Missing common pairs or zero baseline MAE",
+    "commonPairs": 1032,
+    "task": "forecast-spike prediction (origin-frozen thresholds)",
+    "commonOriginDays": 2,
+    "observedAnomalyTask": "operational classification; no independent physical-cause labels",
+    "weeklyBlockDifference95": {
+      "interval": null,
+      "reason": "Fewer than eight weeks of paired errors"
+    },
+    "comparisonMethods": [
+      "HGB_SMALL",
+      "HGB_MAE",
+      "CURRENT",
+      "MEDIAN",
+      "PERSISTENCE",
+      "B1",
+      "HGB_WEEKLY",
+      "HGB_RESIDUAL_B1",
+      "RIDGE_RESIDUAL_B1"
+    ],
+    "allMethodCommonPairs": 312,
+    "exclusions": {
+      "B1": {
+        "PURGED_SPLIT_BOUNDARY": 1152,
+        "INSUFFICIENT_HISTORY": 120
+      },
+      "B2": {
+        "PURGED_SPLIT_BOUNDARY": 1152,
+        "INSUFFICIENT_HISTORY": 576
+      },
+      "B3": {
+        "INSUFFICIENT_HISTORY": 840,
+        "PURGED_SPLIT_BOUNDARY": 1152
+      },
+      "CURRENT": {
+        "PURGED_SPLIT_BOUNDARY": 1152
+      },
+      "HGB_MAE": {
+        "PURGED_SPLIT_BOUNDARY": 1152
+      },
+      "HGB_RESIDUAL_B1": {
+        "PURGED_SPLIT_BOUNDARY": 1152,
+        "INSUFFICIENT_HISTORY": 120
+      },
+      "HGB_RESIDUAL_B2": {
+        "PURGED_SPLIT_BOUNDARY": 1152,
+        "INSUFFICIENT_HISTORY": 576
+      },
+      "HGB_SMALL": {
+        "PURGED_SPLIT_BOUNDARY": 1152
+      },
+      "HGB_WEEKLY": {
+        "PURGED_SPLIT_BOUNDARY": 1152
+      },
+      "MEDIAN": {
+        "PURGED_SPLIT_BOUNDARY": 1152
+      },
+      "PERSISTENCE": {
+        "PURGED_SPLIT_BOUNDARY": 1152
+      },
+      "RIDGE_RESIDUAL_B1": {
+        "PURGED_SPLIT_BOUNDARY": 1152,
+        "INSUFFICIENT_HISTORY": 120
+      },
+      "RIDGE_RESIDUAL_B2": {
+        "PURGED_SPLIT_BOUNDARY": 1152,
+        "INSUFFICIENT_HISTORY": 576
+      }
+    },
+    "coverage": {
+      "B1": {
+        "eligiblePairs": 1032
+      },
+      "B2": {
+        "eligiblePairs": 576
+      },
+      "B3": {
+        "eligiblePairs": 312
+      },
+      "CURRENT": {
+        "eligiblePairs": 1152
+      },
+      "HGB_MAE": {
+        "eligiblePairs": 1152
+      },
+      "HGB_RESIDUAL_B1": {
+        "eligiblePairs": 1032
+      },
+      "HGB_RESIDUAL_B2": {
+        "eligiblePairs": 576
+      },
+      "HGB_SMALL": {
+        "eligiblePairs": 1152
+      },
+      "HGB_WEEKLY": {
+        "eligiblePairs": 1152
+      },
+      "MEDIAN": {
+        "eligiblePairs": 1152
+      },
+      "PERSISTENCE": {
+        "eligiblePairs": 1152
+      },
+      "RIDGE_RESIDUAL_B1": {
+        "eligiblePairs": 1032
+      },
+      "RIDGE_RESIDUAL_B2": {
+        "eligiblePairs": 576
+      }
+    },
+    "errorByPriceRegime": {
+      "HGB_SMALL": {
+        "NON_TAIL": {
+          "pairs": 1032,
+          "distinctTargets": 89,
+          "mae": 132.64022459942473,
+          "absoluteErrorShare": 1.0
+        },
+        "HIGH_PRICE_TAIL": {
+          "pairs": 0,
+          "distinctTargets": 0,
+          "mae": null,
+          "absoluteErrorShare": 0.0
+        }
+      },
+      "HGB_MAE": {
+        "NON_TAIL": {
+          "pairs": 1032,
+          "distinctTargets": 89,
+          "mae": 126.01324884553816,
+          "absoluteErrorShare": 1.0
+        },
+        "HIGH_PRICE_TAIL": {
+          "pairs": 0,
+          "distinctTargets": 0,
+          "mae": null,
+          "absoluteErrorShare": 0.0
+        }
+      },
+      "CURRENT": {
+        "NON_TAIL": {
+          "pairs": 1032,
+          "distinctTargets": 89,
+          "mae": 254.5780808256192,
+          "absoluteErrorShare": 1.0
+        },
+        "HIGH_PRICE_TAIL": {
+          "pairs": 0,
+          "distinctTargets": 0,
+          "mae": null,
+          "absoluteErrorShare": 0.0
+        }
+      },
+      "MEDIAN": {
+        "NON_TAIL": {
+          "pairs": 1032,
+          "distinctTargets": 89,
+          "mae": 100.8077519379845,
+          "absoluteErrorShare": 1.0
+        },
+        "HIGH_PRICE_TAIL": {
+          "pairs": 0,
+          "distinctTargets": 0,
+          "mae": null,
+          "absoluteErrorShare": 0.0
+        }
+      },
+      "PERSISTENCE": {
+        "NON_TAIL": {
+          "pairs": 1032,
+          "distinctTargets": 89,
+          "mae": 179.12808139534883,
+          "absoluteErrorShare": 1.0
+        },
+        "HIGH_PRICE_TAIL": {
+          "pairs": 0,
+          "distinctTargets": 0,
+          "mae": null,
+          "absoluteErrorShare": 0.0
+        }
+      },
+      "B1": {
+        "NON_TAIL": {
+          "pairs": 1032,
+          "distinctTargets": 89,
+          "mae": 191.42003875968993,
+          "absoluteErrorShare": 1.0
+        },
+        "HIGH_PRICE_TAIL": {
+          "pairs": 0,
+          "distinctTargets": 0,
+          "mae": null,
+          "absoluteErrorShare": 0.0
+        }
+      },
+      "HGB_WEEKLY": {
+        "NON_TAIL": {
+          "pairs": 1032,
+          "distinctTargets": 89,
+          "mae": 131.20059044383586,
+          "absoluteErrorShare": 1.0
+        },
+        "HIGH_PRICE_TAIL": {
+          "pairs": 0,
+          "distinctTargets": 0,
+          "mae": null,
+          "absoluteErrorShare": 0.0
+        }
+      },
+      "HGB_RESIDUAL_B1": {
+        "NON_TAIL": {
+          "pairs": 1032,
+          "distinctTargets": 89,
+          "mae": 137.74928428193692,
+          "absoluteErrorShare": 1.0
+        },
+        "HIGH_PRICE_TAIL": {
+          "pairs": 0,
+          "distinctTargets": 0,
+          "mae": null,
+          "absoluteErrorShare": 0.0
+        }
+      },
+      "RIDGE_RESIDUAL_B1": {
+        "NON_TAIL": {
+          "pairs": 1032,
+          "distinctTargets": 89,
+          "mae": 332.87536987699684,
+          "absoluteErrorShare": 1.0
+        },
+        "HIGH_PRICE_TAIL": {
+          "pairs": 0,
+          "distinctTargets": 0,
+          "mae": null,
+          "absoluteErrorShare": 0.0
+        }
+      }
+    },
+    "distinctTargets": 89
+  },
+  "prospective": {
+    "status": "AWAITING_FUTURE_DATA",
+    "frozenAt": "2026-10-05T17:26:26.337063+00:00",
+    "start": "2026-10-07T00:00:00+08:00",
+    "end": "2026-10-14T00:00:00+08:00",
+    "modelSha256": "5321b7d991b7b790489308c60fe45b9b2023e39ef341cc27e468d39309986a0d",
+    "selectionSha256": "da5c9f5d9b7a5c3fc3b4708223409c23460e17305ae3094e888e2e3543e3a791",
+    "selectedMethod": "MEDIAN",
+    "selectedLearnedModel": "HGB_SMALL",
+    "productionEligible": false,
+    "rule": "Seven complete elapsed SGT days after freeze; fixed model/settings; no fitting in evaluation"
+  },
+  "fitCallsAllowed": false,
+  "hashesUnchanged": true,
+  "independentMaeRecalculation": "PASS",
+  "productionEligible": false,
+  "limitations": [
+    "October 3 was already seen; October 5 repeats the prior holdout, not independent confirmation.",
+    "Incomplete days are reported, not used as complete 12-hour test days. No shortened forecast contract.",
+    "Pooled diagnostics are not a model-selection rule or proof of future accuracy. No refit or promotion."
+  ]
+}

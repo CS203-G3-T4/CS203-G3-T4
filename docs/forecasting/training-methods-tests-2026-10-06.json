@@ -1,0 +1,22 @@
+{
+  "status": "PASS",
+  "testRuns": {
+    "stability-full-tests-v2": {
+      "tests": "23",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "313.738"
+    },
+    "stability-calendar-test": {
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.762"
+    }
+  },
+  "uniqueChecksPassed": 24,
+  "syntheticFixturesAreAccuracyEvidence": false,
+  "diffWhitespaceCheck": "PASS"
+}

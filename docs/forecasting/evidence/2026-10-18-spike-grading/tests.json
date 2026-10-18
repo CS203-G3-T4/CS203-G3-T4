@@ -1,0 +1,37 @@
+{
+  "pythonTargeted": {
+    "tests": 13,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "durationSeconds": 40.73,
+  "warning": "One upstream Starlette/AnyIO deprecation warning",
+  "wheelBuild": "PASS; spike_grading.py included",
+  "independentReportVerification": {
+    "status": "PASS",
+    "rawPredictionConfusionCounts": true,
+    "originalScoreCrosscheck": true,
+    "pastOnlySameSlotThresholdsRecomputed": true,
+    "canonicalActualsAndSplitBounds": true,
+    "uniqueFixedLeadEventsIndependentlyRecomputed": true,
+    "commonPairs": 2511,
+    "methods": 10,
+    "frozenArtifactsAndFuturePlanUnchanged": true
+  },
+  "futureWorkflow": "Regression exercises real confirm-improvement with synthetic future prices; no fitting or promotion occurs",
+  "fullPythonSuiteRepeated": false,
+  "priorFullPythonSuitePassed": 44,
+  "notRepeated": [
+    "Java",
+    "frontend",
+    "PostgreSQL",
+    "browser"
+  ],
+  "scope": "Offline grading, CLI and research-report hooks; no serving, migrations or frontend changes",
+  "thresholdChanged": false,
+  "frozenModelsOrSelectionChanged": false,
+  "productionApprovalChanged": false,
+  "liveDatabaseUsed": false,
+  "collectorModifiedOrRestarted": false
+}

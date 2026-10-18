@@ -1,0 +1,40 @@
+{
+  "createdAt": "2026-10-18T07:16:55.648062+00:00",
+  "datasetDigest": "a927b8ab8ff6237c29c9b779049e5d443037a434ec3e905f7e7b4354621a429e",
+  "featureSchemaVersion": 2,
+  "trainingStart": "2026-09-23T16:00:00+00:00",
+  "trainingCutoff": "2026-10-09T16:00:00+00:00",
+  "validationStart": "2026-10-09T16:00:00+00:00",
+  "validationEnd": "2026-10-16T16:00:00+00:00",
+  "testStart": "2026-10-16T16:00:00+00:00",
+  "testEnd": "2026-10-17T16:00:00+00:00",
+  "latestFitCutoff": "2026-10-18T07:00:00+00:00",
+  "previousModel": "/home/bryan/CS203_T4/CS203-G3-T4/.local/acceptance-2026-10-18/runtime/models/price-calendar-holiday-demand-v2-20261018",
+  "protectedIntervals": [
+    {
+      "purpose": "original-protected-test",
+      "start": "2026-07-28T16:00:00+00:00",
+      "end": "2026-09-22T16:00:00+00:00"
+    },
+    {
+      "purpose": "presentation-demo",
+      "start": "2026-09-27T16:00:00+00:00",
+      "end": "2026-09-28T16:00:00+00:00"
+    },
+    {
+      "purpose": "new-holdout",
+      "start": "2026-10-16T16:00:00+00:00",
+      "end": "2026-10-17T16:00:00+00:00"
+    }
+  ],
+  "selection": "Fixed existing active HGB settings; no hyperparameter search; baseline selected on earlier seven-day validation only",
+  "model": "24 HistGradientBoostingRegressor pipelines; squared_error, max_iter40, max_leaf_nodes15, l2_regularization1, seed42",
+  "features": "Shared schema2 prices/calendar/holidays/demand availability; no historical origin-known demand available",
+  "truth": "PROVISIONAL; actual source publication and collection availability respected at origins and split boundaries",
+  "interpretation": "Historical reconstruction, not evidence of an artifact actually served at historical origins",
+  "latestFitRule": "Refit on all eligible current data excluding every protected interval, including the new holdout; earlier scores do not evaluate this fit",
+  "previousComparison": "Previous twelve-month final-price research model versus short-history provisional-price retrain; cannot attribute differences solely to extra data",
+  "researchOnly": true,
+  "productionEligible": false,
+  "promotion": "Not attempted"
+}

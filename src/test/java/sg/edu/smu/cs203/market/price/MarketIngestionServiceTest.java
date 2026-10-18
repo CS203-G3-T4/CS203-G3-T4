@@ -91,6 +91,8 @@ class MarketIngestionServiceTest {
         var events=mock(org.springframework.context.ApplicationEventPublisher.class);
         when(client.fetch()).thenReturn(feedAt(NOW.minusSeconds(240)));
         when(observations.save(any(),any(),any())).thenReturn(true,false);
+        when(runs.findLatest()).thenReturn(java.util.Optional.empty(),java.util.Optional.of(
+                new IngestionRun(NOW,NOW,IngestionStatus.SUCCESS,NOW,null)));
         var service=new MarketIngestionService(client,new PriceNormalizer(),prices,runs,observations,
                 Clock.fixed(NOW,ZoneOffset.UTC),Duration.ofMinutes(40),events);
         service.poll();
@@ -100,5 +102,19 @@ class MarketIngestionServiceTest {
         order.verify(events).publishEvent(any(MarketObservationSaved.class));
         service.poll();
         org.mockito.Mockito.verify(events,org.mockito.Mockito.times(1)).publishEvent(any(MarketObservationSaved.class));
+    }
+
+    @Test
+    void importedDuplicateTriggersForecastAfterFirstSuccessfulPollAndRecovery() {
+        var client=mock(UsepClient.class);
+        var runs=mock(IngestionRunRepository.class);
+        var events=mock(org.springframework.context.ApplicationEventPublisher.class);
+        when(client.fetch()).thenReturn(feedAt(NOW.minusSeconds(240)));
+        when(runs.findLatest()).thenReturn(java.util.Optional.empty(),java.util.Optional.of(
+                new IngestionRun(NOW,NOW,IngestionStatus.FAILURE,null,"outage")));
+        var service=new MarketIngestionService(client,new PriceNormalizer(),mock(MarketPriceRepository.class),runs,
+                mock(MarketObservationRepository.class),Clock.fixed(NOW,ZoneOffset.UTC),Duration.ofMinutes(40),events);
+        service.poll(); service.poll();
+        org.mockito.Mockito.verify(events,org.mockito.Mockito.times(2)).publishEvent(any(MarketObservationSaved.class));
     }
 }

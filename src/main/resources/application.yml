@@ -12,7 +12,8 @@ market:
   feed:
     url: ${USEP_FEED_URL:https://nems.sn.sg/api/status.json}
     enabled: ${USEP_POLLING_ENABLED:true}
-    cron: ${USEP_POLL_CRON:0 2,32 * * * *}
+    # Retry regularly: NEMS can publish a new half-hour price after the :02/:32 poll.
+    cron: ${USEP_POLL_CRON:0 */5 * * * *}
     connect-timeout: 3s
     read-timeout: 5s
     stale-after: 40m
@@ -26,6 +27,7 @@ management:
 weather:
   feed:
     url: ${NEA_FEED_URL:https://api-open.data.gov.sg/v2/real-time/api/two-hr-forecast}
+    cron: ${NEA_POLL_CRON:0 2,32 * * * *}
   daily:
     url: ${NEA_DAILY_FEED_URL:https://api-open.data.gov.sg/v2/real-time/api/twenty-four-hr-forecast}
     enabled: ${NEA_DAILY_POLLING_ENABLED:${USEP_POLLING_ENABLED:true}}
@@ -34,6 +36,9 @@ weather:
     heat-threshold-c: ${WEATHER_HEAT_THRESHOLD_C:33}
 
 forecast:
+  admin:
+    username: ${WATTLY_ADMIN_USER:}
+    password: ${WATTLY_ADMIN_PASSWORD:}
   mode: ${FORECAST_MODE:LIVE}
   python-url: ${FORECAST_PYTHON_URL:http://127.0.0.1:8001}
   python-timeout: ${FORECAST_PYTHON_TIMEOUT:5s}
@@ -45,3 +50,9 @@ forecast:
     k: ${FORECAST_SPIKE_K:3}
     spread-floor: ${FORECAST_SPIKE_SPREAD_FLOOR:1}
     classification-band: ${FORECAST_CLASSIFICATION_BAND:1}
+
+# F4 (CSDT4-19/20). Why demo is the default: docs/f4-recommendations.md
+recommendation:
+  forecast-source: ${RECOMMENDATION_FORECAST_SOURCE:demo}
+  demo-forecast-file: ${RECOMMENDATION_DEMO_FORECAST_FILE:data/replay/2026-09-26_data(main_day).csv}
+  minimum-saving-sgd: ${RECOMMENDATION_MINIMUM_SAVING_SGD:0.01}

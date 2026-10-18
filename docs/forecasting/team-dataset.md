@@ -8,7 +8,11 @@ the Java baseline. Production AI still requires a separately approved model.
 
 The snapshot was exported with PostgreSQL 16 from the separate demo instance.
 The repository's PostgreSQL 17 Compose service can restore it. Use the F3 branch
-`feature/CSDT4-AIForecaster&BaselineEvaluator`; its migrations match this snapshot.
+`feature/CSDT4-AIForecaster&BaselineEvaluator`. Current integrated code retains the
+original migration checksums and adds V10–V12 on startup. Verify the original
+restore fingerprints before starting that code; additional tables afterward are
+expected. See [the current runbook](runbook.md) for migration
+compatibility, setup and the unapproved-model limits.
 Teammates need Docker Compose and Java 21. Commands below use Bash (Linux/WSL).
 
 ## Restore a new database
@@ -75,7 +79,7 @@ The existing archive and database restore can be reused; only the application
 needs rebuilding/restarting. The new results do not approve live AI serving.
 
 The live panel uses the restored history, the application's normal startup poll
-and subsequent half-hour polls. An absent/unapproved Python model selects an
+and subsequent five-minute price polls. An absent/unapproved Python model selects an
 eligible Java baseline. Freshness and approval guards remain active. A snapshot
 cannot guarantee live availability during an upstream outage or fill a later gap.
 Check `/api/v1/forecast/latest` for the exact reason if the live panel is unavailable.

@@ -1,272 +1,268 @@
-# F3 setup and operation
+# Forecasting setup, evaluation and operation
 
-Run from the Git root in WSL Ubuntu. Spring and Python run as separate processes
-on the same host. Keep the existing `nems-collector.service` and its environment
-unchanged. F3 never restarts it or writes its database. See [contracts](contracts.md)
-and [measured results and remaining acceptance work](results.md).
+Run from the Git root. The independent `/home/bryan/cs203` collector remains
+unchanged: snapshots use SQLite read-only backup, never restart/migrate the source.
+See [contracts](contracts.md), [acceptance evidence](acceptance-2026-10-18.md) and
+[official source provenance](historical-acquisition-2026-10-18.md).
 
-## Setup
+## Install and run
 
-Requirements: a Java 21 JDK (including `javac`), Python 3.12 with venv/pip,
-PostgreSQL 15+ (the existing compose file uses 17), and Node for the optional UI
-smoke. Use a project virtual environment, not the collector's Python environment.
+Requirements: Java21 JDK, Python3.12, PostgreSQL15+, Node for tests; systemd user
+manager for the optional local timer. Compose uses PostgreSQL17. The acceptance
+proof used native PostgreSQL16.15 and17.11, Java21, Python3.12 and Chromium on WSL
+Ubuntu; the Compose container itself was not exercised.
 
-```sh
+```bash
 cd /home/bryan/CS203_T4/CS203-G3-T4
 python3.12 -m venv .venv
 . .venv/bin/activate
 python -m pip install -r ml/requirements.lock
 python -m pip install --no-deps --no-build-isolation -e ml
 cp .env.example .env
-# Edit .env for your own database and runtime paths.
+# Configure DB_URL/DB_USER/DB_PASSWORD and persistent WATTLY_ML_HOME in .env.
+# Add private WATTLY_ADMIN_USER and WATTLY_ADMIN_PASSWORD; no defaults exist.
+chmod 600 .env
 set -a; . ./.env; set +a
-mkdir -p "$WATTLY_ML_HOME"/snapshots "$WATTLY_ML_HOME"/datasets "$WATTLY_ML_HOME"/models "$WATTLY_ML_HOME"/reports
 docker compose up -d postgres
 ./mvnw spring-boot:run
-```
-
-If Ubuntu reports missing `ensurepip`, install its `python3.12-venv` OS package
-before creating the venv. Neither Spring nor Python automatically loads `.env`;
-source it explicitly in **each** terminal. Environment variables in
-[.env.example](../../.env.example) configure runtime paths, DB access and inference.
-CLI flags configure individual data/training runs; there is no separate YAML parser.
-
-In another terminal, activate the same venv and source `.env`, then:
-
-```sh
+# In a second terminal, source the same environment and activate the venv:
 python -m wattly_ml.cli serve --port 8001
 curl http://127.0.0.1:8001/health
 curl http://127.0.0.1:8001/ready
 ```
 
-`/health` reports process health. `/ready` returns 503 until a compatible approved
-bundle exists. Spring still works with Java baselines. No model is trained by
-startup or requests. The forecast page is `http://localhost:8080/forecast.html`.
-The public API and Swagger are served by Spring on port 8080; Python binds to
-loopback and is not called by the browser.
+Neither process automatically sources `.env`. Python `/ready` is503 until an
+approved compatible model exists. This is expected for the delivered unapproved
+research model. Java supplies validated baseline fallback, or an explicitly
+unranked baseline, or unavailable when contiguous history is insufficient.
+Never edit a research manifest to bypass approval.
 
-## Snapshot, prepare and import
+Resident: `http://localhost:8080/forecast.html`. Admin:
+`http://localhost:8080/admin-forecast.html`; the browser requests Basic credentials.
+Server-side ADMIN authorization protects the page and APIs. Keep local Basic auth
+on loopback or behind HTTPS; configure secrets outside source. Existing trusted
+servlet ADMIN principals remain accepted. Public requests cannot acquire that role.
 
-```sh
+Price ingestion triggers the coalescing forecast worker after persistence. Import
+and first-success/recovery notifications also trigger it when a revision was already
+imported. Saved runs/points are immutable. LIVE and REPLAY stay separate. The shared
+Spring Clock controls business time. F4 requires `actionable=true`, so stale input,
+unverified mapping and unavailable forecasts cannot schedule appliances.
+
+## Acquire, prepare and import
+
+```bash
 python -m wattly_ml.cli snapshot "$COLLECTOR_DATA_DIR/collector.sqlite3" \
   --kind sqlite --output "$WATTLY_ML_HOME/snapshots"
-# Use the exact printed immutable snapshot directory below.
-python -m wattly_ml.cli prepare "$WATTLY_ML_HOME/snapshots/sqlite-SNAPSHOT_DIGEST" \
-  --output "$WATTLY_ML_HOME/datasets/collector-2026-09-29"
+# Replace SNAPSHOT with the exact printed immutable directory.
+python -m wattly_ml.cli prepare SNAPSHOT --output "$WATTLY_ML_HOME/datasets/collector-v1"
+FORECAST_IMPORT_FILE="$WATTLY_ML_HOME/datasets/collector-v1/prices.jsonl" ./mvnw spring-boot:run
 ```
 
-The adapter opens SQLite with `mode=ro` and uses its backup API, including WAL
-contents, with a 15-second deadline. It never migrates the source. CSV snapshots
-reject a file that changes during copying. Destination directories must be outside
-the source directory. Manifests include checksums, acquisition time, source path,
-coverage, parsing failures, gaps, revision counts and mapping status. Reusing a
-snapshot checks its content; preparing an existing dataset directory is rejected.
-Interrupted writes remain under a temporary name and are never selected as complete.
+Unset FORECAST_IMPORT_FILE after import. It is transactional/idempotent and does
+not replace provisional live inputs with final labels. Snapshots/datasets/reports
+reject overwrite and record checksums, parsing failures, gaps and revisions.
+Period-offset investigation remains unverified. Set
+`FORECAST_PERIOD_MAPPING_EVIDENCE=EMC_RT_20260929_24_PERIODS` only for the existing
+floor mapping documented in [period-mapping-verification.md](period-mapping-verification.md).
 
-For a collector daily CSV use `snapshot FILE --kind combined --output DIR`; this
-retains its reduced retrieval provenance. Weather without a genuine retrieval
-timestamp is not eligible for operational features. `--provisional-offset-minutes`
-on `prepare` supports -60/-30/0/30/60 for investigating mapping; every choice stays
-unverified. Nonzero offsets cannot become actionable through the existing floor
-mapping's evidence flag.
+Official CSV acquisition now works through EMC's advertised public download form;
+see the exact URL, headers, date ranges and audit in the source note. The portable
+evidence archive includes original monthly files June2025–September2026. It has
+23,376 unique final-price periods. Publication/availability remain null. Prepare
+immutable `snapshot FILE --kind emc --source-url URL --output DIR` per file, then
+`prepare SNAPSHOT_DIRS... --output DATASET`. Only explicit `--retrospective` allows
+the period-end assumption; final-price evidence is not operational replay.
 
-Inspect `manifest.json` before importing. The bridge is a local startup option,
-not an HTTP upload. It validates and imports the entire file transactionally:
+Future operational imports need genuine price vintages for June2025–September22,
+2026: aware `periodStart`, `sourceUpdatedAt`, `availableAt`, `usep`, `priceStatus`,
+`source`, `revisionId`, `timeMapping`, provenance and original payload. Expected
+forward demand uses one JSONL object per actual target/vintage, for example:
 
-```sh
-FORECAST_IMPORT_FILE="$WATTLY_ML_HOME/datasets/collector-2026-09-29/prices.jsonl" \
-  ./mvnw spring-boot:run
+```json
+{"targetPeriod":"2026-10-19T01:00:00+08:00","publishedAt":"2026-10-18T23:00:00+08:00","availableAt":"2026-10-18T23:02:00+08:00","demandMw":6500,"source":"AUTHORIZED_SOURCE_AND_VINTAGE"}
 ```
 
-Unset the option after importing. Retrying is idempotent. F1's
-`MarketHistoryRepository` deduplicates source/period/publication/value/status/
-mapping and preserves external IDs and original documents separately. Imported
-NEMS rows also use the existing `MarketPriceRepository.upsert`; final EMC labels
-never replace live provisional inputs. Collector availability means availability
-to that collector, not proof Wattly had the record before import. No hashes are
-assumed interchangeable across producers.
+This is a format example, not measured data. Supply via
+`prepare ... --demand-forecasts authorized-demand.jsonl`; live Spring import is an
+ADMIN POST `/api/v1/admin/forecast-demand` with an array of the same records.
+Do not derive vintages/coverage from current demand or the final CSV demand column.
+No future target coverage is invented; missing values remain missing. MOM holidays
+are versioned and publication-aware; update source/version/digest together in a new
+schema-compatible artifact, never edit an approved bundle.
 
-## Official historical files
+## Reproduce the frozen retrospective study
 
-Use EMC's public [Market Data Download](https://www.nems.emcsg.com/nems-prices#market-data-download),
-select **Uniform Singapore Energy Price and Demand Forecast**, and download at
-most 31 days per file. The actual sample inspected on 29 September 2026 has:
+Reserve fresh immutable output/version names when rerunning. These are the actual
+frozen windows, not a proposal. September28 demo stays outside fitting/selection.
+Use one computation thread (`OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1`).
 
-```csv
-"INFORMATION TYPE","DATE","PERIOD","USEP ($/MWh)","LCP ($/MWh)","DEMAND (MW)","SOLAR(MW)","TCL (MW)","RUSEP ($/MWh)","MAP ($/MWh)","MAPT ($/MWh)","TPC Applied"
+```bash
+export PYTHONPATH="$PWD/ml/src"
+export WATTLY_ML_HOME="$PWD/.local/acceptance-2026-10-18/runtime"
+data="$PWD/.local/acceptance-2026-10-18/datasets/official-final-v1"
+reports="$PWD/.local/acceptance-2026-10-18/reports"
+python -m wattly_ml.cli baseline-study "$data" \
+  --start 2026-04-01T00:00:00+08:00 --end 2026-07-01T00:00:00+08:00 \
+  --retrospective --output "$reports/baselines-rerun"
+python -m wattly_ml.cli train "$data" \
+  --start 2025-07-01T00:00:00+08:00 --cutoff 2026-07-01T00:00:00+08:00 \
+  --end 2026-07-29T00:00:00+08:00 --truth-policy FINAL --retrospective \
+  --protected-start 2026-07-29T00:00:00+08:00 --protected-end 2026-09-29T00:00:00+08:00 \
+  --version acceptance-rerun-v2 --output "$reports/validation-rerun"
+python -m wattly_ml.cli evaluate "$data" \
+  --model "$WATTLY_ML_HOME/models/acceptance-rerun-v2" \
+  --start 2026-07-29T00:00:00+08:00 --end 2026-09-23T00:00:00+08:00 \
+  --truth-policy FINAL --retrospective --final --output "$reports/unseen-rerun"
+python -m wattly_ml.cli spike-study "$data" \
+  --start 2026-04-01T00:00:00+08:00 --end 2026-07-01T00:00:00+08:00 \
+  --retrospective --output "$reports/spikes-rerun"
 ```
 
-`DATE` is `20-Sep-2026`; periods 1–48 map to 00:00 through 23:30 SGT. Only USEP
-is the target. The importer also accepts explicit documented Date/Period case
-aliases and ISO/slash date forms, and rejects unfamiliar headers/periods. The
-tiny matching CSV committed under `ml/fixtures` has **synthetic** values.
+B1/B2/B3 use CSDT4-18's canonical definitions. CSDT4-35 says B3 “last week”;
+that conflicting wording is documented, not silently implemented. Rank only
+identical eligible pairs. Own-coverage MAE is descriptive, never a fair ranking.
+`baseline-validation.json` is independently importable, without AI approval:
 
-The public single-day sample succeeded. The subsequent 2025-04-01–2025-05-01
-history request returned **HTTP 403**, so automatic acquisition stopped. Supply
-permitted downloaded files to proceed; do not bypass access controls.
-
-```sh
-python -m wattly_ml.cli snapshot /path/to/emc.csv --kind emc \
-  --source-url 'https://www.nems.emcsg.com/nems-prices' --output "$WATTLY_ML_HOME/snapshots"
-python -m wattly_ml.cli prepare "$WATTLY_ML_HOME"/snapshots/emc-* \
-  --output "$WATTLY_ML_HOME/datasets/emc-v1"
+```bash
+curl --fail --user "$WATTLY_ADMIN_USER" -H 'Content-Type: application/json' \
+  --data-binary @"$reports/baselines-three-months-v2/baseline-validation.json" \
+  http://127.0.0.1:8080/api/v1/admin/forecast-baseline-validation
+# curl prompts for the password; avoid putting credentials into shell history.
 ```
 
-These files have final-price truth, **null** historical publication/availability,
-and a `retrospective-final-csv` provenance. `--retrospective` explicitly assumes
-period-end availability for historical features. It does not claim the final price
-was actually published then. Source and acquisition timestamps are never substituted
-for each other. Demand and weather are excluded from v1 model features until enough
-matching historical vintages exist. Daily weather revisions are now retained by
-the existing Java collector; prior overwritten revisions cannot be recovered.
+The saved evidence contains paired MAE for horizons1–6 (next3h),7–12 (3–6h),13–24
+(6–12h), coverage/exclusions and frozen same-time-of-day spike references.
+Threshold-relative TP/FP/FN are not independently labelled genuine event accuracy;
+inspect distinct target and contiguous event counts too. No unsupported accuracy
+percentage is supplied. Sensitivity k3/min14/floor1 is recommended for team review,
+not approved by the team.
 
-## Train, evaluate, approve
+## F2/F4 household comparison
 
-The following dates illustrate a **future run after obtaining complete files**.
-They are not claims that those files are present. Reserve 28 days of warm-up,
-12 months of training, a separate validation block, at least eight untouched test
-weeks, and an F5 replay day beyond training/selection. Both training and validation
-purge the origins whose full target intervals cross their end boundary. Operational
-training/selection labels must actually have arrived by their respective cutoff.
+Use a running isolated application populated with genuine F2 project profiles and
+the unchanged F4 optimizer. Configure WATTLY_RUN_API_URL and admin credentials.
+The protected adapter never uses the live database for acceptance testing.
 
-```sh
-python -m wattly_ml.cli train "$WATTLY_ML_HOME/datasets/emc-v1" \
-  --start 2025-05-01T00:00:00+08:00 --cutoff 2026-05-01T00:00:00+08:00 \
-  --end 2026-07-20T00:00:00+08:00 --truth-policy FINAL --retrospective \
-  --version price-calendar-v1 --output "$WATTLY_ML_HOME/reports/validation-v1"
-python -m wattly_ml.cli evaluate "$WATTLY_ML_HOME/datasets/emc-v1" \
-  --model "$WATTLY_ML_HOME/models/price-calendar-v1" \
-  --start 2026-07-20T00:00:00+08:00 --end 2026-09-20T00:00:00+08:00 \
-  --truth-policy FINAL --retrospective --final --output "$WATTLY_ML_HOME/reports/final-v1"
-python -m wattly_ml.cli promote price-calendar-v1
+```bash
+python -m wattly_ml.cli savings-study "$reports/unseen-weeks-v1/predictions.jsonl" \
+  --validation "$reports/validation-v1/summary.json" \
+  --model-manifest "$WATTLY_ML_HOME/models/price-calendar-holiday-demand-v2-20261018/manifest.json" \
+  --households 1 2 3 4 5 --output "$reports/household-savings-rerun"
+python scripts/verify-forecast-evidence.py .local/acceptance-2026-10-18
 ```
 
-Freeze model/feature choices before opening the final report. Test results are
-never read by promotion. Final evidence also requires 56 days with common eligible
-pairs; an insufficient run saves its coverage report and exits with a blocker.
-Initial approval requires adequate verified data,
-non-exploratory status, common validation coverage, and improvement over the
-validation-selected baseline. A candidate that does not pass remains unapproved.
-`--exploratory` permits small-data training but its artifact cannot be promoted.
-Without an approved ranking, Java fallback order is B1, B2, B3 and is labelled
-UNRANKED; after an AI run the ranking is retained in PostgreSQL for outages.
+Use actual F2 IDs returned by `/api/v1/households` in your isolated instance.
+The cohort is frozen in proof artifacts. Two preset origins/day and earliest
+eligible decision per appliance run prevent overlap inflation. Runs are weighted
+runsPerWeek/7. Same feasible windows and actual prices score both schedules, losses
+remain signed and fixed-rate households are never shifted. These are **modelled
+consumption and simulated savings under current-profile counterfactuals**, not
+measured bills or verified historical household behavior. The older generic
+`decisions` adapter remains compatible.
 
-Bundles contain all 24 regressors/imputers, feature order, dependency versions,
-seed/parameters, training date/cutoff, dataset digest/quality, validation scores and
-baseline ranking. Models and reports use immutable version directories. Load only
-trusted local bundles: joblib is executable, and checksums detect corruption rather
-than establish trust. Dependency versions must match the lock.
+## Weekly schedule, audit and recovery
 
-The artifact's `spikeConfig` also governs Python backtesting and serving. Spring's
-`FORECAST_SPIKE_MINIMUM_SAMPLES`, `FORECAST_SPIKE_K`, and
-`FORECAST_SPIKE_SPREAD_FLOOR` must match it (defaults 14, 3, 1); mismatches reject
-AI and use Java fallback. Do not edit an approved manifest to retune a threshold;
-evaluate a new version using validation data. If a previously registered version
-returns a changed manifest, Spring saves fallback with `MODEL_MANIFEST_CONFLICT`
-and preserves the original model and predictions. Correct or roll back the Python
-artifact before restarting inference.
+The weekly service requires a real running ADMIN audit API, dedicated runtime,
+private environment and an existing user systemd manager. Inference must use the
+same persistent WATTLY_ML_HOME. Copy and edit the example; source files contain no
+real credentials. The timer defaults to Sunday03:00 Singapore and is configurable.
 
-Reports contain per-origin/per-horizon predictions, actuals, exclusion reasons,
-frozen spike thresholds/labels, 24 horizon MAEs, three horizon groups, coverage,
-spike TP/FP/FN/support and precision/recall. Primary comparisons use identical pairs
-eligible for every method. `ownEligibleMae` is a separately labelled descriptive
-score on a method's own pairs. Skill is null for zero baseline MAE or missing
-common pairs. Weekly block resampling requires at least eight observed weeks;
-no-event spike metrics are null. No accuracy/confidence percentages are invented.
-
-## Weekly candidate and rollback
-
-Run manually first. This repository installs no scheduler or training daemon.
-Activate the venv, source `.env`, and invoke `sh scripts/forecast-weekly.sh` with
-the same dataset/start/cutoff/end/truth/version/output flags as `train`. Its `end`
-is a designated **rolling validation** cutoff, never the fixed final-test report.
-The job is limited to one process, one computation thread and 45 minutes. It trains
-an immutable candidate, scores the current champion on the identical new validation
-pairs, and promotes only on improvement. A rejected candidate retains its report
-and a failure preserves the current pointer.
-
-`promote` handles initial manual approval. Once a champion exists, use `weekly`
-for the required paired challenger comparison. Promotion is serialized with a file
-lock and atomically replaces one version/checksum pointer, retaining the previous
-version. Rollback is limited to that previous approved bundle:
-
-```sh
-python -m wattly_ml.cli rollback PREVIOUS_VERSION
-# Restart only the Python inference process after promotion/rollback.
-python -m wattly_ml.cli serve
+```bash
+cp scripts/forecast-weekly.env.example /tmp/wattly-weekly.env
+chmod 600 /tmp/wattly-weekly.env
+# Edit paths, actual API credentials and optional authorized history/demand inputs.
+# Move it to your private persistent config before installing.
+bash scripts/install-forecast-timer.sh render /path/to/private-weekly.env /tmp/wattly-units
+bash scripts/forecast-weekly-scheduled.sh /path/to/private-weekly.env
+bash scripts/install-forecast-timer.sh install /path/to/private-weekly.env
+bash scripts/install-forecast-timer.sh status
+systemctl --user list-timers wattly-forecast-weekly.timer
+journalctl --user -u wattly-forecast-weekly.service -n 100 --no-pager
+curl --fail --user "$WATTLY_ADMIN_USER" \
+  'http://127.0.0.1:8080/api/v1/admin/forecast-training-attempts?limit=20'
+python -m wattly_ml.cli sync-runs "$WATTLY_ML_HOME"
+bash scripts/install-forecast-timer.sh uninstall
 ```
 
-Inference loads once at startup; there is no hidden hot reload. Restarting Python
-temporarily uses Java fallback and does not restart F1 or the standalone collector.
-CLI returns 0 on success, 2 on invalid/unavailable data or artifacts; HTTP readiness
-uses 503 and request validation uses 422/413.
+Do not install the example unedited. `render` verifies units without activating.
+`uninstall` disables/stops the timer; retains unit files, immutable artifacts and
+audit records for inspection. No persistent acceptance timer points at the disposed
+test app. A user manager must remain running for unattended schedules; arrange
+host login/lingering under your normal local operations policy if required.
 
-## Replay, F4 and deployment
+Every attempt writes a durable local record before acquisition/fitting and mirrors
+it to `model_run`. Database outage fails training closed and retains `.pending`
+spool files; `sync-runs` restores exact final outcomes. Bounded abandoned attempts
+are recovered after one hour under the training lock. Acquisition, training,
+rejection and promotion failures are recorded, not only successful serving.
+Inspect `$WATTLY_ML_HOME/training-attempts/*.json` and reports on failure. Successful
+attempts record data identity/ranges and validation scores; no-data failures leave
+scores empty with their reason. Protected intervals are removed from training,
+labels and lag inputs; missing history reduces coverage, never gets filled.
 
-F5 owns replacing the injected Clock. Set `FORECAST_MODE=REPLAY` on its isolated
-instance; live ingestion notifications do not trigger replay forecasts. F5 calls
-`ForecastJob.runOnce()` after importing its as-of history. Reads exclude both future
-origins and future generation times and never mix LIVE/REPLAY runs. Serving rejects
-artifacts trained or selected after the simulated origin, including the real artifact
-training date. Offline retrospective backtests reconstruct cutoff-frozen models;
-they do not prove an artifact existed historically. No qualifying historical replay
-artifact has been produced in this implementation session.
+Native timer resource limits are CPU100%, memory2G, 47min service limit; wrapper
+allows45min plus30s termination. One training lock and one numerical computation
+thread prevent overlapping candidates. Candidate and champion use identical
+validation windows and eligible pairs. Worse, inadequate, failed or unapproved
+candidates retain the champion. Official retrospective models and models without
+forward-demand provenance cannot pass production approval.
 
-F4 must require `ForecastService.latest().actionable()`, then use the existing
-`HouseholdDirectory` to exclude fixed-rate households and obtain feasible appliance
-windows. `python -m wattly_ml.cli decisions CASES.json --output RESULT.json` accepts
-cases with `caseId`, `householdId`, `exposedToWholesalePrice`, equal-length `actual`,
-`ai`, `baseline` price vectors, `usualPlanKwh`, and `feasiblePlansKwh`. It compares
-realized simulated savings for identical plans, preserves losses, and labels
-modelled load and accepted-recommendation assumptions. F4 must supply real cases;
-the test case proves mechanics only.
+Promotion atomically swaps a checksum pointer under a lock; models remain immutable.
+Inference checks it on `/ready` and `/forecast` and reloads safely. Failed/corrupt
+reload returns503 so Spring falls back. Rollback selects the previous approved
+bundle, also without restarting the collector or Spring:
 
-On a server, F1 populates the application's canonical history; inference receives
-bounded JSON history from Spring and never needs a collector filesystem. Transfer
-immutable snapshots and trusted model directories separately, set `WATTLY_ML_HOME`,
-and mount them with the same pinned Python environment. Same-host processes use
-loopback. Container deployments must provide a private Spring-to-Python address;
-never expose Python as the public browser API. The existing PostgreSQL compose
-service and its volume remain unchanged. No cloud deployment was performed.
+```bash
+python -m wattly_ml.cli promote NEW_APPROVED_VERSION
+python -m wattly_ml.cli rollback PREVIOUS_APPROVED_VERSION
+curl http://127.0.0.1:8001/ready
+```
 
-## Tests and safe recovery
+`promote` never reads protected test results. Once a champion exists use `weekly`
+for challenger evaluation, rather than manually bypassing it. The supplied
+retrospective research artifact deliberately fails promotion gates.
 
-```sh
+## Controlled model improvement (research only)
+
+`improve-history` compares fixed long-history and recent schema2 models, including
+B2 corrections, on earlier common-pair validation. `confirm-improvement` evaluates
+the frozen candidate on later data without fitting or promotion. See the
+[October 18 comparison and commands](improvement-2026-10-18.md). Research results
+do not change the serving pointer or relax production approval requirements.
+
+`grade-spikes PREDICTIONS.jsonl --output NEW_DIRECTORY` grades saved forecasts for
+missed spikes, false alarms and event warning lead time. New improvement studies
+and future confirmations include that report under `spikes/`. See the
+[spike-focused comparison](spike-grading-2026-10-18.md); price MAE alone does not
+grade spike detection.
+
+## Verification and migration safety
+
+```bash
 ./mvnw test
-. .venv/bin/activate
 python -m pytest -q ml/tests
 node --test src/test/js/*.test.js
-# Full persistence + HTTP + actual page JavaScript smoke; use a disposable DB.
-WATTLY_TEST_DB_URL=jdbc:postgresql://localhost:55432/energy_market \
-WATTLY_TEST_DB_USER=energy_market WATTLY_TEST_DB_PASSWORD=energy_market \
-WATTLY_UI_SMOKE=1 ./mvnw test
-# Also launch a real, temporary FastAPI process with 24 synthetic trained models.
-WATTLY_TEST_DB_URL=jdbc:postgresql://localhost:55432/energy_market \
-WATTLY_TEST_DB_USER=energy_market WATTLY_TEST_DB_PASSWORD=energy_market \
-WATTLY_PYTHON_SMOKE_EXECUTABLE="$PWD/.venv/bin/python" WATTLY_UI_SMOKE=1 ./mvnw test
+# Full isolated proof; PG_BIN points to installed PostgreSQL binaries.
+JAVA_HOME=/path/to/jdk21 WATTLY_PYTHON="$PWD/.venv/bin/python" \
+WATTLY_PG_BIN=/usr/lib/postgresql/16/bin WATTLY_STACK_PROOF="$PWD/.local/new-stack-proof" \
+NODE_PATH=/path/to/playwright/node_modules PLAYWRIGHT_BROWSERS_PATH=/path/to/browsers \
+python scripts/verify-forecast-stack.py
 ```
 
-The DB test creates a new `f3_test_<uuid>` schema and applies V1–V9 there; it does
-not alter the application's existing schema. It runs the actual HTML/JS rendering
-against live Spring responses using Node's minimal test DOM. It is not a browser
-layout/accessibility audit. Without `WATTLY_TEST_DB_URL` that integration test is
-explicitly skipped. The Python test suite includes a small offline 24-model
-train/save/load/serve smoke, golden parity, cutoff/availability checks, and failed
-promotion/rollback checks. Once dependencies are installed it needs no upstream
-network or long dataset.
+The stack script creates its own cluster/DB/schema, tests real Spring/FastAPI HTTP,
+then uses an archived unmodified collector payload against its isolated app, loads
+saved history/ranking, exercises actual resident/admin pages in Chromium, performs
+F2/F4 replay, fires an ephemeral native timer and stops only its own processes.
+`--application-only` reruns Java plus focused Python acceptance checks before the
+application proof; it skips the full Python/frontend suites, whose earlier results
+must be supplied separately. Browser prerequisites are pinned Playwright1.64.1
+and its Chromium installed outside source. No live DB is used. Credentials in proof
+`private-*.env` files are mode600 and excluded from delivery.
 
-The optional Python process smoke uses `ml/tests/serve_fixture.py` in an empty
-temporary directory with explicitly synthetic approval/replay metadata. It checks
-Spring → FastAPI → PostgreSQL → public endpoint → actual page JavaScript for all
-24 AI intervals, then stops Python and checks 24 baseline intervals after new
-input. It also checks retry deduplication and retained fallback ranking. Proofs
-are `target/forecast-python-ui-proof.json` and
-`target/forecast-python-fallback-ui-proof.json`; process logs are in
-`target/forecast-python-smoke.log`. The test tears down its process and temporary
-bundle, never promotes a production model, and is not historical accuracy evidence.
-
-V9 is additive. Existing migrations and API shapes are preserved. To stop new
-forecast work during recovery, stop Spring normally; no collector changes are
-needed. To revert the application code, retain the added tables for data recovery
-rather than deleting forecasts/history. Do not edit an applied migration checksum.
-An unapproved/corrupt/missing model leaves saved forecasts and Java fallback intact.
+V1–V9 remain unchanged; V10 is the original F4 recommendations migration from its
+cached branch; V11 is main’s unchanged household-budget migration; V12 adds operation/ranking/demand/audit support. Both fresh
+migrations and PostgreSQL persistence are covered by the isolated proof. To roll
+back code, stop Spring normally and retain expanded tables; never edit applied
+migration checksums or delete saved predictions. The source/evidence delivery
+includes untracked October modules/tests, without staging or committing them.
