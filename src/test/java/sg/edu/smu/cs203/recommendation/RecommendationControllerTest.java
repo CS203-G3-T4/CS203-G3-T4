@@ -19,6 +19,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import sg.edu.smu.cs203.household.HouseholdAccessDeniedException;
 import sg.edu.smu.cs203.household.HouseholdNotFoundException;
 
 class RecommendationControllerTest {
@@ -63,6 +64,15 @@ class RecommendationControllerTest {
         mvc.perform(post("/api/v1/recommendations/5/dismiss"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.detail").value("This suggestion is already accepted"));
+    }
+
+    @Test
+    void decidingAnotherResidentsSuggestionIsA403() throws Exception {
+        when(service.dismiss(5L)).thenThrow(new HouseholdAccessDeniedException());
+
+        mvc.perform(post("/api/v1/recommendations/5/dismiss"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.title").value("Access denied"));
     }
 
     @Test
