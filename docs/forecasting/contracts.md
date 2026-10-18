@@ -53,13 +53,15 @@ and poll status; a bounded, coalescing F3 worker forecasts without extra polling
 Complete runs and all eligible candidates are saved in one transaction.
 
 Spring owns `/api/v1/forecast/latest`, `/current-assessment`, and
-`/api/v1/admin/forecast-accuracy?days=7`. GETs only read saved data. The repository
-has no roles/login yet: the admin endpoint must deny requests unless the servlet
-principal has role ADMIN, allowing the future authentication layer to supply it.
-LIVE and REPLAY are separate; queries exclude origins and generation timestamps
-after the Clock. A replay artifact must have completed training AND validation
-before the origin, including the artifact's actual training date. F5 owns Clock
-replacement and replay orchestration.
+`/api/v1/admin/forecast-accuracy?days=7`. GETs only read saved data. Account-backed
+form login supplies `ROLE_RESIDENT` and `ROLE_ADMIN`; `/api/v1/admin/**` and
+`/api/v1/demo/**` require `ROLE_ADMIN`. Unauthenticated requests to those API
+paths receive 403 rather than a login redirect, and authenticated residents also
+receive 403. The shared login page and account-based landing behavior are tracked
+separately. LIVE and REPLAY are separate; queries exclude origins and generation
+timestamps after the Clock. A replay artifact must have completed training AND
+validation before the origin, including the artifact's actual training date. F5
+owns Clock replacement and replay orchestration.
 
 F4 should consume `ForecastService.latest()` and require `actionable=true`, then
 use the existing `HouseholdDirectory` for exposure and appliance windows. F3
