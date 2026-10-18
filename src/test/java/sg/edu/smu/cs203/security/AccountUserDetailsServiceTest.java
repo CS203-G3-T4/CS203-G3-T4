@@ -41,6 +41,7 @@ class AccountUserDetailsServiceTest {
         var user = service.loadUserByUsername("resident");
 
         assertTrue(user.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_RESIDENT")));
+        assertEquals(7L, ((AccountUserDetails) user).householdId());
     }
 
     @Test

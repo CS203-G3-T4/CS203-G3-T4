@@ -2,15 +2,14 @@ package sg.edu.smu.cs203.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.config.Customizer;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 
 @Configuration
@@ -19,6 +18,9 @@ public class SecurityConfiguration {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers("/login.html", "/login", "/api/v1/csrf",
+                                "/css/**", "/js/**", "/images/**", "/favicon.ico")
+                        .permitAll()
                         .requestMatchers("/actuator/health", "/actuator/health/**",
                                 "/swagger-ui/**", "/v3/api-docs/**")
                         .permitAll()
@@ -34,7 +36,12 @@ public class SecurityConfiguration {
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                         .csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler()))
-                .formLogin(Customizer.withDefaults());
+                .formLogin(form -> form
+                        .loginPage("/login.html")
+                        .loginProcessingUrl("/login")
+                        .failureUrl("/login.html?error")
+                        .successHandler(new AccountLoginSuccessHandler())
+                        .permitAll());
         return http.build();
     }
 

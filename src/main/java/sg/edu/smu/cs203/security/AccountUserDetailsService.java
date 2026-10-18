@@ -1,6 +1,5 @@
 package sg.edu.smu.cs203.security;
 
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -20,9 +19,7 @@ public class AccountUserDetailsService implements UserDetailsService {
         UserAccount account = accounts.findByUsername(username)
                 .filter(user -> user.role() != AccountRole.RESIDENT || !user.simulatedHousehold())
                 .orElseThrow(() -> new UsernameNotFoundException("Invalid username or password"));
-        return User.withUsername(account.username())
-                .password(account.passwordHash())
-                .roles(account.role().name())
-                .build();
+        return new AccountUserDetails(
+                account.username(), account.passwordHash(), account.role(), account.householdId());
     }
 }

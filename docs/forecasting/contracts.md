@@ -57,8 +57,9 @@ Spring owns `/api/v1/forecast/latest`, `/current-assessment`, and
 form login supplies `ROLE_RESIDENT` and `ROLE_ADMIN`; `/api/v1/admin/**` and
 `/api/v1/demo/**` require `ROLE_ADMIN`. Unauthenticated requests to those API
 paths receive 403 rather than a login redirect, and authenticated residents also
-receive 403. The shared login page and account-based landing behavior are tracked
-separately. LIVE and REPLAY are separate; queries exclude origins and generation
+receive 403. The shared `/login.html` form uses CSRF protection and redirects
+residents to their linked household dashboard and admins to household
+administration. LIVE and REPLAY are separate; queries exclude origins and generation
 timestamps after the Clock. A replay artifact must have completed training AND
 validation before the origin, including the artifact's actual training date. F5
 owns Clock replacement and replay orchestration.
