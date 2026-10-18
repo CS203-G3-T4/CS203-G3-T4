@@ -135,7 +135,7 @@ def main():
             USEP_FEED_URL=f'http://127.0.0.1:{feedport}/price',NEA_FEED_URL=f'http://127.0.0.1:{feedport}/weather-unavailable',
             USEP_POLLING_ENABLED='true',NEA_DAILY_POLLING_ENABLED='false',FORECAST_MODE='LIVE',
             FORECAST_IMPORT_FILE=str(OUT/'collector-dataset/prices.jsonl'),FORECAST_PERIOD_MAPPING_EVIDENCE='EMC_RT_20260929_24_PERIODS',
-            FORECAST_PYTHON_URL='http://127.0.0.1:1',WATTLY_ADMIN_USER='local-proof-admin',WATTLY_ADMIN_PASSWORD=password,
+            FORECAST_PYTHON_URL='http://127.0.0.1:1',WATTLY_ADMIN_USER='local-proof-admin',WATTLY_ADMIN_PASSWORD=password,WATTLY_FORECAST_LOCAL_ADMIN_ENABLED='true',
             RECOMMENDATION_FORECAST_SOURCE='f3',
             WATTLY_RUN_API_URL=f'http://127.0.0.1:{appport}',WATTLY_BROWSER_PROOF_SOURCE='ISOLATED_APP_WITH_ARCHIVED_REAL_COLLECTOR_PRICES')
         private=OUT/'private-runtime.env'
@@ -151,10 +151,10 @@ def main():
         while time.monotonic()<deadline:
             if spring.poll() is not None: raise RuntimeError('Spring exited; see spring.log')
             try:
-                if get_json(base+'/api/v1/forecast/latest').get('available'): break
+                if get_json(base+'/api/v1/forecast/latest').get('run'): break
             except OSError: pass
             time.sleep(.25)
-        else: raise RuntimeError('No saved real-data forecast within90seconds')
+        else: raise RuntimeError('No saved real-data forecast or explicit stale/unavailable run within90seconds')
         from wattly_ml.operations import post_admin
         os.environ.update({k:ENV[k] for k in ['WATTLY_RUN_API_URL','WATTLY_ADMIN_USER','WATTLY_ADMIN_PASSWORD']})
         studies=ROOT/'.local/acceptance-2026-10-18/reports'
@@ -210,7 +210,7 @@ def main():
             'mainDashboardRecommendationsBudgetPages':True,
             'defaultStartupWithoutPythonOrHistory':True,'mainRecommendationDefaultPreserved':True,
             'configuredHouseholdScenarios':households,'collectorModified':False,'liveDatabaseUsed':False,
-            'archivedCollectorFeed':'Original payload/timestamps preserved; only the isolated app receives this local archived feed'},indent=2))
+            'archivedCollectorFeed':'Original payload/timestamps preserved; stale inputs remain unavailable, never made fresh for the proof'},indent=2))
         print(str(OUT/'proof.json'))
     finally:
         if spring is not None and spring.poll() is None:

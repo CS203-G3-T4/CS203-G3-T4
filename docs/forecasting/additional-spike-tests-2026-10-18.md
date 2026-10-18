@@ -153,7 +153,7 @@ timeout --signal=TERM --kill-after=15s 1200s "$PYTHON" \
 Evidence: [recent panels and stability](evidence/2026-10-18-additional-spike-tests/recent-stability.json),
 [historical summary](evidence/2026-10-18-additional-spike-tests/historical-summary.json),
 [historical scoreboard](evidence/2026-10-18-additional-spike-tests/historical-scoreboard.csv),
-[old-AI test](evidence/2026-10-18-additional-spike-tests/old-ai-eight-week-test.json),
+[old-AI test](artifacts.md#retrieval),
 [independent verification](evidence/2026-10-18-additional-spike-tests/verification.json),
 [test record](evidence/2026-10-18-additional-spike-tests/tests.json).
 

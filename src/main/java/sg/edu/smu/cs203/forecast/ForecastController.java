@@ -21,10 +21,12 @@ public class ForecastController {
     private final CurrentAssessmentService assessments;
     private final ForecastRepository repository;
     private final Clock clock;
-    @org.springframework.beans.factory.annotation.Autowired private ForecastOperationsRepository operations;
-    @org.springframework.beans.factory.annotation.Autowired private ForecastAccuracyService accuracyService;
-    public ForecastController(ForecastService service,CurrentAssessmentService assessments,ForecastRepository repository,Clock clock) {
+    private final ForecastOperationsRepository operations;
+    private final ForecastAccuracyService accuracyService;
+    public ForecastController(ForecastService service,CurrentAssessmentService assessments,ForecastRepository repository,Clock clock,
+            ForecastOperationsRepository operations,ForecastAccuracyService accuracyService) {
         this.service=service; this.assessments=assessments; this.repository=repository; this.clock=clock;
+        this.operations=operations; this.accuracyService=accuracyService;
     }
     @GetMapping("/api/v1/forecast/latest")
     @Operation(summary="Read the latest saved 24-interval forecast, with stale and actionable flags")

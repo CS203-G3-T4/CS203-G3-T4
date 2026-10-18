@@ -33,7 +33,7 @@ public class ForecastOperationsRepository {
                     || row.availableAt().isAfter(now) || row.demandMw()==null || row.demandMw().signum()<0
                     || row.source()==null || row.source().isBlank()) throw new IllegalArgumentException("Invalid demand provenance");
             jdbc.update("""
-                INSERT INTO expected_demand_revision VALUES (?,?,?,?,?) ON CONFLICT DO NOTHING
+                INSERT INTO expected_demand_revision (target_period,published_at,available_at,demand_mw,source) VALUES (?,?,?,?,?) ON CONFLICT DO NOTHING
                 """,ts(row.targetPeriod()),ts(row.publishedAt()),ts(row.availableAt()),row.demandMw(),row.source());
             BigDecimal saved=jdbc.queryForObject("SELECT demand_mw FROM expected_demand_revision WHERE target_period=? AND published_at=? AND available_at=? AND source=?",
                     BigDecimal.class,ts(row.targetPeriod()),ts(row.publishedAt()),ts(row.availableAt()),row.source());
@@ -62,7 +62,7 @@ public class ForecastOperationsRepository {
         }
         for (int i=1;i<ranking.size();i++) if (evidence.path("table").path(ranking.get(i-1)).path("mae").asDouble()
                 >evidence.path("table").path(ranking.get(i)).path("mae").asDouble()) throw new IllegalArgumentException("Invalid ranking order");
-        jdbc.update("INSERT INTO baseline_validation VALUES (?,?,?,?,?,?,?::jsonb) ON CONFLICT DO NOTHING",id,mode,ts(now),ts(start),ts(end),
+        jdbc.update("INSERT INTO baseline_validation (id,mode,usable_from,validation_start,validation_end,dataset_digest,evidence) VALUES (?,?,?,?,?,?,?::jsonb) ON CONFLICT DO NOTHING",id,mode,ts(now),ts(start),ts(end),
                 evidence.path("datasetDigest").asText(),evidence.toString());
         String saved=jdbc.queryForObject("SELECT evidence::text FROM baseline_validation WHERE id=?",String.class,id);
         if (!mapper.readTree(saved).equals(evidence)) throw new IllegalArgumentException("Validation evidence is immutable");

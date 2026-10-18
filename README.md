@@ -187,9 +187,11 @@ falls back. Promotion and rollback never alter a bundle in place.
 
 Resident `/forecast.html` shows saved forecasts and today's actuals. Protected
 `/admin-forecast.html` shows seven-day forecast/actual series and common-pair MAE.
-Set `WATTLY_ADMIN_USER` and `WATTLY_ADMIN_PASSWORD` outside source to enable local
-ADMIN Basic authentication; there are no default credentials. Keep it on localhost
-or behind HTTPS in deployment. Server-side ADMIN checks remain mandatory.
+For local/demo use only, explicitly set `WATTLY_FORECAST_LOCAL_ADMIN_ENABLED=true`
+on Spring plus private `WATTLY_ADMIN_USER` and `WATTLY_ADMIN_PASSWORD`. Credentials
+alone do not enable it; there are no defaults. Keep demos on loopback. Production
+uses shared authentication with this fallback disabled; server-side ADMIN checks
+remain mandatory. See the auth-owner decision below.
 
 A configurable weekly user-systemd timer, audit/failure inspection, paired
 challenger validation, reload and rollback are documented in the
@@ -215,3 +217,9 @@ the projected total. `PUT` to the same path saves `monthlyBudgetSgd` and
 use the rate in Household Settings. Price-linked plans need a resident-entered planning
 rate before spending can be estimated. Amounts exclude taxes and fixed fees. These
 figures use F2's load model, not meter readings or a live retail bill.
+
+Forecasting review updates: [V13 database compatibility](docs/forecasting/migration-v13.md),
+[temporary local admin boundary](docs/forecasting/auth-owner-decision.md), and
+[verified research archives](docs/forecasting/artifacts.md). Check migration lineage
+before upgrading any persistent database; legacy forecast V12 is not automatically
+rewritten or repaired.

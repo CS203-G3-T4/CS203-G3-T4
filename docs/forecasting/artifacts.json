@@ -1,0 +1,192 @@
+{
+  "sourceCommit": "76c4866284ffb9c92c0369a088ad034c29a9d6f6",
+  "archiveName": "wattly-forecast-evidence-76c4866.tar.gz",
+  "files": [
+    {
+      "path": "docs/forecasting/accuracy-study-2026-10-05.json",
+      "bytes": 320325,
+      "sha256": "5cc673b1a0fe3d8e87ec50e3786f9020df337696490021d870a3fd8717cc390f"
+    },
+    {
+      "path": "docs/forecasting/accuracy-study-2026-10-06.json",
+      "bytes": 471631,
+      "sha256": "d04eb106b5e327a03d6547a7efe8adc0698094c5838fee1ded16fb88de004869"
+    },
+    {
+      "path": "docs/forecasting/accuracy-study-horizons-2026-10-05.csv",
+      "bytes": 46092,
+      "sha256": "86734e7047dd796fe226903eb76e0f7ff95f104ae0aebb58fb2ddd7b4601825d"
+    },
+    {
+      "path": "docs/forecasting/accuracy-study-horizons-2026-10-06.csv",
+      "bytes": 87624,
+      "sha256": "6f6a6a331160de0a00f456713109f17c8bf120031753f915456ecd0fdcb8d71a"
+    },
+    {
+      "path": "docs/forecasting/accuracy-study-verification-2026-10-05.json",
+      "bytes": 2790,
+      "sha256": "0715b1b7ae3f24a8b1a5fc9ee9d360cf8ce733ff79b6b93e337feb02f19a5caf"
+    },
+    {
+      "path": "docs/forecasting/accuracy-study-verification-2026-10-06.json",
+      "bytes": 3733,
+      "sha256": "5fcb81bfd03a2b127ec101ba63983a80b8b05aeee1169ba27d5e09e2ed831b4f"
+    },
+    {
+      "path": "docs/forecasting/additional-comparison-2026-10-06.json",
+      "bytes": 161133,
+      "sha256": "ba0a4d563f1bf0ad60aa062333a7ac2edcfb8e41790019cd23d61e97f4214128"
+    },
+    {
+      "path": "docs/forecasting/additional-comparison-horizons-2026-10-06.csv",
+      "bytes": 72920,
+      "sha256": "18ffb063f6941941c88c57bf0b53e7cc33c8e6d413a1d15ec5f70051e12f8f05"
+    },
+    {
+      "path": "docs/forecasting/ar-improvements-2026-10-06.json",
+      "bytes": 1391431,
+      "sha256": "264dee059531ea32f99a254f031f8df51f85d86969124b2d60f4823af9bcf76b"
+    },
+    {
+      "path": "docs/forecasting/ar-improvements-horizons-2026-10-06.csv",
+      "bytes": 231336,
+      "sha256": "a1943b285bf3ac87cee41ac3a8221caa347fcd35a0d24401bd6a592fce5dd939"
+    },
+    {
+      "path": "docs/forecasting/ar-improvements-tests-2026-10-06.json",
+      "bytes": 2486,
+      "sha256": "54bc46ce82a7fb78d4620bac1fd962c1b87bec55d3321f6bdc2998b2a09c47d5"
+    },
+    {
+      "path": "docs/forecasting/ar-improvements-verification-2026-10-06.json",
+      "bytes": 791,
+      "sha256": "5e8588a435d87c2ec6ae4c11d281d197c60eec76d62048aa2ca8611bcc631445"
+    },
+    {
+      "path": "docs/forecasting/evidence/2026-10-18-acceptance/admin-forecast.png",
+      "bytes": 73954,
+      "sha256": "b471a47cddc234422fe20294f0b4659c7057f3f4d86a36ab6c0727b760588f46"
+    },
+    {
+      "path": "docs/forecasting/evidence/2026-10-18-acceptance/populated-admin-fixture.png",
+      "bytes": 81326,
+      "sha256": "fcdbe38a918529745d5ccc8eff47b02bfbf8d8031469912dd9617fc32501a7cf"
+    },
+    {
+      "path": "docs/forecasting/evidence/2026-10-18-acceptance/resident-forecast-mobile.png",
+      "bytes": 160124,
+      "sha256": "fcc5da74ad404e5efde35c54ca075967e07c5891766e594fc2b5f470c0d055d4"
+    },
+    {
+      "path": "docs/forecasting/evidence/2026-10-18-acceptance/resident-forecast.png",
+      "bytes": 156969,
+      "sha256": "2933ba93098f9f63baad38fefda408b07996781d3e627b4e0e4672b4e0cb2989"
+    },
+    {
+      "path": "docs/forecasting/evidence/2026-10-18-additional-spike-tests/historical-july.json",
+      "bytes": 42300,
+      "sha256": "f6d4e062235b98da5988842fa255b1e7e7da541238e72de1dc24c968ac540f57"
+    },
+    {
+      "path": "docs/forecasting/evidence/2026-10-18-additional-spike-tests/historical-june.json",
+      "bytes": 42195,
+      "sha256": "1f7f29daf8134847ab4d5713489f4c68c1a85237b2620489aa755a8cdcd612d7"
+    },
+    {
+      "path": "docs/forecasting/evidence/2026-10-18-additional-spike-tests/historical-pooled.json",
+      "bytes": 42307,
+      "sha256": "1062e2014e94fc32678050272fde7b63760bc2eff540190fba4ba84fd07b1e89"
+    },
+    {
+      "path": "docs/forecasting/evidence/2026-10-18-additional-spike-tests/old-ai-eight-week-test.json",
+      "bytes": 34162,
+      "sha256": "61a6d31358477c56fbdc207d764c83a57e1958dae25aa1b7b3b74a32d0ac50b2"
+    },
+    {
+      "path": "docs/forecasting/evidence/2026-10-18-additional-spike-tests/recent-without-b3.json",
+      "bytes": 34561,
+      "sha256": "6e2d9c26333fa27682219e76ba8e4d939b2f3b42fa14d7a4e90e1ea431228dcc"
+    },
+    {
+      "path": "docs/forecasting/evidence/2026-10-18-main-sync/dashboard.png",
+      "bytes": 95411,
+      "sha256": "48faa803628cd4d67ebf0f4faad1f219dfdc4d95d13b9bdc9eb0c886ae4e2ada"
+    },
+    {
+      "path": "docs/forecasting/evidence/2026-10-18-main-sync/migration-upgrade.xml",
+      "bytes": 35920,
+      "sha256": "e542123fa5c90e7f5fd3a77a916ee3f280fc9a67692026e6cb008deeb5af89f9"
+    },
+    {
+      "path": "docs/forecasting/evidence/2026-10-18-main-sync/recommendations.png",
+      "bytes": 66043,
+      "sha256": "41a9c6faa558f3122c14de8478957fd9e88773ba88c9922655611e3a92923df0"
+    },
+    {
+      "path": "docs/forecasting/evidence/2026-10-18-main-sync/spending.png",
+      "bytes": 77549,
+      "sha256": "f8c2ddec6f4187e075064d513a8baf1416dbdd54b6a588b00abdcba48320db5c"
+    },
+    {
+      "path": "docs/forecasting/evidence/2026-10-18-spike-grading/summary.json",
+      "bytes": 83624,
+      "sha256": "b2b8398568fbcff6782a82e50c17d28e98b2a077dfd2239c1ea87945f1213f43"
+    },
+    {
+      "path": "docs/forecasting/historical-data-needed-2026-10-06.csv",
+      "bytes": 4884,
+      "sha256": "a30dd6216e3b497f9c9f05a5aaabdafb1eb42c2f14b5b29868743d399baa4f73"
+    },
+    {
+      "path": "docs/forecasting/time-series-comparison-2026-10-06.html",
+      "bytes": 301537,
+      "sha256": "a86b4b7bd11e4028fb59dc18364037c7c7f07c5818cbcb0ba440887a6629e123"
+    },
+    {
+      "path": "docs/forecasting/time-series-horizons-2026-10-06.csv",
+      "bytes": 69559,
+      "sha256": "07eafddedfafa7c0a26b270326d403274e7e9a8de70bbeba787df81d75b77672"
+    },
+    {
+      "path": "docs/forecasting/time-series-study-2026-10-06.json",
+      "bytes": 399603,
+      "sha256": "715da44c7ffa5934205f6737fe4f417e96af7d126d2413137669ef1932130bfc"
+    },
+    {
+      "path": "docs/forecasting/time-series-verification-2026-10-06.json",
+      "bytes": 4008,
+      "sha256": "8eff6cb0df043018b9d223bdb4c5bab9b615064bdfd308cb6baca7883a970c60"
+    },
+    {
+      "path": "docs/forecasting/time-series-view-verification-2026-10-06.json",
+      "bytes": 290,
+      "sha256": "b768ec50add2eb79f4f9e062ca7997f6d2dee8623130f4391307a58e6ea300f6"
+    },
+    {
+      "path": "docs/forecasting/training-methods-2026-10-06.json",
+      "bytes": 420291,
+      "sha256": "aaedf737005c26539eaf6b81105159808d2aaead1fc9d992abab983d1d325cde"
+    },
+    {
+      "path": "docs/forecasting/training-methods-horizons-2026-10-06.csv",
+      "bytes": 22092,
+      "sha256": "202f4bd195f77822a60ffe80acf49af9f54aee32551c9155179471059c0757ac"
+    },
+    {
+      "path": "docs/forecasting/training-methods-tests-2026-10-06.json",
+      "bytes": 452,
+      "sha256": "d3dba17ade11ff176eb9b29e16254d34c8c648bc3658caf88bb3e45501271b15"
+    },
+    {
+      "path": "docs/forecasting/training-methods-verification-2026-10-06.json",
+      "bytes": 1173,
+      "sha256": "18f192e69caaec6609a0bebe43e2d5330f6f5feaf724f5bec0f3247c5dd4d448"
+    },
+    {
+      "path": "src/main/resources/static/forecast-demo-latest.json",
+      "bytes": 209345,
+      "sha256": "5e2c5e8a8d0130232f0301a05b6b36afa940de2777737d1e262c407a5fa5582a"
+    }
+  ],
+  "archiveSha256": "4d153531160edf9cb77e160cc1107a37e80434b61585c0f9d689af8531c63551"
+}

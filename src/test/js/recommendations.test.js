@@ -140,3 +140,33 @@ test('a rejected override shows the server message and re-enables the buttons', 
   assert.equal(status.className, 'rec-status error');
   assert.equal(buttons[0].disabled, false);
 });
+
+test('the page only reads suggestions; it never asks the server to recompute them', async () => {
+  const calls = [];
+  const nodes = {};
+  const element = () => ({ textContent: '', innerHTML: '', hidden: false });
+  ['recommendation-list', 'recommendation-note', 'recommendation-source',
+    'recommendation-count', 'recommendation-savings'].forEach((id) => { nodes[id] = element(); });
+  const document = escapingDocument();
+  document.getElementById = (id) => nodes[id] || null;
+  const { Wattly, Recs, context } = load({ document, window: { location: { search: '?household=4' } }, URLSearchParams });
+  Wattly.api = async (method, url) => {
+    calls.push(method + ' ' + url);
+    return { ok: true, status: 200, data: { demoForecast: true, recommendations: [dryer],
+      refreshedAt: '2026-09-30T06:31:00Z' } };
+  };
+
+  await Recs.load();
+
+  assert.deepEqual(calls, ['GET /api/v1/households/4/recommendations']);
+  assert.match(nodes['recommendation-note'].textContent, /demo forecast/);
+  assert.match(nodes['recommendation-note'].textContent, /Updated 2:31 PM\.$/);
+  assert.equal(nodes['recommendation-count'].textContent, '1');
+  assert.ok(context);
+});
+
+test('before the first background recompute there is no updated time', () => {
+  const { Recs } = load();
+
+  assert.equal(Recs.updatedText(null), '');
+});

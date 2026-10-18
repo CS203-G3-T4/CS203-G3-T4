@@ -12,12 +12,16 @@ from .operations import TrainingAttempt, sync_runs
 from .timebase import DAY, SGT, instant
 
 
-def main():
+def main(now=None):
+    scheduled_at = now if now is not None else datetime.now(timezone.utc)
+    if scheduled_at.tzinfo is None or scheduled_at.utcoffset() is None:
+        raise ValueError("Scheduling time must be timezone-aware")
+    scheduled_at = scheduled_at.astimezone(timezone.utc)
     home=Path(os.environ['WATTLY_ML_HOME']).expanduser()
-    end=instant(os.environ['WATTLY_VALIDATION_END']) if os.environ.get('WATTLY_VALIDATION_END') else datetime.now(timezone.utc).astimezone(SGT).replace(hour=0,minute=0,second=0,microsecond=0)
+    end=instant(os.environ['WATTLY_VALIDATION_END']) if os.environ.get('WATTLY_VALIDATION_END') else scheduled_at.astimezone(SGT).replace(hour=0,minute=0,second=0,microsecond=0).astimezone(timezone.utc)
     cutoff=end-int(os.environ.get('WATTLY_VALIDATION_DAYS','28'))*DAY
     start=instant(os.environ['WATTLY_TRAIN_START']) if os.environ.get('WATTLY_TRAIN_START') else cutoff-365*DAY
-    version='weekly-'+datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S')+'-'+uuid.uuid4().hex[:8]
+    version='weekly-'+scheduled_at.strftime('%Y%m%dT%H%M%S')+'-'+uuid.uuid4().hex[:8]
     dataset=home/'datasets'/version
     args=argparse.Namespace(dataset=dataset,version=version,start=start,cutoff=cutoff,end=end,output=home/'reports'/version)
     attempt=TrainingAttempt(args)
@@ -26,7 +30,7 @@ def main():
             raise ValueError('Scheduled operation requires WATTLY_RUN_API_URL and admin credentials; local-only audit is not sufficient')
         sync_runs(home)
         attempt.start()
-        attempt.update(promotionDecision='DATA_ACQUISITION')
+        attempt.update(promotionDecision='DATA_ACQUISITION',scheduledAt=scheduled_at.isoformat())
         source=Path(os.environ['COLLECTOR_DATA_DIR'])/'collector.sqlite3'
         acquired=snapshot(source,home/'snapshots','sqlite')
         snapshots=[acquired]

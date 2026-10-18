@@ -30,7 +30,7 @@ import static sg.edu.smu.cs203.forecast.ForecastMathTest.*;
     webEnvironment=SpringBootTest.WebEnvironment.RANDOM_PORT,
     properties={"market.feed.enabled=false","weather.daily.enabled=false","forecast.mode=REPLAY",
         "forecast.period-mapping-evidence=SYNTHETIC_TEST_ONLY","forecast.admin.username=fixture-admin",
-        "forecast.admin.password=fixture-only-password","recommendation.forecast-source=f3"})
+        "forecast.admin.password=fixture-only-password","forecast.admin.local-basic-enabled=true","recommendation.forecast-source=f3"})
 class ForecastAcceptancePersistenceTest {
     static final String SCHEMA="acceptance_test_"+UUID.randomUUID().toString().replace("-","");
     @DynamicPropertySource static void properties(DynamicPropertyRegistry p) {
@@ -59,7 +59,9 @@ class ForecastAcceptancePersistenceTest {
         evidence.set("ranking",mapper.valueToTree(List.of("B2","B1","B3")));
         var table=evidence.putObject("table"); int error=1;
         for (String method:List.of("B2","B1","B3")) table.putObject(method).put("mae",error++).put("commonPairs",200);
+        jdbc.execute("ALTER TABLE baseline_validation ADD COLUMN future_metadata TEXT DEFAULT 'future-default'");
         operations.saveRanking(evidence,NOW); operations.saveRanking(evidence,NOW);
+        assertThat(jdbc.queryForObject("SELECT future_metadata FROM baseline_validation",String.class)).isEqualTo("future-default");
         assertThat(operations.ranking(NOW,"REPLAY")).containsExactly("B2","B1","B3");
         assertThat(operations.ranking(NOW.minusSeconds(1),"REPLAY")).isEmpty();
         assertThat(operations.ranking(NOW,"LIVE")).isEmpty();
@@ -68,7 +70,9 @@ class ForecastAcceptancePersistenceTest {
         assertThat(saved.latest("REPLAY",NOW).orElseThrow().selectedModel()).isEqualTo("B2");
         assertThat(saved.latest("REPLAY",NOW).orElseThrow().qualityFlags()).doesNotContain("BASELINE_RANKING_UNRANKED");
         var demand=new ForecastOperationsRepository.Demand(BaselineForecastService.targets(NOW).getFirst(),NOW.minusSeconds(60),NOW,BigDecimal.valueOf(7000),"SYNTHETIC_FORECAST");
+        jdbc.execute("ALTER TABLE expected_demand_revision ADD COLUMN future_metadata TEXT DEFAULT 'future-default'");
         operations.saveDemand(List.of(demand),NOW); operations.saveDemand(List.of(demand),NOW);
+        assertThat(jdbc.queryForObject("SELECT future_metadata FROM expected_demand_revision",String.class)).isEqualTo("future-default");
         assertThat(operations.demand(NOW)).containsExactly(demand);
         assertThat(operations.demand(NOW.minusSeconds(1))).isEmpty();
         assertThatThrownBy(()->operations.saveDemand(List.of(new ForecastOperationsRepository.Demand(demand.targetPeriod(),NOW,NOW.plusSeconds(1),BigDecimal.ONE,"SYNTHETIC")),NOW)).isInstanceOf(IllegalArgumentException.class);

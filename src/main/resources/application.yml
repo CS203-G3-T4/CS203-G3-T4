@@ -37,6 +37,7 @@ weather:
 
 forecast:
   admin:
+    local-basic-enabled: ${WATTLY_FORECAST_LOCAL_ADMIN_ENABLED:false}
     username: ${WATTLY_ADMIN_USER:}
     password: ${WATTLY_ADMIN_PASSWORD:}
   mode: ${FORECAST_MODE:LIVE}
@@ -55,4 +56,11 @@ forecast:
 recommendation:
   forecast-source: ${RECOMMENDATION_FORECAST_SOURCE:demo}
   demo-forecast-file: ${RECOMMENDATION_DEMO_FORECAST_FILE:data/replay/2026-09-26_data(main_day).csv}
-  minimum-saving-sgd: ${RECOMMENDATION_MINIMUM_SAVING_SGD:0.01}
+  minimum-saving-sgd: ${RECOMMENDATION_MINIMUM_SAVING_SGD:0.05}
+  # CSDT4-37: at most this many open suggestions per household, best saving first.
+  max-active: ${RECOMMENDATION_MAX_ACTIVE:3}
+  # CSDT4-37: recompute in the background (startup, new price, appliance change, this schedule).
+  auto-recompute: ${RECOMMENDATION_AUTO_RECOMPUTE:true}
+  recompute-cron: ${RECOMMENDATION_RECOMPUTE_CRON:0 1,31 * * * *}
+  # A stale price feed always blocks F3-based suggestions; set true to block the demo forecast too.
+  stale-feed-blocks-demo: ${RECOMMENDATION_STALE_FEED_BLOCKS_DEMO:false}

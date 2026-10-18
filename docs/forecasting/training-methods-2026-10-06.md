@@ -60,7 +60,7 @@ The 25% HGB / 75% median blend also helps, but loses to the regularised candidat
 | HGB_SMALL | 141.87 | 165.80 | 215.34 |
 | MEDIAN | 135.82 | 159.79 | 180.29 |
 
-The forecast remains **24 half-hour predictions / 12 hours**. Full horizon MAEs and actual pair counts for every method are in [the horizon CSV](training-methods-horizons-2026-10-06.csv). Longer horizons remain harder.
+The forecast remains **24 half-hour predictions / 12 hours**. Full horizon MAEs and actual pair counts for every method are in [the horizon CSV](artifacts.md#retrieval). Longer horizons remain harder.
 
 HGB_REGULARISED ordinary-period MAE is **135.29** on 2,841 pairs, compared with HGB_MAE **161.12**. High-tail MAE is **953.01**, worse than HGB_MAE **933.12** and median **928.08**, on 97 pairs / nine distinct target periods. These tails contribute 19.39% of the new candidate’s absolute error from 3.30% of pairs. Thresholds use each fold’s training-only 95th percentile; they are not configured spike labels.
 
@@ -107,7 +107,7 @@ Keep the collector online. No automatic job was installed, and no collector file
 
 ## Verification
 
-Independent saved-prediction recalculation passed for overall, daily and per-horizon MAE; exact origin/target/truth identity, publication/availability cutoffs, exclusions, horizon counts, reference predictions, unchanged previous file checksums and frozen artifact hashes. Current-snapshot confirmation correctly refuses early evaluation and writes no report. See [audit](training-methods-verification-2026-10-06.json).
+Independent saved-prediction recalculation passed for overall, daily and per-horizon MAE; exact origin/target/truth identity, publication/availability cutoffs, exclusions, horizon counts, reference predictions, unchanged previous file checksums and frozen artifact hashes. Current-snapshot confirmation correctly refuses early evaluation and writes no report. See [audit](artifacts.md#retrieval).
 
 **23 full ML regression tests passed**, plus **one separately run calendar-boundary check passed** (added after suite collection). The final full suite completed in 313.74 seconds, with one existing Starlette/AnyIO deprecation warning. It covers serving/fallback and promotion guards, training-only preprocessing, shared-estimator reuse, missing/negative blend inputs, identical pairs, purged targets, held-out-price and late-revision counterfactuals, immutable output, early-confirmation rejection and frozen confirmation with `Pipeline.fit` disabled. Test fixtures use synthetic data only, never reported as real forecast accuracy.
 

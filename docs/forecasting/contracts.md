@@ -55,7 +55,7 @@ This section supersedes the historical checkpoints below. See the
   equal household/input windows and realized prices, retaining losses and excluding
   fixed-rate shifting. Current profiles replayed historically are counterfactuals,
   not reconstructed historical consumption/configuration.
-- Original F4 migration V10 is preserved; additive V12 adds operation tables/audit
+- Original F4 migration V10 is preserved; main's V12 recommendation refresh is preserved; additive V13 adds operation tables/audit
   columns. Applied migrations are never edited. Application rollback retains new
   tables and immutable evidence. Inference reload follows atomic approved pointers;
   bad/unapproved/missing bundles fail closed into Java fallback.
