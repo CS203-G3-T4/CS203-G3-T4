@@ -33,6 +33,26 @@
     .rec-status.error { color: var(--critical); }
     .rec-item.decided .rec-when, .rec-item.decided .rec-saving { opacity: .6; }
     .rec-item.rec-warning { border-left: 3px solid var(--warning); }
+    .rec-tabs { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 14px; border-bottom: 1px solid var(--gridline); }
+    .rec-tabs [role="tab"] { padding: 8px 14px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--ink-2); font: inherit; font-weight: 600; cursor: pointer; }
+    .rec-tabs [role="tab"][aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+    .rec-snoozed { margin-top: 20px; }
+    .rec-snoozed h3 { margin: 0; font-size: 15px; }
+    .rec-snooze summary { cursor: pointer; color: var(--accent); font-size: 13px; font-weight: 600; }
+    .rec-snooze[open] { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+    .rec-snooze input { padding: 6px 8px; border: 1px solid var(--border); border-radius: 8px; font: inherit; }
+    .rec-chart { grid-column: 1 / -1; margin: 4px 0 0; }
+    .rec-chart svg { display: block; width: 100%; height: 56px; }
+    .rec-bar { fill: #cfcdc5; }
+    .rec-bar.usual { fill: var(--accent); }
+    .rec-bar.suggested { fill: var(--teal); }
+    .rec-bar-cap { fill: var(--ink); }
+    .rec-chart-axis { display: flex; justify-content: space-between; margin-top: 4px; color: var(--muted); font-size: 11.5px; }
+    .rec-chart-legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 4px; color: var(--ink-2); font-size: 12.5px; }
+    .rec-swatch { display: inline-block; width: 10px; height: 10px; margin-right: 6px; border-radius: 2px; vertical-align: -1px; }
+    .rec-swatch.usual { background: var(--accent); }
+    .rec-swatch.suggested { background: var(--teal); }
+    .rec-chart-empty { grid-column: 1 / -1; margin: 0; color: var(--muted); font-size: 12.5px; }
     .rec-confidence { margin-top: 4px; color: var(--ink-2); font-size: 12.5px; }
     .rec-flag { color: var(--warning); font-size: 11.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
     @media (max-width: 620px) { .rec-item { grid-template-columns: 1fr; } .rec-overview { gap: 8px; } }
@@ -85,9 +105,22 @@
       <div class="card rec-stat"><span>Estimated savings for these runs</span><strong id="recommendation-savings">—</strong></div>
     </section>
     <section class="card rec-panel" aria-labelledby="suggestions-title">
-      <div class="rec-panel-head"><h2 id="suggestions-title">Suggested start times</h2><span class="source-badge" id="recommendation-source" hidden>Demo forecast</span></div>
-      <p class="rec-note" id="recommendation-note" aria-live="polite">Checking the price forecast…</p>
-      <ul class="rec-list" id="recommendation-list"></ul>
+      <div class="rec-panel-head"><h2 id="suggestions-title">Your suggestions</h2><span class="source-badge" id="recommendation-source" hidden>Demo forecast</span></div>
+      <div class="rec-tabs" id="rec-tabs" role="tablist" aria-label="Suggestions">
+        <button type="button" role="tab" id="tab-active" data-tab="ACTIVE" aria-controls="rec-tabpanel" aria-selected="true">Active</button>
+        <button type="button" role="tab" id="tab-accepted" data-tab="ACCEPTED" aria-controls="rec-tabpanel" aria-selected="false" tabindex="-1">Accepted</button>
+        <button type="button" role="tab" id="tab-dismissed" data-tab="DISMISSED" aria-controls="rec-tabpanel" aria-selected="false" tabindex="-1">Dismissed</button>
+        <button type="button" role="tab" id="tab-history" data-tab="HISTORY" aria-controls="rec-tabpanel" aria-selected="false" tabindex="-1">History</button>
+      </div>
+      <div id="rec-tabpanel" role="tabpanel" aria-labelledby="tab-active">
+        <p class="rec-note" id="recommendation-note" aria-live="polite">Loading your suggestions…</p>
+        <ul class="rec-list" id="recommendation-list"></ul>
+        <div class="rec-snoozed" id="snoozed-block" hidden>
+          <h3>Snoozed</h3>
+          <p class="rec-help">These come back by themselves at the time you picked.</p>
+          <ul class="rec-list" id="recommendation-snoozed"></ul>
+        </div>
+      </div>
       <p class="rec-help">Accepting a suggestion records your choice. You still start the appliance yourself. Estimated savings are for one run and may differ from your bill.</p>
     </section>
   </main>
