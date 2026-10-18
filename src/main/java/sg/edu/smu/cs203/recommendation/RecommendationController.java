@@ -20,14 +20,15 @@ public class RecommendationController {
     }
 
     @GetMapping("/api/v1/households/{householdId}/recommendations")
-    @Operation(summary = "List a household's open suggestions (does not re-check the forecast)")
+    @Operation(summary = "List a household's open suggestions, best saving first (at most 3), and the outcome "
+            + "of the latest background recompute. Does not re-check the forecast (CSDT4-37)")
     public RecommendationsResponse list(@PathVariable long householdId) {
         return service.list(householdId);
     }
 
     @PostMapping("/api/v1/households/{householdId}/recommendations/generate")
-    @Operation(summary = "Re-check the forecast and suggest the cheapest start for each flexible appliance "
-            + "(CSDT4-19). Safe to repeat: unchanged suggestions are kept")
+    @Operation(summary = "Recompute this household's suggestions now. Normally runs in the background on a new "
+            + "price, an appliance or plan change, or every 30 minutes (CSDT4-37). Safe to repeat")
     public RecommendationsResponse generate(@PathVariable long householdId) {
         return service.generate(householdId);
     }

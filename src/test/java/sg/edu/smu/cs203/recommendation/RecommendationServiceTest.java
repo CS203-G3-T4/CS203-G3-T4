@@ -43,8 +43,9 @@ class RecommendationServiceTest {
     private final RecommendationRepository repository = mock(RecommendationRepository.class);
     private final HouseholdDirectory households = mock(HouseholdDirectory.class);
     private final PriceForecastSource forecasts = mock(PriceForecastSource.class);
+    private final PriceFeedStatus feed = mock(PriceFeedStatus.class);
     private final RecommendationService service = new RecommendationService(repository, households, forecasts,
-            Clock.fixed(now, SINGAPORE), new BigDecimal("0.01"));
+            feed, Clock.fixed(now, SINGAPORE), new BigDecimal("0.05"), 3, false);
 
     @Test
     void generateSavesAnActiveShiftSuggestionWithItsSavingAndReason() {
