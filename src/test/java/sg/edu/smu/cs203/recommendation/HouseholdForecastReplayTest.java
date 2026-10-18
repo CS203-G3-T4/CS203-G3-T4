@@ -41,6 +41,25 @@ class HouseholdForecastReplayTest {
         assertThat(replay.compare(request()).get("cases")).isEqualTo(List.of());
         assertThat(replay.compare(request()).get("fixedRateNotShifted")).isEqualTo(true);
     }
+    @Test void spikeWarningReplaysTheSpikeFreeAlternativeRatherThanTheUsualOrCheapestSpike() {
+        when(directory.household(1)).thenReturn(household(true));
+        when(directory.flexibleAppliances(1)).thenReturn(List.of(new ApplianceResponse(1,1,"Fixture washer",ApplianceType.WASHING_MACHINE,
+            BigDecimal.ONE,30,new BigDecimal("0.5"),Flexibility.FLEXIBLE,LocalTime.of(0,30),LocalTime.NOON,LocalTime.of(1,0),690,false,7,true,null)));
+        var r=request();
+        var targets=BaselineForecastService.targets(origin);
+        var ai=targets.stream().map(t->new PriceForecast.HalfHourPrice(t,
+            BigDecimal.valueOf(t.equals(targets.getFirst())?10:t.equals(targets.get(2))?100:1000),
+            t.equals(targets.getFirst()) || t.equals(targets.get(1)))).toList();
+        var actual=targets.stream().map(t->new PriceForecast.HalfHourPrice(t,
+            BigDecimal.valueOf(t.equals(targets.get(2))?100:400))).toList();
+        var request=new HouseholdForecastReplay.Request(r.householdId(),r.asOf(),r.modelUsableFrom(),r.baselineValidationEnd(),
+            r.modelVersion(),r.baselineMethod(),r.truthPolicy(),r.datasetDigest(),ai,r.baseline(),actual);
+        @SuppressWarnings("unchecked") var cases=(List<Map<String,Object>>)replay.compare(request).get("cases");
+        assertThat(cases).hasSize(1);
+        assertThat(cases.getFirst().get("aiStart")).isEqualTo(targets.get(2));
+        assertThat((BigDecimal)cases.getFirst().get("aiSavingsSgd")).isEqualByComparingTo("0.15");
+        assertThat(cases.getFirst().get("baselineStart")).isEqualTo(targets.get(1));
+    }
     @Test void missingActualsAndIncompleteForecastsDoNotBecomeSavings() {
         when(directory.household(1)).thenReturn(household(true));
         when(directory.flexibleAppliances(1)).thenReturn(List.of(new ApplianceResponse(1,1,"Fixture washer",ApplianceType.WASHING_MACHINE,

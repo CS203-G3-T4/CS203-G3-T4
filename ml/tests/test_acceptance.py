@@ -155,3 +155,31 @@ def test_inflight_request_keeps_one_model_identity_during_concurrent_reload(monk
         assert response.json()['modelVersion']=='TEST_ONLY_OLD'
         assert response.json()['points'][0]['predictedUsep']==1
         assert app.state.bundle['manifest']['version']=='TEST_ONLY_NEW'
+
+
+def test_savings_replay_sends_only_saved_forecast_spikes_never_future_truth(tmp_path,monkeypatch):
+    from wattly_ml import household_replay
+    origin=instant('2026-08-01T00:00:00+08:00')
+    stamp=origin.isoformat()
+    rows=[{'asOf':stamp,'targetPeriod':target.isoformat(),'horizon':horizon,'method':method,
+           'predictedUsep':100,'actual':500,'spikeFlag':horizon==1,'actualSpike':True,
+           'truthPolicy':'FINAL','exclusionReason':None}
+          for method in ('AI','B1') for horizon,target in enumerate(targets(origin),1)]
+    predictions=tmp_path/'predictions.jsonl'
+    predictions.write_text(''.join(json.dumps(row)+'\n' for row in rows))
+    validation=tmp_path/'validation.json'
+    validation.write_text(json.dumps({'datasetDigest':'synthetic-test','end':(origin-DAY).isoformat()}))
+    model=tmp_path/'manifest.json'
+    model.write_text(json.dumps({'datasetDigest':'synthetic-test','baselineRanking':['B1'],
+        'usableFrom':(origin-DAY).isoformat(),'version':'SYNTHETIC_TEST_ONLY'}))
+    calls=[]
+    def replay(path,payload):
+        calls.append(payload)
+        return {'household':{'id':1},'exclusions':{},'fixedRateNotShifted':False,'cases':[]}
+    monkeypatch.setattr(household_replay,'post_admin',replay)
+    monkeypatch.setattr(household_replay,'report',lambda *args:None)
+    household_replay.study(predictions,validation,model,[1],tmp_path/'report')
+    assert len(calls)==1
+    for method in ('ai','baseline'):
+        assert [p['spike'] for p in calls[0][method]]==[True]+[False]*23
+    assert all(p['spike'] is False for p in calls[0]['actual'])

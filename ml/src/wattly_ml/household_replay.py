@@ -37,12 +37,13 @@ def study(predictions: Path, validation: Path, model_manifest: Path, households,
         if [(r['targetPeriod'],r['actual']) for r in ai]!=[(r['targetPeriod'],r['actual']) for r in b]:
             raise ValueError('Forecast methods do not share targets/truth')
         for household in households:
+            # F4 acts only on origin-known forecast flags; truth is used for realised cost.
             payload={'householdId':household,'asOf':stamp,'modelUsableFrom':model['usableFrom'],
                 'baselineValidationEnd':validation['end'],'modelVersion':model['version'],'baselineMethod':baseline,
                 'truthPolicy':ai[0]['truthPolicy'],'datasetDigest':model['datasetDigest'],
-                'ai':[{'periodStart':r['targetPeriod'],'usepSgdPerMwh':r['predictedUsep']} for r in ai],
-                'baseline':[{'periodStart':r['targetPeriod'],'usepSgdPerMwh':r['predictedUsep']} for r in b],
-                'actual':[{'periodStart':r['targetPeriod'],'usepSgdPerMwh':r['actual']} for r in ai]}
+                'ai':[{'periodStart':r['targetPeriod'],'usepSgdPerMwh':r['predictedUsep'],'spike':r.get('spikeFlag') is True} for r in ai],
+                'baseline':[{'periodStart':r['targetPeriod'],'usepSgdPerMwh':r['predictedUsep'],'spike':r.get('spikeFlag') is True} for r in b],
+                'actual':[{'periodStart':r['targetPeriod'],'usepSgdPerMwh':r['actual'],'spike':False} for r in ai]}
             response=post_admin('forecast-savings-replay',payload)
             if not response:
                 raise ValueError('Set WATTLY_RUN_API_URL and admin credentials for the actual F2/F4 application')

@@ -6,6 +6,10 @@ import java.time.Instant;
 /**
  * What the pages receive. Costs and saving are SGD for one run. demoForecast is true when the
  * suggestion came from the demo curve, so the page can label it rather than call it a prediction.
+ *
+ * kind AVOID is a spike warning (CSDT4-38): usualStart is the time to avoid, spikeStart the first
+ * spike half-hour, suggestedStart the spike-free alternative and estSavingSgd the cost avoided.
+ * remindAt is set after "Remind me later".
  */
 public record RecommendationResponse(
         long id,
@@ -25,7 +29,9 @@ public record RecommendationResponse(
         boolean demoForecast,
         RecommendationStatus status,
         Instant createdAt,
-        Instant decidedAt) {
+        Instant decidedAt,
+        Instant spikeStart,
+        Instant remindAt) {
 
     public static RecommendationResponse from(Recommendation r) {
         return new RecommendationResponse(
@@ -46,6 +52,8 @@ public record RecommendationResponse(
                 PriceForecast.DEMO.equals(r.forecastSource()),
                 r.status(),
                 r.createdAt(),
-                r.decidedAt());
+                r.decidedAt(),
+                r.spikeStart(),
+                r.snoozedUntil());
     }
 }

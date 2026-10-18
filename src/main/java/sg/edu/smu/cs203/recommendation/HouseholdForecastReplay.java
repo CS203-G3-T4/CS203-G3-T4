@@ -27,6 +27,12 @@ public class HouseholdForecastReplay {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,exception.getMessage());
         }
     }
+    private static Instant chosenStart(CheapestStartCalculator.Result result) {
+        return switch (result.outcome()) {
+            case SHIFT, AVOID -> result.bestStart();
+            case USUAL_IS_CHEAPEST, NOT_ENOUGH_FORECAST -> result.usualStart();
+        };
+    }
     public Map<String,Object> compare(Request request) {
         if (request.ai()==null || request.baseline()==null || request.actual()==null || request.actual().size()>24
                 || request.asOf()==null || request.modelUsableFrom()==null || request.baselineValidationEnd()==null
@@ -56,8 +62,8 @@ public class HouseholdForecastReplay {
             if (ai.outcome()==CheapestStartCalculator.Outcome.NOT_ENOUGH_FORECAST || baseline.outcome()==CheapestStartCalculator.Outcome.NOT_ENOUGH_FORECAST) {
                 excluded.merge("USUAL_RUN_OUTSIDE_FORECAST",1,Integer::sum); continue;
             }
-            Instant aiStart=ai.outcome()==CheapestStartCalculator.Outcome.SHIFT?ai.bestStart():ai.usualStart();
-            Instant baselineStart=baseline.outcome()==CheapestStartCalculator.Outcome.SHIFT?baseline.bestStart():baseline.usualStart();
+            Instant aiStart=chosenStart(ai);
+            Instant baselineStart=chosenStart(baseline);
             BigDecimal usual=CheapestStartCalculator.costOf(ai.usualStart(),run,actual);
             BigDecimal aiCost=CheapestStartCalculator.costOf(aiStart,run,actual),baselineCost=CheapestStartCalculator.costOf(baselineStart,run,actual);
             if (usual==null || aiCost==null || baselineCost==null) { excluded.merge("MISSING_REALIZED_PRICE",1,Integer::sum); continue; }

@@ -43,10 +43,28 @@ class F3PriceForecastSourceTest {
                 .containsExactly(new BigDecimal("180.5"), new BigDecimal("420.0"));
     }
 
-    private ForecastTypes.Run run() {
+    @Test
+    void f3SpikeFlagsAreKeptAndAnUnknownFlagIsNotASpike() {
         List<ForecastTypes.Point> points = List.of(
+                new ForecastTypes.Point(1, Instant.parse("2026-09-30T00:30:00Z"), new BigDecimal("180.5"),
+                        new BigDecimal("400"), false),
+                new ForecastTypes.Point(2, Instant.parse("2026-09-30T01:00:00Z"), new BigDecimal("2500"),
+                        new BigDecimal("400"), true),
+                new ForecastTypes.Point(3, Instant.parse("2026-09-30T01:30:00Z"), new BigDecimal("2500"), null, null));
+        when(forecasts.latest()).thenReturn(new ForecastTypes.View(true, true, false, "LIVE", null, run(points)));
+
+        assertThat(source.forecast().forecast().points()).extracting(PriceForecast.HalfHourPrice::spike)
+                .containsExactly(false, true, false);
+    }
+
+    private ForecastTypes.Run run() {
+        return run(List.of(
                 new ForecastTypes.Point(1, Instant.parse("2026-09-30T00:30:00Z"), new BigDecimal("180.5"), null, null),
-                new ForecastTypes.Point(2, Instant.parse("2026-09-30T01:00:00Z"), new BigDecimal("420.0"), null, null));
+                new ForecastTypes.Point(2, Instant.parse("2026-09-30T01:00:00Z"), new BigDecimal("420.0"),
+                        null, null)));
+    }
+
+    private ForecastTypes.Run run(List<ForecastTypes.Point> points) {
         return new ForecastTypes.Run("run-1", asOf, asOf, "input", "LIVE", "BASELINE", "B2-v1", "B2",
                 null, List.of(), false, "AVAILABLE", points);
     }

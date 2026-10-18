@@ -33,6 +33,11 @@ public class RecommendationApiExceptionHandler {
         return problem(HttpStatus.CONFLICT, "Recommendation is not open", exception.getMessage());
     }
 
+    @ExceptionHandler(RecommendationActionNotAllowedException.class)
+    public ProblemDetail notAllowed(RecommendationActionNotAllowedException exception) {
+        return problem(HttpStatus.CONFLICT, "Not available for this suggestion", exception.getMessage());
+    }
+
     @ExceptionHandler(ValidationFailedException.class)
     public ProblemDetail ruleBroken(ValidationFailedException exception) {
         return invalid(exception.errors());

@@ -21,7 +21,7 @@ public class RecommendationRepository {
             SELECT r.id, r.household_id, r.appliance_id, a.name AS appliance_name, r.kind,
                    r.suggested_start, r.usual_start, r.suggested_cost, r.usual_cost, r.est_saving,
                    r.reason, r.forecast_source, r.forecast_model, r.status, r.accepted_start,
-                   r.created_at, r.decided_at
+                   r.created_at, r.decided_at, r.spike_start, r.snoozed_until
             FROM recommendation r
             JOIN appliance a ON a.id = r.appliance_id
             """;
@@ -43,7 +43,9 @@ public class RecommendationRepository {
             RecommendationStatus.valueOf(rs.getString("status")),
             instant(rs, "accepted_start"),
             instant(rs, "created_at"),
-            instant(rs, "decided_at"));
+            instant(rs, "decided_at"),
+            instant(rs, "spike_start"),
+            instant(rs, "snoozed_until"));
 
     private final JdbcTemplate jdbc;
 
@@ -102,21 +104,34 @@ public class RecommendationRepository {
                 .stream().findFirst();
     }
 
-    /** True if the resident already accepted or dismissed a suggestion for this run. */
+    /** True if the resident already accepted, dismissed or acknowledged anything for this run. */
     public boolean decidedForRun(long applianceId, Instant usualStart) {
-        Integer count = jdbc.queryForObject("""
-                SELECT count(*) FROM recommendation
-                WHERE appliance_id = ? AND usual_start = ? AND status IN ('ACCEPTED', 'DISMISSED')
-                """, Integer.class, applianceId, Timestamp.from(usualStart));
-        return count != null && count > 0;
+        return countForRun(applianceId, usualStart, "'ACCEPTED', 'DISMISSED', 'ACKNOWLEDGED'") > 0;
+    }
+
+    /**
+     * True if the run was already moved (an accepted suggestion) or its spike warning acknowledged.
+     * A dismissed shift suggestion doesn't count: the resident still runs at the usual time, so a
+     * spike there is worth a warning (CSDT4-38).
+     */
+    public boolean movedOrAcknowledgedForRun(long applianceId, Instant usualStart) {
+        return countForRun(applianceId, usualStart, "'ACCEPTED', 'ACKNOWLEDGED'") > 0;
+    }
+
+    private int countForRun(long applianceId, Instant usualStart, String statuses) {
+        Integer count = jdbc.queryForObject("SELECT count(*) FROM recommendation"
+                + " WHERE appliance_id = ? AND usual_start = ? AND status IN (" + statuses + ")",
+                Integer.class, applianceId, Timestamp.from(usualStart));
+        return count == null ? 0 : count;
     }
 
     public long insert(Recommendation recommendation) {
         Long id = jdbc.queryForObject("""
                 INSERT INTO recommendation
                     (household_id, appliance_id, kind, suggested_start, usual_start, suggested_cost,
-                     usual_cost, est_saving, reason, forecast_source, forecast_model, status, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                     usual_cost, est_saving, reason, forecast_source, forecast_model, status, created_at,
+                     spike_start, snoozed_until)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 RETURNING id
                 """,
                 Long.class,
@@ -132,7 +147,9 @@ public class RecommendationRepository {
                 recommendation.forecastSource(),
                 recommendation.forecastModel(),
                 recommendation.status().name(),
-                Timestamp.from(recommendation.createdAt()));
+                Timestamp.from(recommendation.createdAt()),
+                timestamp(recommendation.spikeStart()),
+                timestamp(recommendation.snoozedUntil()));
         return id;
     }
 
@@ -153,13 +170,28 @@ public class RecommendationRepository {
         return changed == 1;
     }
 
-    /** Expires the household's ACTIVE suggestions whose start has passed; returns their ids. */
+    /**
+     * Hides an open spike warning until the given time ("Remind me later"). Returns false if it was
+     * no longer open.
+     */
+    public boolean snooze(long id, Instant until) {
+        return jdbc.update("""
+                UPDATE recommendation SET snoozed_until = ?
+                WHERE id = ? AND status = 'ACTIVE' AND kind = 'AVOID'
+                """, Timestamp.from(until), id) == 1;
+    }
+
+    /**
+     * Expires the household's ACTIVE suggestions whose start has passed; returns their ids. A spike
+     * warning also expires once the usual start it warns about has passed.
+     */
     public List<Long> expirePassed(long householdId, Instant now) {
         return jdbc.queryForList("""
                 UPDATE recommendation SET status = 'EXPIRED', decided_at = ?
-                WHERE household_id = ? AND status = 'ACTIVE' AND suggested_start <= ?
+                WHERE household_id = ? AND status = 'ACTIVE'
+                  AND (suggested_start <= ? OR (kind = 'AVOID' AND usual_start <= ?))
                 RETURNING id
-                """, Long.class, Timestamp.from(now), householdId, Timestamp.from(now));
+                """, Long.class, Timestamp.from(now), householdId, Timestamp.from(now), Timestamp.from(now));
     }
 
     public void logEvent(long recommendationId, String eventType, Instant occurredAt,
@@ -174,6 +206,10 @@ public class RecommendationRepository {
                 Timestamp.from(occurredAt),
                 startAt == null ? null : Timestamp.from(startAt),
                 overridden);
+    }
+
+    private static Timestamp timestamp(Instant instant) {
+        return instant == null ? null : Timestamp.from(instant);
     }
 
     private static Instant instant(ResultSet rs, String column) throws SQLException {

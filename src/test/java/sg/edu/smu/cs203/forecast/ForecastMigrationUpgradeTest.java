@@ -5,13 +5,17 @@ import java.sql.DriverManager;
 import java.util.UUID;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @EnabledIfEnvironmentVariable(named="WATTLY_TEST_DB_URL",matches=".+")
 class ForecastMigrationUpgradeTest {
-    @Test void legacyForecastV12RequiresAnExplicitUpgradeDecisionAndIsNeverRepaired() throws Exception {
+    @ParameterizedTest
+    @ValueSource(ints={12,13})
+    void legacyForecastVersionRequiresAnExplicitUpgradeDecisionAndIsNeverRepaired(int legacyVersion) throws Exception {
         String url=System.getenv("WATTLY_TEST_DB_URL");
         String user=System.getenv().getOrDefault("WATTLY_TEST_DB_USER","wattly_test");
         String password=System.getenv().getOrDefault("WATTLY_TEST_DB_PASSWORD","");
@@ -22,10 +26,10 @@ class ForecastMigrationUpgradeTest {
             try (var files=java.nio.file.Files.list(source)) {
                 for (var file:files.toList()) {
                     int version=Integer.parseInt(file.getFileName().toString().split("__")[0].substring(1));
-                    if (version<12) java.nio.file.Files.copy(file,directory.resolve(file.getFileName()));
+                    if (version<legacyVersion) java.nio.file.Files.copy(file,directory.resolve(file.getFileName()));
                 }
             }
-            java.nio.file.Files.copy(source.resolve("V13__forecast_operations.sql"),directory.resolve("V12__forecast_operations.sql"));
+            java.nio.file.Files.copy(source.resolve("V14__forecast_operations.sql"),directory.resolve("V"+legacyVersion+"__forecast_operations.sql"));
             Flyway.configure().dataSource(url,user,password).schemas(schema).defaultSchema(schema)
                     .locations("filesystem:"+directory).load().migrate();
             try (var connection=DriverManager.getConnection(url,user,password);var sql=connection.createStatement()) {
@@ -34,8 +38,8 @@ class ForecastMigrationUpgradeTest {
                         +"VALUES ('LEGACY_PRESERVED','{}','2026-10-18T00:00:00Z','2026-10-18T00:00:00Z','APPROVED')");
                 assertThatThrownBy(()->Flyway.configure().dataSource(url,user,password).schemas(schema).defaultSchema(schema)
                         .load().migrate()).isInstanceOf(org.flywaydb.core.api.FlywayException.class);
-                try (var rows=sql.executeQuery("SELECT script FROM flyway_schema_history WHERE version='12'")) {
-                    assertThat(rows.next()).isTrue(); assertThat(rows.getString(1)).isEqualTo("V12__forecast_operations.sql");
+                try (var rows=sql.executeQuery("SELECT script FROM flyway_schema_history WHERE version='"+legacyVersion+"'")) {
+                    assertThat(rows.next()).isTrue(); assertThat(rows.getString(1)).isEqualTo("V"+legacyVersion+"__forecast_operations.sql");
                 }
                 try (var rows=sql.executeQuery("SELECT count(*) FROM model_run WHERE version='LEGACY_PRESERVED'")) {
                     assertThat(rows.next()).isTrue(); assertThat(rows.getInt(1)).isEqualTo(1);
@@ -52,7 +56,7 @@ class ForecastMigrationUpgradeTest {
         String user=System.getenv().getOrDefault("WATTLY_TEST_DB_USER","wattly_test");
         String password=System.getenv().getOrDefault("WATTLY_TEST_DB_PASSWORD","");
         String schema="main_upgrade_"+UUID.randomUUID().toString().replace("-","");
-        Flyway.configure().dataSource(url,user,password).schemas(schema).defaultSchema(schema).target("12").load().migrate();
+        Flyway.configure().dataSource(url,user,password).schemas(schema).defaultSchema(schema).target("13").load().migrate();
         try (var connection=DriverManager.getConnection(url,user,password);var sql=connection.createStatement()) {
             sql.execute("SET search_path TO "+schema);
             sql.execute("INSERT INTO household_budget VALUES (1,125.50,29.5,'2026-10-18T00:00:00Z')");
@@ -75,7 +79,7 @@ class ForecastMigrationUpgradeTest {
                 assertThat(rows.next()).isTrue(); assertThat(rows.getInt(1)).isZero();
             }
             try (var rows=sql.executeQuery("SELECT max(version::int) FROM flyway_schema_history WHERE version IS NOT NULL")) {
-                assertThat(rows.next()).isTrue(); assertThat(rows.getInt(1)).isEqualTo(13);
+                assertThat(rows.next()).isTrue(); assertThat(rows.getInt(1)).isEqualTo(14);
             }
         }
     }

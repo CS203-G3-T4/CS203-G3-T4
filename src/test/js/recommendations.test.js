@@ -170,3 +170,44 @@ test('before the first background recompute there is no updated time', () => {
 
   assert.equal(Recs.updatedText(null), '');
 });
+
+// CSDT4-38: price spike warnings with Got it / Remind me later.
+const warning = {
+  id: 7, kind: 'AVOID', applianceName: 'Tumble Dryer', reason: 'A price spike is forecast from 20:00',
+  estSavingSgd: 3.375, usualStart: '2026-09-30T11:45:00Z', suggestedStart: '2026-09-30T05:00:00Z',
+  spikeStart: '2026-09-30T12:00:00Z', status: 'ACTIVE'
+};
+const at = (iso) => Date.parse(iso);
+
+test('a spike warning says which time to avoid, the alternative and the cost avoided', () => {
+  const { Recs } = load();
+  const html = Recs.itemHtml(warning, at('2026-09-30T00:10:00Z'));
+
+  assert.match(html, /class="rec-item rec-warning"/);
+  assert.match(html, /Price spike expected/);
+  assert.match(html, /Avoid <strong>7:45 PM<\/strong>\. Run at 1:00 PM instead/);
+  assert.match(html, /Save about \$3\.38/);
+  assert.match(html, /data-action="got-it">Got it</);
+  assert.match(html, /data-action="remind-later">Remind me later</);
+  assert.doesNotMatch(html, /data-action="accept"/);
+});
+
+test('Remind me later is not offered once the usual start is under an hour away', () => {
+  const { Recs } = load();
+
+  assert.equal(Recs.canRemindLater(warning, at('2026-09-30T10:44:00Z')), true);
+  assert.equal(Recs.canRemindLater(warning, at('2026-09-30T10:45:00Z')), false);
+  assert.doesNotMatch(Recs.itemHtml(warning, at('2026-09-30T11:00:00Z')), /remind-later/);
+});
+
+test('Got it and Remind me later post to their own endpoints and say what happens next', () => {
+  const { Recs } = load();
+
+  assert.deepEqual({ ...Recs.requestFor(7, 'got-it', null) }, { url: '/api/v1/recommendations/7/got-it', body: undefined });
+  assert.equal(Recs.requestFor(7, 'remind-later', null).url, '/api/v1/recommendations/7/remind-later');
+  assert.match(Recs.decidedText({ ...warning, status: 'ACKNOWLEDGED' }), /^Got it\. Wattly won’t warn you again/);
+  assert.equal(Recs.decidedText({ ...warning, remindAt: '2026-09-30T01:10:00Z' }), 'OK, we’ll remind you at 9:10 AM.');
+  assert.equal(Recs.toastFor({ status: 'ACKNOWLEDGED' }), 'Warning noted');
+  assert.equal(Recs.toastFor({ status: 'ACTIVE' }), 'We’ll remind you later');
+  assert.equal(Recs.toastFor({ status: 'ACCEPTED' }), 'Suggestion accepted');
+});
