@@ -162,9 +162,10 @@ Start with the [F3 runbook](docs/forecasting/runbook.md),
 The current evidence is exploratory: long-history acquisition and verification of
 NEMS settlement-period mapping remain blocked. No AI improvement is claimed, and
 unverified forecasts are not actionable. The admin accuracy endpoint requires an
-ADMIN servlet role. Form login authenticates accounts from the `user_account`
-table; route-specific admin and household access rules are tracked separately in
-CSDT4-64 and CSDT4-65.
+ADMIN servlet role. The shared `/login.html` form authenticates accounts from
+the `user_account` table without a role selector. Residents land on their linked
+household dashboard; admins land on household administration. Route-specific
+admin and household access rules are tracked in CSDT4-64 and CSDT4-65.
 
 ## F4: recommendations
 
