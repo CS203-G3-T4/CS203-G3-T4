@@ -79,3 +79,6 @@ use `ON DELETE CASCADE`, like `appliance` does, or the delete will fail with a f
 - `loadProfile(id, date)` → kWh per half-hour, for month-to-date spend
 - `TimeWindow` (appliance package) answers "can this run start at this time?", including
   windows that cross midnight.
+- `households()` → every real (not simulated) household, for work across households.
+- `HouseholdChanged(householdId)` is published after a household is created or updated and after
+  any appliance change, so F4 can recompute suggestions (CSDT4-37).
