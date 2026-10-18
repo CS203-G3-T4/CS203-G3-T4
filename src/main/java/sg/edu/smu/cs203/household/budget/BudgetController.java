@@ -25,7 +25,8 @@ public class BudgetController {
     }
 
     @PutMapping("/api/v1/households/{householdId}/budget")
-    @Operation(summary = "Save a monthly budget and optional price-linked planning rate")
+    @Operation(summary = "Save a monthly budget and whether over-budget alerts are on (alertsEnabled; CSDT4-42). "
+            + "The planning rate is optional and no longer used by the pages")
     public BudgetResponse save(@PathVariable long householdId, @Valid @RequestBody BudgetRequest request) {
         return service.save(householdId, request);
     }
