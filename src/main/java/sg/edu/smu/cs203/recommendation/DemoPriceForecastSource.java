@@ -146,7 +146,7 @@ public class DemoPriceForecastSource implements PriceForecastSource {
             boolean spike = threshold != null && price.compareTo(threshold) > 0;
             points.add(new PriceForecast.HalfHourPrice(start, price, spike));
         }
-        return Lookup.of(new PriceForecast(PriceForecast.DEMO, model, asOf, points));
+        return Lookup.of(new PriceForecast(PriceForecast.DEMO, model, asOf, points, replayDay));
     }
 
     /**

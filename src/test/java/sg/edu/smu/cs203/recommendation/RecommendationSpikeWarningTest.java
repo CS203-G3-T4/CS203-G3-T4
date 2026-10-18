@@ -67,8 +67,9 @@ class RecommendationSpikeWarningTest {
         assertThat(warning.estSaving()).isEqualByComparingTo("3.375");
         assertThat(warning.snoozedUntil()).isNull();
         assertThat(warning.reason())
-                .startsWith("A price spike is forecast from 20:00, during your usual 19:45 run. "
-                        + "Start at 08:30 instead to avoid about $3.38 on this run ($0.75 vs $4.13).")
+                .startsWith("A price spike is forecast from 8:00 PM: your usual 7:45 PM run would average 165¢/kWh. "
+                        + "Starting at 8:30 AM instead averages 30¢/kWh and still finishes by 9:30 AM, before your "
+                        + "9:00 PM limit. Estimated saving: $3.38 on this run ($0.75 vs $4.13).")
                 .contains("demo forecast");
     }
 

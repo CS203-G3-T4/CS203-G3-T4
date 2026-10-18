@@ -1,13 +1,14 @@
 package sg.edu.smu.cs203.recommendation;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -17,6 +18,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,6 +49,10 @@ import sg.edu.smu.cs203.household.appliance.ApplianceResponse;
  * guards and ranking, replace a shift suggestion for that appliance, and are answered with
  * "Got it" (ACKNOWLEDGED) or "Remind me later" (hidden for an hour, or until an hour before the
  * usual start if that is sooner).
+ *
+ * CSDT4-39: each suggestion explains itself with the forecast prices, times and window limit
+ * (RecommendationExplanation), carries a confidence from actual past prices (BacktestConfidence,
+ * option A), and its saving is labelled estimated.
  */
 @Service
 public class RecommendationService {
@@ -70,6 +76,7 @@ public class RecommendationService {
     private final BigDecimal minimumSaving;
     private final int maxActive;
     private final boolean staleFeedBlocksDemo;
+    private PastPrices pastPrices = PastPrices.NONE;
 
     public RecommendationService(RecommendationRepository recommendations,
                                  HouseholdDirectory households,
@@ -90,6 +97,12 @@ public class RecommendationService {
         this.minimumSaving = minimumSaving;
         this.maxActive = maxActive;
         this.staleFeedBlocksDemo = staleFeedBlocksDemo;
+    }
+
+    /** Actual prices for the confidence check (CSDT4-39); without them, confidence is "not enough history". */
+    @Autowired(required = false)
+    public void setPastPrices(PastPrices pastPrices) {
+        this.pastPrices = pastPrices;
     }
 
     /**
@@ -175,10 +188,39 @@ public class RecommendationService {
                 supersede(open, now);
             }
         }
+        Backtest backtest = ranked.isEmpty() ? null : backtest(forecast, now);
         for (Candidate candidate : ranked) {
-            save(householdId, candidate, openByAppliance.get(candidate.appliance().id()), forecast, now);
+            save(householdId, candidate, openByAppliance.get(candidate.appliance().id()), forecast, backtest, now);
         }
         return finish(householdId, now, forecast, null);
+    }
+
+    /**
+     * Actual prices to judge confidence on, and the day to judge from. For F3 that is now; for the
+     * demo forecast it is the start of the replay day, since the demo replays that day's prices.
+     */
+    private record Backtest(Map<Instant, BigDecimal> actualPrices, Instant asOf, LocalDate replayDay) {
+    }
+
+    private Backtest backtest(PriceForecast forecast, Instant now) {
+        Instant asOf = forecast.replayDay() == null ? now : forecast.replayDay().atStartOfDay(SINGAPORE).toInstant();
+        return new Backtest(pastPrices.actualPrices(asOf), asOf, forecast.replayDay());
+    }
+
+    /** Confidence for one suggestion, or null when there isn't enough price history. */
+    static BacktestConfidence.Confidence confidence(CheapestStartCalculator.ShiftableRun run,
+                                                    CheapestStartCalculator.Result result,
+                                                    Map<Instant, BigDecimal> actualPrices, Instant asOf,
+                                                    LocalDate replayDay) {
+        Instant usual = result.usualStart();
+        Instant suggested = result.bestStart();
+        if (replayDay != null) {
+            // Move both runs onto the replay day, keeping their times of day and the gap between them.
+            long days = ChronoUnit.DAYS.between(usual.atZone(SINGAPORE).toLocalDate(), replayDay);
+            usual = usual.plus(Duration.ofDays(days));
+            suggested = suggested.plus(Duration.ofDays(days));
+        }
+        return BacktestConfidence.of(run, usual, suggested, actualPrices, asOf);
     }
 
     /** One appliance's best shift or spike warning, before ranking. */
@@ -196,7 +238,7 @@ public class RecommendationService {
     }
 
     private void save(long householdId, Candidate candidate, Recommendation open, PriceForecast forecast,
-                      Instant now) {
+                      Backtest backtest, Instant now) {
         CheapestStartCalculator.Result result = candidate.result();
         ApplianceResponse appliance = candidate.appliance();
         String kind = result.outcome() == CheapestStartCalculator.Outcome.AVOID
@@ -215,11 +257,17 @@ public class RecommendationService {
             }
             supersede(open, now);
         }
+        CheapestStartCalculator.ShiftableRun run = runOf(appliance);
+        BacktestConfidence.Confidence confidence = confidence(run, result, backtest.actualPrices(), backtest.asOf(),
+                backtest.replayDay());
         Recommendation created = new Recommendation(null, householdId, appliance.id(), appliance.name(),
                 kind, result.bestStart(), result.usualStart(), result.bestCost(),
-                result.usualCost(), result.saving(), reason(result, forecast), forecast.source(),
+                result.usualCost(), result.saving(),
+                truncate(RecommendationExplanation.explain(result, run, forecast), 600), forecast.source(),
                 truncate(forecast.model(), 60), RecommendationStatus.ACTIVE, null, now, null,
-                result.spikeStart(), snoozedUntil);
+                result.spikeStart(), snoozedUntil,
+                confidence == null ? null : confidence.cheaperDays(),
+                confidence == null ? null : confidence.daysChecked());
         long id = recommendations.insert(created);
         recommendations.logEvent(id, RecommendationRepository.CREATED, now, result.bestStart(), false);
     }
@@ -379,34 +427,6 @@ public class RecommendationService {
     static CheapestStartCalculator.ShiftableRun runOf(ApplianceResponse appliance) {
         return new CheapestStartCalculator.ShiftableRun(appliance.powerKw(), appliance.runMinutes(),
                 appliance.earliestStart(), appliance.mustFinishBy(), appliance.usualStart());
-    }
-
-    /**
-     * e.g. "Start at 14:00 instead of 19:45 to save about $2.22 on this run ($0.35 vs $2.58)." or,
-     * for a warning, "A price spike is forecast from 19:30, during your usual 19:45 run. Start at
-     * 14:00 instead to avoid about $2.22 on this run ($0.35 vs $2.58)."
-     */
-    static String reason(CheapestStartCalculator.Result result, PriceForecast forecast) {
-        String text = result.outcome() == CheapestStartCalculator.Outcome.AVOID
-                ? "A price spike is forecast from " + local(result.spikeStart()) + ", during your usual "
-                        + local(result.usualStart()) + " run. Start at " + local(result.bestStart())
-                        + " instead to avoid about $" + money(result.saving()) + " on this run ($"
-                        + money(result.bestCost()) + " vs $" + money(result.usualCost()) + ")."
-                : "Start at " + local(result.bestStart()) + " instead of " + local(result.usualStart())
-                        + " to save about $" + money(result.saving()) + " on this run ($" + money(result.bestCost())
-                        + " vs $" + money(result.usualCost()) + ").";
-        if (forecast.isDemo()) {
-            return text + " Based on a demo forecast (a replay of past prices), not a live prediction.";
-        }
-        return text + " Based on F3's forecast (" + forecast.model() + ").";
-    }
-
-    private static String local(Instant instant) {
-        return instant.atZone(SINGAPORE).toLocalTime().format(HH_MM);
-    }
-
-    private static String money(BigDecimal sgd) {
-        return sgd.setScale(2, RoundingMode.HALF_UP).toPlainString();
     }
 
     private static String truncate(String value, int length) {
