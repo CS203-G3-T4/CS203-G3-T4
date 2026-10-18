@@ -81,10 +81,33 @@ class RecommendationControllerTest {
                 .andExpect(status().isNotFound());
     }
 
+    @Test
+    void gotItAndRemindMeLaterAreSeparateEndpoints() throws Exception {
+        when(service.gotIt(7L)).thenReturn(response(RecommendationStatus.ACKNOWLEDGED));
+        when(service.remindLater(8L)).thenReturn(response(RecommendationStatus.ACTIVE));
+
+        mvc.perform(post("/api/v1/recommendations/7/got-it"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("ACKNOWLEDGED"));
+        mvc.perform(post("/api/v1/recommendations/8/remind-later"))
+                .andExpect(status().isOk());
+        verify(service).remindLater(8L);
+    }
+
+    @Test
+    void anActionThatDoesntFitTheSuggestionIsA409() throws Exception {
+        when(service.gotIt(5L)).thenThrow(new RecommendationActionNotAllowedException(
+                "Got it and Remind me later are only for price spike warnings"));
+
+        mvc.perform(post("/api/v1/recommendations/5/got-it"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.title").value("Not available for this suggestion"));
+    }
+
     private static RecommendationResponse response(RecommendationStatus status) {
         Instant at = Instant.parse("2026-09-30T05:00:00Z");
         return new RecommendationResponse(5L, 1L, 10L, "Tumble Dryer", "SHIFT_START", at, at, at,
                 BigDecimal.ONE, BigDecimal.TEN, new BigDecimal("9"), "reason", PriceForecast.DEMO, "demo", true,
-                status, at, at);
+                status, at, at, null, null);
     }
 }
