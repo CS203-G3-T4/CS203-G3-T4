@@ -11,6 +11,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import sg.edu.smu.cs203.household.HouseholdAccessDeniedException;
 import sg.edu.smu.cs203.household.HouseholdNotFoundException;
 import sg.edu.smu.cs203.household.ValidationFailedException;
 
@@ -21,6 +22,14 @@ public class RecommendationApiExceptionHandler {
     @ExceptionHandler(HouseholdNotFoundException.class)
     public ProblemDetail householdNotFound(HouseholdNotFoundException exception) {
         return problem(HttpStatus.NOT_FOUND, "Household not found", exception.getMessage());
+    }
+
+    @ExceptionHandler(HouseholdAccessDeniedException.class)
+    public ProblemDetail householdAccessDenied(HouseholdAccessDeniedException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN,
+                exception.getMessage());
+        problem.setTitle("Access denied");
+        return problem;
     }
 
     @ExceptionHandler(RecommendationNotFoundException.class)

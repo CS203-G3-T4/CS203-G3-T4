@@ -24,9 +24,11 @@ Still open because they depend on other features:
 - "Switching to fixed rate stops new shifting suggestions": F4 must read `exposedToWholesalePrice`.
 - "Load profile includes accepted runs": needs F4's accepted recommendations. Today each run is
   placed at the appliance's usual start.
-- "Simulated households can't log in": needs login (CSDT4-23).
-- Adding and deleting households is open to anyone until login exists. After CSDT4-23, adding
-  becomes part of sign-up and deleting should be admin-only (CSDT4-62).
+- Simulated households cannot log in; account authentication rejects accounts attached to them.
+- Household-specific reads and writes now check the signed-in account's household in the service
+  layer. Residents see only their own household in listings and receive 403 for another household;
+  admins may access any household.
+- Adding and deleting households remains subject to the admin-only follow-up (CSDT4-66).
 
 ## Try it
 
