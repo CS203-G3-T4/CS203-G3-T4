@@ -3,6 +3,7 @@ package sg.edu.smu.cs203.recommendation;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalTime;
 import java.time.ZoneId;
@@ -13,6 +14,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -39,6 +41,12 @@ import sg.edu.smu.cs203.household.appliance.ApplianceResponse;
  *
  * Ranking: by expected saving against the usual start, savings below the minimum ($0.05) are
  * skipped, and at most 3 suggestions per household are open at once.
+ *
+ * CSDT4-38: when the forecast marks a spike during an appliance's usual run, its suggestion is an
+ * AVOID warning instead (the spike-free alternative and the cost avoided). Warnings pass the same
+ * guards and ranking, replace a shift suggestion for that appliance, and are answered with
+ * "Got it" (ACKNOWLEDGED) or "Remind me later" (hidden for an hour, or until an hour before the
+ * usual start if that is sooner).
  */
 @Service
 public class RecommendationService {
@@ -51,6 +59,8 @@ public class RecommendationService {
     static final String STALE_FEED_MESSAGE =
             "No new suggestions: the live price feed is out of date, so the forecast can't be trusted right now.";
     static final String NOT_YET_MESSAGE = "Suggestions are being prepared and will appear shortly.";
+    /** "Remind me later" hides a warning this long, or until this long before the usual start. */
+    static final Duration REMIND_LATER = Duration.ofHours(1);
 
     private final RecommendationRepository recommendations;
     private final HouseholdDirectory households;
@@ -141,8 +151,14 @@ public class RecommendationService {
             }
             CheapestStartCalculator.Result result = CheapestStartCalculator.cheapestStart(
                     runOf(appliance), forecast.points(), now, minimumSaving);
-            if (result.outcome() == CheapestStartCalculator.Outcome.SHIFT
-                    && !recommendations.decidedForRun(appliance.id(), result.usualStart())) {
+            boolean worthShowing = switch (result.outcome()) {
+                // Not again for a run the resident already decided on.
+                case SHIFT -> !recommendations.decidedForRun(appliance.id(), result.usualStart());
+                // Still warn if they only dismissed a shift: they'll run at the usual time.
+                case AVOID -> !recommendations.movedOrAcknowledgedForRun(appliance.id(), result.usualStart());
+                default -> false;
+            };
+            if (worthShowing) {
                 candidates.add(new Candidate(appliance, result));
             }
         }
@@ -165,7 +181,7 @@ public class RecommendationService {
         return finish(householdId, now, forecast, null);
     }
 
-    /** One appliance's best shift, before ranking. */
+    /** One appliance's best shift or spike warning, before ranking. */
     record Candidate(ApplianceResponse appliance, CheapestStartCalculator.Result result) {
     }
 
@@ -183,16 +199,27 @@ public class RecommendationService {
                       Instant now) {
         CheapestStartCalculator.Result result = candidate.result();
         ApplianceResponse appliance = candidate.appliance();
+        String kind = result.outcome() == CheapestStartCalculator.Outcome.AVOID
+                ? Recommendation.AVOID : Recommendation.SHIFT_START;
+        Instant snoozedUntil = null;
         if (open != null) {
-            if (open.suggestedStart().equals(result.bestStart()) && open.usualStart().equals(result.usualStart())) {
+            if (open.kind().equals(kind) && open.suggestedStart().equals(result.bestStart())
+                    && open.usualStart().equals(result.usualStart())
+                    && Objects.equals(open.spikeStart(), result.spikeStart())) {
                 return; // same advice as before: keep it, so the resident's view doesn't jump around
+            }
+            // A newer warning about the same run keeps "Remind me later".
+            if (open.isWarning() && Recommendation.AVOID.equals(kind) && open.usualStart().equals(result.usualStart())
+                    && open.snoozedAt(now)) {
+                snoozedUntil = open.snoozedUntil();
             }
             supersede(open, now);
         }
         Recommendation created = new Recommendation(null, householdId, appliance.id(), appliance.name(),
-                Recommendation.SHIFT_START, result.bestStart(), result.usualStart(), result.bestCost(),
+                kind, result.bestStart(), result.usualStart(), result.bestCost(),
                 result.usualCost(), result.saving(), reason(result, forecast), forecast.source(),
-                truncate(forecast.model(), 60), RecommendationStatus.ACTIVE, null, now, null);
+                truncate(forecast.model(), 60), RecommendationStatus.ACTIVE, null, now, null,
+                result.spikeStart(), snoozedUntil);
         long id = recommendations.insert(created);
         recommendations.logEvent(id, RecommendationRepository.CREATED, now, result.bestStart(), false);
     }
@@ -210,6 +237,7 @@ public class RecommendationService {
     @Transactional
     public RecommendationResponse accept(long recommendationId, AcceptRequest request) {
         Recommendation recommendation = openRecommendation(recommendationId);
+        requireShift(recommendation);
         Instant now = clock.instant();
         Instant start = recommendation.suggestedStart();
         boolean overridden = false;
@@ -243,10 +271,65 @@ public class RecommendationService {
     @Transactional
     public RecommendationResponse dismiss(long recommendationId) {
         Recommendation recommendation = openRecommendation(recommendationId);
+        requireShift(recommendation);
         Instant now = clock.instant();
         close(recommendation, RecommendationStatus.DISMISSED, now, null);
         recommendations.logEvent(recommendationId, RecommendationStatus.DISMISSED.name(), now, null, false);
         return RecommendationResponse.from(recommendations.findById(recommendationId).orElseThrow());
+    }
+
+    /** "Got it" on a spike warning (CSDT4-38): closes it; the same run is not warned about again. */
+    @Transactional
+    public RecommendationResponse gotIt(long recommendationId) {
+        Recommendation warning = openRecommendation(recommendationId);
+        requireWarning(warning);
+        Instant now = clock.instant();
+        close(warning, RecommendationStatus.ACKNOWLEDGED, now, null);
+        recommendations.logEvent(recommendationId, RecommendationStatus.ACKNOWLEDGED.name(), now, null, false);
+        return RecommendationResponse.from(recommendations.findById(recommendationId).orElseThrow());
+    }
+
+    /**
+     * "Remind me later" on a spike warning (CSDT4-38): hides it for an hour, or until an hour before
+     * the usual start if that is sooner. Not possible once the usual start is under an hour away.
+     */
+    @Transactional
+    public RecommendationResponse remindLater(long recommendationId) {
+        Recommendation warning = openRecommendation(recommendationId);
+        requireWarning(warning);
+        Instant now = clock.instant();
+        Instant remindAt = remindAt(warning.usualStart(), now);
+        if (remindAt == null) {
+            throw new RecommendationActionNotAllowedException(
+                    "Your usual start is less than an hour away, so there's no time to remind you later");
+        }
+        if (!recommendations.snooze(recommendationId, remindAt)) {
+            throw new RecommendationNotActiveException("This warning was already answered");
+        }
+        recommendations.logEvent(recommendationId, "SNOOZED", now, remindAt, false);
+        return RecommendationResponse.from(recommendations.findById(recommendationId).orElseThrow());
+    }
+
+    /** When "Remind me later" brings a warning back, or null if the usual start is too close. */
+    static Instant remindAt(Instant usualStart, Instant now) {
+        Instant inAnHour = now.plus(REMIND_LATER);
+        Instant beforeStart = usualStart.minus(REMIND_LATER);
+        Instant remindAt = inAnHour.isBefore(beforeStart) ? inAnHour : beforeStart;
+        return remindAt.isAfter(now) ? remindAt : null;
+    }
+
+    private static void requireShift(Recommendation recommendation) {
+        if (recommendation.isWarning()) {
+            throw new RecommendationActionNotAllowedException(
+                    "This is a price spike warning: answer it with Got it or Remind me later");
+        }
+    }
+
+    private static void requireWarning(Recommendation recommendation) {
+        if (!recommendation.isWarning()) {
+            throw new RecommendationActionNotAllowedException(
+                    "Got it and Remind me later are only for price spike warnings");
+        }
     }
 
     private Recommendation openRecommendation(long recommendationId) {
@@ -284,7 +367,9 @@ public class RecommendationService {
     }
 
     private RecommendationsResponse response(long householdId, RecommendationRepository.RefreshStatus status) {
+        Instant now = clock.instant();
         List<RecommendationResponse> open = recommendations.findActive(householdId).stream()
+                .filter(r -> !r.snoozedAt(now)) // "Remind me later": back once the time comes
                 .map(RecommendationResponse::from)
                 .toList();
         return new RecommendationsResponse(householdId, status.forecastSource(), status.forecastModel(),
@@ -296,11 +381,20 @@ public class RecommendationService {
                 appliance.earliestStart(), appliance.mustFinishBy(), appliance.usualStart());
     }
 
-    /** e.g. "Start at 14:00 instead of 19:45 to save about $2.22 on this run ($0.35 vs $2.58)." */
+    /**
+     * e.g. "Start at 14:00 instead of 19:45 to save about $2.22 on this run ($0.35 vs $2.58)." or,
+     * for a warning, "A price spike is forecast from 19:30, during your usual 19:45 run. Start at
+     * 14:00 instead to avoid about $2.22 on this run ($0.35 vs $2.58)."
+     */
     static String reason(CheapestStartCalculator.Result result, PriceForecast forecast) {
-        String text = "Start at " + local(result.bestStart()) + " instead of " + local(result.usualStart())
-                + " to save about $" + money(result.saving()) + " on this run ($" + money(result.bestCost())
-                + " vs $" + money(result.usualCost()) + ").";
+        String text = result.outcome() == CheapestStartCalculator.Outcome.AVOID
+                ? "A price spike is forecast from " + local(result.spikeStart()) + ", during your usual "
+                        + local(result.usualStart()) + " run. Start at " + local(result.bestStart())
+                        + " instead to avoid about $" + money(result.saving()) + " on this run ($"
+                        + money(result.bestCost()) + " vs $" + money(result.usualCost()) + ")."
+                : "Start at " + local(result.bestStart()) + " instead of " + local(result.usualStart())
+                        + " to save about $" + money(result.saving()) + " on this run ($" + money(result.bestCost())
+                        + " vs $" + money(result.usualCost()) + ").";
         if (forecast.isDemo()) {
             return text + " Based on a demo forecast (a replay of past prices), not a live prediction.";
         }
