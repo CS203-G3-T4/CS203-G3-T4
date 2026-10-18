@@ -24,7 +24,15 @@ public record PriceForecast(String source, String model, Instant asOf, List<Half
         return DEMO.equals(source);
     }
 
-    /** Forecast USEP for the half-hour that starts at periodStart. */
-    public record HalfHourPrice(Instant periodStart, BigDecimal usepSgdPerMwh) {
+    /**
+     * Forecast USEP for the half-hour that starts at periodStart. spike is true when the price is
+     * far above what is normal for that time of day (F3's rule: above the 28-day typical price plus
+     * k spreads; CSDT4-38).
+     */
+    public record HalfHourPrice(Instant periodStart, BigDecimal usepSgdPerMwh, boolean spike) {
+
+        public HalfHourPrice(Instant periodStart, BigDecimal usepSgdPerMwh) {
+            this(periodStart, usepSgdPerMwh, false);
+        }
     }
 }

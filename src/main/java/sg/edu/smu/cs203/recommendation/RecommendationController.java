@@ -34,7 +34,7 @@ public class RecommendationController {
     }
 
     @PostMapping("/api/v1/recommendations/{recId}/accept")
-    @Operation(summary = "Accept a suggestion (CSDT4-20). Optional body {\"startTime\": \"HH:mm\"} "
+    @Operation(summary = "Accept a shift suggestion (CSDT4-20). Optional body {\"startTime\": \"HH:mm\"} "
             + "sets the resident's own start inside the same window. Nothing runs automatically")
     public RecommendationResponse accept(@PathVariable long recId,
                                          @Valid @RequestBody(required = false) AcceptRequest request) {
@@ -42,8 +42,21 @@ public class RecommendationController {
     }
 
     @PostMapping("/api/v1/recommendations/{recId}/dismiss")
-    @Operation(summary = "Dismiss a suggestion (CSDT4-20); the same run is not suggested again")
+    @Operation(summary = "Dismiss a shift suggestion (CSDT4-20); the same run is not suggested again")
     public RecommendationResponse dismiss(@PathVariable long recId) {
         return service.dismiss(recId);
+    }
+
+    @PostMapping("/api/v1/recommendations/{recId}/got-it")
+    @Operation(summary = "\"Got it\" on a price spike warning (CSDT4-38); that run is not warned about again")
+    public RecommendationResponse gotIt(@PathVariable long recId) {
+        return service.gotIt(recId);
+    }
+
+    @PostMapping("/api/v1/recommendations/{recId}/remind-later")
+    @Operation(summary = "\"Remind me later\" on a price spike warning (CSDT4-38): hidden for an hour, or until "
+            + "an hour before the usual start if that is sooner")
+    public RecommendationResponse remindLater(@PathVariable long recId) {
+        return service.remindLater(recId);
     }
 }

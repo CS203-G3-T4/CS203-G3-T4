@@ -1,5 +1,5 @@
-> October19 compatibility update: main owns recommendation V12; forecast operations now use V13.
-> This dated report records the earlier run. See [the V13 upgrade policy](migration-v13.md)
+> Current compatibility: main owns recommendation V12/V13; forecast operations use V14.
+> This dated report records the earlier run. See [the V14 upgrade policy](migration-v14.md)
 > and [artifact retrieval](artifacts.md) for current instructions.
 
 > Main sync update: origin/main `941e744` adds household budget migration V11.

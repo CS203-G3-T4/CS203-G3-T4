@@ -1,3 +1,5 @@
+> Historical verification at `2c7fbb4`. The replacement PR incorporates later main and uses forecast V14; see [current integration and verification](replacement-pr-2026-10-19.md). Original results below are preserved.
+
 # PR #11 review response — 19 October 2026
 
 Addresses Jonathan Gladwin's review of `76c4866`. Current main `3c6e3b7` was

@@ -64,3 +64,6 @@ recommendation:
   recompute-cron: ${RECOMMENDATION_RECOMPUTE_CRON:0 1,31 * * * *}
   # A stale price feed always blocks F3-based suggestions; set true to block the demo forecast too.
   stale-feed-blocks-demo: ${RECOMMENDATION_STALE_FEED_BLOCKS_DEMO:false}
+  # Mark spikes in the demo forecast with F3's rule (vs the 28 days before the replay day), so
+  # "avoid this time" warnings can be shown (CSDT4-38). Needs that history in the database.
+  demo-spikes: ${RECOMMENDATION_DEMO_SPIKES:true}

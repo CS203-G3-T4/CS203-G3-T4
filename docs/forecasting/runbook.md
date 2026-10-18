@@ -263,11 +263,11 @@ and its Chromium installed outside source. No live DB is used. Credentials in pr
 `private-*.env` files are mode600 and excluded from delivery.
 
 V1–V9 remain unchanged; V10 is the original F4 recommendations migration from its
-cached branch; V11 is main’s unchanged household-budget migration; V12 is main's recommendation refresh; V13 adds operation/ranking/demand/audit support. Both fresh
+cached branch; V11 is main’s unchanged household-budget migration; V12 is main's recommendation refresh; V13 is main's recommendation spike warnings; V14 adds operation/ranking/demand/audit support. Both fresh
 migrations and PostgreSQL persistence are covered by the isolated proof. To roll
 back code, stop Spring normally and retain expanded tables; never edit applied
 migration checksums or delete saved predictions. The source/evidence delivery
-includes the October modules/tests. See [V13 compatibility](migration-v13.md) before upgrading an existing database.
+includes the October modules/tests. See [V14 compatibility](migration-v14.md) before upgrading an existing database.
 
 ## Review correction: local auth, artifacts and recovery
 

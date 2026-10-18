@@ -55,6 +55,8 @@ made-up numbers, and the label keeps it from being presented as an AI prediction
 | `POST /api/v1/households/{id}/recommendations/generate` | Recomputes one household now. Normally done in the background (CSDT4-37). Safe to repeat. |
 | `POST /api/v1/recommendations/{recId}/accept` | Accepts. Optional body `{"startTime": "15:10"}` is the resident's own start (Singapore `HH:mm`) inside the same window. |
 | `POST /api/v1/recommendations/{recId}/dismiss` | Dismisses. The same run is not suggested again. |
+| `POST /api/v1/recommendations/{recId}/got-it` | "Got it" on a spike warning (CSDT4-38). That run is not warned about again. |
+| `POST /api/v1/recommendations/{recId}/remind-later` | "Remind me later" on a spike warning: hidden for an hour, or until an hour before the usual start if sooner. 409 when the usual start is under an hour away. |
 
 Errors: 404 for an unknown household or suggestion, 409 if the suggestion was already decided or
 expired, 400 with `errors.startTime` for an override outside the window.
@@ -80,18 +82,22 @@ the other because of a per-household PostgreSQL advisory lock, so they can't bot
 
 ## Tables and statuses
 
-`recommendation` stores kind (`SHIFT_START`), suggested_start, usual_start, est_saving, both
-costs, reason, forecast_source/model, status, accepted_start and decided_at.
+`recommendation` stores kind (`SHIFT_START` or `AVOID`), suggested_start, usual_start,
+est_saving, both costs, reason, forecast_source/model, status, accepted_start, decided_at, and for
+warnings spike_start and snoozed_until (V13).
 
 `recommendation_event` logs every change: `CREATED`, `ACCEPTED` (with the start and whether it
-was an override), `DISMISSED`, `SUPERSEDED` and `EXPIRED`.
+was an override), `DISMISSED`, `ACKNOWLEDGED`, `SNOOZED` (with the remind time), `SUPERSEDED`
+and `EXPIRED`.
 
 Statuses:
 
 - `ACTIVE`: waiting for the resident. At most one per appliance, enforced by a unique index.
-- `ACCEPTED` / `DISMISSED`: the resident's decision.
+- `ACCEPTED` / `DISMISSED`: the resident's decision on a shift suggestion.
+- `ACKNOWLEDGED`: "Got it" on a spike warning.
 - `SUPERSEDED`: replaced by newer advice, or the appliance changed.
-- `EXPIRED`: the suggested start passed without a decision.
+- `EXPIRED`: the suggested start passed without a decision (for a warning, also once the usual
+  start it warns about has passed).
 
 Both tables cascade when a household or appliance is deleted (CSDT4-62).
 
@@ -122,6 +128,32 @@ change to it or its appliances (`HouseholdChanged`, published by `HouseholdServi
 saved in `recommendation_refresh` (V12): when it ran, which forecast it used, and why there are no
 suggestions. `POST …/generate` still exists for recomputing one household by hand (Swagger).
 Set `RECOMMENDATION_AUTO_RECOMPUTE=false` to turn the background job off.
+
+## Price spike warnings (CSDT4-38)
+
+When the forecast marks a spike in any half-hour an appliance's usual run touches, its suggestion
+becomes an `AVOID` warning: "avoid your usual time", with the cheapest start in the window that
+touches no spike, and the cost avoided by using it (usual cost minus that start's cost).
+
+- **Where spikes come from.** F3 marks each forecast half-hour with `spikeFlag` (above the 28-day
+  typical price for that time plus 3 spreads; `forecast.spike.*`). A missing flag (too little
+  history) is not a spike. The demo forecast applies the same rule to the 28 days before its
+  replay day (26 Sep), using the saved market history, so the demo can show warnings.
+  `RECOMMENDATION_DEMO_SPIKES=false` turns that off; with too little history nothing is marked.
+- **Same rules as other suggestions.** Warnings are made in the same background recompute, so the
+  fixed-rate, stale-feed, disabled-appliance, time-window and past-start guards all apply. Savings
+  under $0.05 are skipped, and warnings are ranked with shift suggestions by saving (max 3 open).
+- **One card per appliance.** A warning replaces that appliance's shift suggestion. If no
+  spike-free start in the window saves at least $0.05, the appliance gets an ordinary suggestion
+  (or none) instead.
+- **Got it** closes the warning (`ACKNOWLEDGED`); the same run is not warned about or suggested
+  again. A run whose shift suggestion was only dismissed can still get a warning, since the
+  resident will run at the usual time.
+- **Remind me later** keeps the warning open but hidden until `min(now + 1 h, usual start - 1 h)`.
+  The button isn't shown once the usual start is under an hour away. A newer warning for the same
+  run (e.g. after a forecast update) keeps the reminder time.
+- Shift suggestions are answered with Accept / Dismiss, warnings with Got it / Remind me later;
+  the wrong pair returns 409.
 
 ## Not done here (later stories)
 

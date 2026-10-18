@@ -1,3 +1,5 @@
+> Historical checkpoint at `2c7fbb4`. Current main now owns V13; use [V14 compatibility](migration-v14.md) for the replacement PR.
+
 # Forecast operations migration: V12 to V13
 
 Current main `3c6e3b7` contains recommendation refresh V12. This branch preserves
