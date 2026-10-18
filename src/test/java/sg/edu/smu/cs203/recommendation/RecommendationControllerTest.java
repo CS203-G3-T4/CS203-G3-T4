@@ -108,6 +108,6 @@ class RecommendationControllerTest {
         Instant at = Instant.parse("2026-09-30T05:00:00Z");
         return new RecommendationResponse(5L, 1L, 10L, "Tumble Dryer", "SHIFT_START", at, at, at,
                 BigDecimal.ONE, BigDecimal.TEN, new BigDecimal("9"), "reason", PriceForecast.DEMO, "demo", true,
-                status, at, at, null, null);
+                status, at, at, null, null, null, null, null, true);
     }
 }
