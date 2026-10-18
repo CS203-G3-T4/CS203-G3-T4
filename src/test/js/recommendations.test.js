@@ -39,7 +39,7 @@ test('a suggestion shows Singapore times, the saving, and escapes names', () => 
   const html = Recs.itemHtml(dryer);
 
   assert.match(html, /Start at <strong>1:00 PM<\/strong> instead of 7:45 PM/);
-  assert.match(html, /Save about \$2\.22/);
+  assert.match(html, /Estimated saving \$2\.22/);
   assert.match(html, /Tumble &lt;Dryer&gt;/);
   assert.doesNotMatch(html, /<Dryer>/);
   assert.match(html, /&quot;cheaper&quot;/);
@@ -186,7 +186,7 @@ test('a spike warning says which time to avoid, the alternative and the cost avo
   assert.match(html, /class="rec-item rec-warning"/);
   assert.match(html, /Price spike expected/);
   assert.match(html, /Avoid <strong>7:45 PM<\/strong>\. Run at 1:00 PM instead/);
-  assert.match(html, /Save about \$3\.38/);
+  assert.match(html, /Estimated saving \$3\.38/);
   assert.match(html, /data-action="got-it">Got it</);
   assert.match(html, /data-action="remind-later">Remind me later</);
   assert.doesNotMatch(html, /data-action="accept"/);
@@ -210,4 +210,24 @@ test('Got it and Remind me later post to their own endpoints and say what happen
   assert.equal(Recs.toastFor({ status: 'ACKNOWLEDGED' }), 'Warning noted');
   assert.equal(Recs.toastFor({ status: 'ACTIVE' }), 'We’ll remind you later');
   assert.equal(Recs.toastFor({ status: 'ACCEPTED' }), 'Suggestion accepted');
+});
+
+// CSDT4-39: confidence from past prices and an "estimated" saving.
+test('confidence says how often the suggested time was really cheaper, or that history is missing', () => {
+  const { Recs } = load();
+
+  assert.equal(Recs.confidenceText({ ...dryer, confidenceCheaperDays: 23, confidenceDaysChecked: 26, confidencePercent: 88 }),
+    'How sure: 1:00 PM was really cheaper than 7:45 PM on 23 of 26 past days (88%).');
+  assert.equal(Recs.confidenceText({ ...dryer, confidencePercent: null }),
+    'How sure: not enough price history yet to check this.');
+  assert.match(Recs.itemHtml({ ...dryer, confidencePercent: null }), /class="rec-confidence">How sure: not enough/);
+  assert.match(Recs.itemHtml(warning, at('2026-09-30T00:10:00Z')), /class="rec-confidence">/);
+});
+
+test('the saving is labelled estimated until actual prices are known', () => {
+  const { Recs } = load();
+
+  assert.equal(Recs.savingText({ estSavingSgd: 2.2232, savingEstimated: true }), 'Estimated saving $2.22');
+  assert.equal(Recs.savingText({ estSavingSgd: 2.2232 }), 'Estimated saving $2.22');
+  assert.equal(Recs.savingText({ estSavingSgd: 2.2232, savingEstimated: false }), 'Saved $2.22');
 });
