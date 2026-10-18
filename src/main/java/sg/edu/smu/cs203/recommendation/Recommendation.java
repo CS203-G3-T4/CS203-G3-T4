@@ -23,7 +23,9 @@ public record Recommendation(
         Instant createdAt,
         Instant decidedAt,
         Instant spikeStart,
-        Instant snoozedUntil) {
+        Instant snoozedUntil,
+        Integer confidenceCheaperDays,
+        Integer confidenceDaysChecked) {
 
     /** Move a flexible appliance's start time to a cheaper one (CSDT4-19). */
     public static final String SHIFT_START = "SHIFT_START";
@@ -41,7 +43,18 @@ public record Recommendation(
                           Instant createdAt, Instant decidedAt) {
         this(id, householdId, applianceId, applianceName, kind, suggestedStart, usualStart, suggestedCost,
                 usualCost, estSaving, reason, forecastSource, forecastModel, status, acceptedStart, createdAt,
-                decidedAt, null, null);
+                decidedAt, null, null, null, null);
+    }
+
+    /** As above, with the spike warning fields (CSDT4-38) but no confidence. */
+    public Recommendation(Long id, long householdId, long applianceId, String applianceName, String kind,
+                          Instant suggestedStart, Instant usualStart, BigDecimal suggestedCost,
+                          BigDecimal usualCost, BigDecimal estSaving, String reason, String forecastSource,
+                          String forecastModel, RecommendationStatus status, Instant acceptedStart,
+                          Instant createdAt, Instant decidedAt, Instant spikeStart, Instant snoozedUntil) {
+        this(id, householdId, applianceId, applianceName, kind, suggestedStart, usualStart, suggestedCost,
+                usualCost, estSaving, reason, forecastSource, forecastModel, status, acceptedStart, createdAt,
+                decidedAt, spikeStart, snoozedUntil, null, null);
     }
 
     public boolean isWarning() {
