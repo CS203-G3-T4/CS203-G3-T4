@@ -6,8 +6,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
+import sg.edu.smu.cs203.household.HouseholdChanged;
 import sg.edu.smu.cs203.household.HouseholdService;
 import sg.edu.smu.cs203.household.ValidationFailedException;
 
@@ -19,12 +22,19 @@ public class ApplianceService {
     private final ApplianceRepository appliances;
     private final HouseholdService households;
     private final Clock clock;
+    // Lets F4 recompute suggestions when an appliance changes (CSDT4-37). No-op until Spring sets it.
+    private ApplicationEventPublisher events = event -> { };
 
     public ApplianceService(ApplianceRepository appliances, HouseholdService households,
                             Clock clock) {
         this.appliances = appliances;
         this.households = households;
         this.clock = clock;
+    }
+
+    @Autowired(required = false)
+    public void setEvents(ApplicationEventPublisher events) {
+        this.events = events;
     }
 
     public List<ApplianceResponse> list(long householdId) {
@@ -46,6 +56,7 @@ public class ApplianceService {
         Instant now = clock.instant();
         Appliance toSave = build(null, householdId, request, now, now);
         long id = appliances.insert(toSave);
+        events.publishEvent(new HouseholdChanged(householdId));
         return get(householdId, id);
     }
 
@@ -58,6 +69,7 @@ public class ApplianceService {
         if (!appliances.update(updated)) {
             throw new ApplianceNotFoundException(householdId, applianceId);
         }
+        events.publishEvent(new HouseholdChanged(householdId));
         return get(householdId, applianceId);
     }
 
@@ -66,6 +78,7 @@ public class ApplianceService {
         if (!appliances.delete(householdId, applianceId)) {
             throw new ApplianceNotFoundException(householdId, applianceId);
         }
+        events.publishEvent(new HouseholdChanged(householdId));
     }
 
     private Appliance find(long householdId, long applianceId) {

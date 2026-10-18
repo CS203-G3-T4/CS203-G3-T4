@@ -12,6 +12,9 @@ import sg.edu.smu.cs203.household.load.LoadProfileResponse;
  */
 public interface HouseholdDirectory {
 
+    /** Every real (not simulated) household, for features that work across households. */
+    List<HouseholdResponse> households();
+
     /** Profile, plan type and whether the household is exposed to USEP. */
     HouseholdResponse household(long householdId);
 

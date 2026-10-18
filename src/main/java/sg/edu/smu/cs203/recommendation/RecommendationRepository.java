@@ -64,10 +64,42 @@ public class RecommendationRepository {
         return jdbc.query(SELECT + " WHERE r.id = ?", ROW_MAPPER, id).stream().findFirst();
     }
 
-    /** Open suggestions for a household, soonest first. */
+    /** Open suggestions for a household, ranked: biggest expected saving first (CSDT4-37). */
     public List<Recommendation> findActive(long householdId) {
-        return jdbc.query(SELECT + " WHERE r.household_id = ? AND r.status = 'ACTIVE' ORDER BY r.suggested_start, r.id",
+        return jdbc.query(SELECT + " WHERE r.household_id = ? AND r.status = 'ACTIVE'"
+                        + " ORDER BY r.est_saving DESC, r.suggested_start, r.id",
                 ROW_MAPPER, householdId);
+    }
+
+    /** Outcome of the latest background recompute for a household (CSDT4-37). */
+    public record RefreshStatus(Instant refreshedAt, String forecastSource, String forecastModel,
+                                String message) {
+    }
+
+    public void saveRefresh(long householdId, RefreshStatus status) {
+        jdbc.update("""
+                INSERT INTO recommendation_refresh
+                    (household_id, refreshed_at, forecast_source, forecast_model, message)
+                VALUES (?, ?, ?, ?, ?)
+                ON CONFLICT (household_id) DO UPDATE
+                SET refreshed_at = EXCLUDED.refreshed_at, forecast_source = EXCLUDED.forecast_source,
+                    forecast_model = EXCLUDED.forecast_model, message = EXCLUDED.message
+                """,
+                householdId,
+                Timestamp.from(status.refreshedAt()),
+                status.forecastSource(),
+                status.forecastModel(),
+                status.message());
+    }
+
+    public Optional<RefreshStatus> findRefresh(long householdId) {
+        return jdbc.query("""
+                SELECT refreshed_at, forecast_source, forecast_model, message
+                FROM recommendation_refresh WHERE household_id = ?
+                """, (rs, rowNum) -> new RefreshStatus(instant(rs, "refreshed_at"),
+                        rs.getString("forecast_source"), rs.getString("forecast_model"),
+                        rs.getString("message")), householdId)
+                .stream().findFirst();
     }
 
     /** True if the resident already accepted or dismissed a suggestion for this run. */
