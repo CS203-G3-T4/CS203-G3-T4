@@ -23,7 +23,7 @@ public class SecurityConfiguration {
                                             ForecastAdminAuthentication forecastAdminAuthentication)
             throws Exception {
         http.authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/", "/login", "/api/v1/csrf",
+                        .requestMatchers("/", "/index.html", "/login", "/api/v1/csrf",
                                 "/css/**", "/js/**", "/images/**", "/favicon.ico")
                         .permitAll()
                         .requestMatchers("/actuator/health", "/actuator/health/**",

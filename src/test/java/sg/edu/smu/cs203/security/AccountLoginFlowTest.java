@@ -73,6 +73,15 @@ class AccountLoginFlowTest {
     }
 
     @Test
+    void loginPageFileIsPublicBecauseTheRootUrlForwardsToIt() throws Exception {
+        // Spring Boot serves "/" by forwarding to /index.html, and Spring Security checks that
+        // forward. MockMvc never performs the forward, so get("/") alone cannot catch this:
+        // without /index.html in the allow list, browsers loop between "/" and "/".
+        mvc.perform(get("/index.html"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void logoutEndsTheSessionAndReturnsToLoginPage() throws Exception {
         MvcResult login = mvc.perform(post("/login")
                         .param("username", "resident")
