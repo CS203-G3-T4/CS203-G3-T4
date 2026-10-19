@@ -26,11 +26,14 @@ public class FeedHealthService {
 
     private final IngestionRunRepository runs;
     private final FeedIncidentRepository incidents;
+    private final PriceGapRepository gaps;
     private final Clock clock;
 
-    public FeedHealthService(IngestionRunRepository runs, FeedIncidentRepository incidents, Clock clock) {
+    public FeedHealthService(IngestionRunRepository runs, FeedIncidentRepository incidents, PriceGapRepository gaps,
+            Clock clock) {
         this.runs = runs;
         this.incidents = incidents;
+        this.gaps = gaps;
         this.clock = clock;
     }
 
@@ -71,6 +74,7 @@ public class FeedHealthService {
                 runs.countFallbacks(monthStart, now),
                 openIncident,
                 recent,
+                gaps.findLatest().map(FeedHealthService::view).orElse(null),
                 now);
     }
 
@@ -98,6 +102,11 @@ public class FeedHealthService {
         return new FeedHealthResponse.Incident(incident.startedAt(), incident.endedAt(),
                 Math.max(0, Duration.between(incident.startedAt(), end).toSeconds()),
                 incident.reason(), incident.failedPolls(), incident.open());
+    }
+
+    private static FeedHealthResponse.PriceGaps view(PriceGapCheck check) {
+        return new FeedHealthResponse.PriceGaps(check.checkedAt(), check.windowStart(), check.windowEnd(),
+                check.missingIntervals().size(), check.ranges());
     }
 
     private static String reason(IngestionRun run) {
