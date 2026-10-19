@@ -79,7 +79,8 @@
       const message = document.createElement('div');
       message.className = 'banner warn';
       message.textContent = 'Hot day expected: the forecast high reaches ' +
-        Number(data.heatThresholdC).toFixed(0) + '°C or above.';
+        Number(data.heatThresholdC).toFixed(0) +
+        '°C or above. Evening prices may rise, so consider running heavy appliances earlier or later.';
       hint.appendChild(message);
     }
   }
