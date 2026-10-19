@@ -71,6 +71,45 @@ class MarketIngestionServiceTest {
         verifyNoInteractions(prices);
     }
 
+    @Test
+    void publishesEverySavedPollOutcomeForFeedHealth() {
+        UsepClient client = mock(UsepClient.class);
+        IngestionRunRepository runs = mock(IngestionRunRepository.class);
+        var events = mock(org.springframework.context.ApplicationEventPublisher.class);
+        when(client.fetch()).thenThrow(new IllegalStateException("feed is down"))
+                .thenReturn(feedAt(NOW.minusSeconds(240)));
+        var service = new MarketIngestionService(client, new PriceNormalizer(), mock(MarketPriceRepository.class), runs,
+                mock(MarketObservationRepository.class), Clock.fixed(NOW, ZoneOffset.UTC), Duration.ofMinutes(40), events);
+
+        service.poll();
+        service.poll();
+
+        ArgumentCaptor<IngestionRun> saved = ArgumentCaptor.forClass(IngestionRun.class);
+        verify(runs, org.mockito.Mockito.times(2)).save(saved.capture());
+        ArgumentCaptor<IngestionRunRecorded> published = ArgumentCaptor.forClass(IngestionRunRecorded.class);
+        verify(events, org.mockito.Mockito.times(2)).publishEvent(published.capture());
+        assertThat(published.getAllValues()).extracting(IngestionRunRecorded::run)
+                .containsExactlyElementsOf(saved.getAllValues());
+        assertThat(published.getAllValues()).extracting(event -> event.run().status())
+                .containsExactly(IngestionStatus.FAILURE, IngestionStatus.SUCCESS);
+    }
+
+    @Test
+    void feedHealthListenerFailureDoesNotBreakIngestion() {
+        UsepClient client = mock(UsepClient.class);
+        IngestionRunRepository runs = mock(IngestionRunRepository.class);
+        var events = mock(org.springframework.context.ApplicationEventPublisher.class);
+        when(client.fetch()).thenThrow(new IllegalStateException("feed is down"));
+        org.mockito.Mockito.doThrow(new IllegalStateException("incident table missing"))
+                .when(events).publishEvent(any(IngestionRunRecorded.class));
+
+        new MarketIngestionService(client, new PriceNormalizer(), mock(MarketPriceRepository.class), runs,
+                mock(MarketObservationRepository.class), Clock.fixed(NOW, ZoneOffset.UTC), Duration.ofMinutes(40), events)
+                .poll();
+
+        verify(runs).save(any(IngestionRun.class));
+    }
+
     private MarketIngestionService service(UsepClient client, MarketPriceRepository prices,
             IngestionRunRepository runs) {
         return new MarketIngestionService(client, new PriceNormalizer(), prices, runs, mock(MarketObservationRepository.class),

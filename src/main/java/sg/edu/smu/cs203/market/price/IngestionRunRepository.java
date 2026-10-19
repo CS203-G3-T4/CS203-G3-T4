@@ -1,6 +1,7 @@
 package sg.edu.smu.cs203.market.price;
 
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,6 +28,35 @@ public class IngestionRunRepository {
                 run.status().name(),
                 run.sourceUpdatedAt() == null ? null : Timestamp.from(run.sourceUpdatedAt()),
                 run.errorMessage());
+    }
+
+    public Optional<Instant> findLastSuccessAt() {
+        Timestamp at = jdbc.queryForObject(
+                "SELECT max(finished_at) FROM ingestion_run WHERE status = 'SUCCESS'", Timestamp.class);
+        return Optional.ofNullable(at).map(Timestamp::toInstant);
+    }
+
+    public Optional<Instant> findFirstStartedAt() {
+        Timestamp at = jdbc.queryForObject("SELECT min(started_at) FROM ingestion_run", Timestamp.class);
+        return Optional.ofNullable(at).map(Timestamp::toInstant);
+    }
+
+    /** Polls since the most recent SUCCESS (all polls if none succeeded). Read from the table so restarts don't reset it. */
+    public int countConsecutiveFailures() {
+        Integer count = jdbc.queryForObject("""
+                SELECT count(*) FROM ingestion_run
+                WHERE id > COALESCE((SELECT max(id) FROM ingestion_run WHERE status = 'SUCCESS'), 0)
+                """, Integer.class);
+        return count == null ? 0 : count;
+    }
+
+    /** Polls that did not return a fresh price (FAILURE or STALE_SOURCE) started in [from, to). */
+    public int countFallbacks(Instant from, Instant to) {
+        Integer count = jdbc.queryForObject("""
+                SELECT count(*) FROM ingestion_run
+                WHERE status <> 'SUCCESS' AND started_at >= ? AND started_at < ?
+                """, Integer.class, Timestamp.from(from), Timestamp.from(to));
+        return count == null ? 0 : count;
     }
 
     public Optional<IngestionRun> findLatest() {
