@@ -45,6 +45,11 @@ runs those seeds on a fresh database; an existing database that already applied
 V5/V7 retains its old seed names, and editing applied migrations changes their
 checksums. Use a fresh disposable local database to try the renamed seed data.
 
+## Deploy
+
+Production runs on Railway with the `prod` profile, which requires `DB_URL`,
+`DB_USER` and `DB_PASSWORD`. See [docs/deployment.md](docs/deployment.md).
+
 ## Run an already restored team dataset
 
 Copy `.env.team-demo.example` to `.env.team-demo`, set `DB_URL` to the restored
