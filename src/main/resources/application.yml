@@ -8,12 +8,6 @@ spring:
   flyway:
     enabled: true
 
-# CSDT4-74: the NEMS price feed URL. The older USEP_FEED_URL variable still works; set
-# wattly.nems.base-url (env WATTLY_NEMS_BASE_URL) to override it, e.g. to point at a fake NEMS in tests.
-wattly:
-  nems:
-    base-url: ${USEP_FEED_URL:https://nems.sn.sg/api/status.json}
-
 market:
   feed:
     url: ${wattly.nems.base-url}
@@ -27,6 +21,11 @@ market:
   gaps:
     cron: ${PRICE_GAP_CRON:0 15 0 * * *}
     days: ${PRICE_GAP_DAYS:7}
+
+# CSDT4-74: WATTLY_NEMS_BASE_URL overrides the NEMS URL; the older USEP_FEED_URL remains supported.
+wattly:
+  nems:
+    base-url: ${WATTLY_NEMS_BASE_URL:${USEP_FEED_URL:https://nems.sn.sg/api/status.json}}
 
 management:
   endpoints:

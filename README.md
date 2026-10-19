@@ -20,7 +20,7 @@ docker compose up -d postgres
 
 The default PostgreSQL connection is `jdbc:postgresql://localhost:55432/energy_market` with local development credentials `energy_market` / `energy_market`. Override it with `DB_URL`, `DB_USER`, and `DB_PASSWORD` for another database. The container port can be changed with `POSTGRES_PORT`.
 
-The application applies the Flyway migration automatically. The source URL can be overridden with `wattly.nems.base-url` (env `WATTLY_NEMS_BASE_URL`); the older `USEP_FEED_URL` still works. Set `USEP_POLLING_ENABLED=false` to disable the startup and scheduled polls, such as when running against a prepared test database.
+The application applies the Flyway migration automatically. The NEMS source URL uses the `wattly.nems.base-url` property, which can be overridden with `WATTLY_NEMS_BASE_URL`; the existing `USEP_FEED_URL` environment variable remains supported as a fallback. Set `USEP_POLLING_ENABLED=false` to disable the startup and scheduled polls, such as when running against a prepared test database.
 
 For local frontend testing, start with the opt-in demo profile:
 
