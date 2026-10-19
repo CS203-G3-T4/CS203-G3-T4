@@ -79,6 +79,8 @@ the existing schema and initialize new databases.
 
 `/latest` returns HTTP 503 with `freshness: UNAVAILABLE` if no price has ever been stored. Once a price has been stored, a feed outage does not erase it; the endpoint returns that value with `freshness: STALE`. A successful poll can still be classified as `STALE_SOURCE` if the upstream API responds with an old timestamp. The freshness limit defaults to 40 minutes.
 
+The admin **USEP price feed** panel (CSDT4-48) is `/admin-feed.html` (admin only). It shows the same figures as `GET /api/v1/admin/feed-status` and refreshes every minute, with no placeholder values: before the first poll it shows dashes and "No polls yet".
+
 Feed health (CSDT4-25) definitions:
 
 - **Incident** (`feed_incident`): opens on the first `FAILURE` or `STALE_SOURCE` poll, with that poll's error as the reason, counts each further failed poll, and closes on the next `SUCCESS`. At most one is open.
