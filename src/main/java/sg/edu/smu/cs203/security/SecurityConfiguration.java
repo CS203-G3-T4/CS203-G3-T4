@@ -24,6 +24,13 @@ public class SecurityConfiguration {
                         .requestMatchers("/actuator/health", "/actuator/health/**",
                                 "/swagger-ui/**", "/v3/api-docs/**")
                         .permitAll()
+                        .requestMatchers("/admin-forecast.html",
+                                "/api/v1/admin/forecast-accuracy",
+                                "/api/v1/admin/forecast-baseline-validation",
+                                "/api/v1/admin/forecast-demand",
+                                "/api/v1/admin/forecast-training-attempts",
+                                "/api/v1/admin/forecast-savings-replay")
+                        .permitAll()
                         .requestMatchers("/api/v1/admin/**", "/api/v1/demo/**")
                         .hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/v1/households")
