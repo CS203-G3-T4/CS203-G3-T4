@@ -67,10 +67,18 @@ the existing schema and initialize new databases.
 - `GET /api/v1/market-prices/latest` returns the latest stored price and `LIVE` or `STALE` freshness.
 - `GET /api/v1/market-prices?from=2026-09-23T00:00:00Z&to=2026-09-24T00:00:00Z` returns historical intervals. The range is at most 31 days.
 - `GET /api/v1/market-prices/feed-status` reports the most recent poll result (`SUCCESS`, `STALE_SOURCE`, `FAILURE`, or `NEVER_POLLED`).
+- `GET /api/v1/admin/feed-status` (admin) reports NEMS feed health: last poll, last successful sync, consecutive failed polls, uptime % and fallback count for the current month, the open incident and the 10 most recent incidents.
 - `GET /actuator/health` reports application and database health.
 - `/swagger-ui.html` displays the API documentation; `/v3/api-docs` returns the OpenAPI document.
 
 `/latest` returns HTTP 503 with `freshness: UNAVAILABLE` if no price has ever been stored. Once a price has been stored, a feed outage does not erase it; the endpoint returns that value with `freshness: STALE`. A successful poll can still be classified as `STALE_SOURCE` if the upstream API responds with an old timestamp. The freshness limit defaults to 40 minutes.
+
+Feed health (CSDT4-25) definitions:
+
+- **Incident** (`feed_incident`): opens on the first `FAILURE` or `STALE_SOURCE` poll, with that poll's error as the reason, counts each further failed poll, and closes on the next `SUCCESS`. At most one is open.
+- **Consecutive failed polls** and **last successful sync** are read from `ingestion_run`, so a restart does not reset them.
+- **Uptime this month** is 100 × (1 − incident time ÷ measured time). Time is measured from the later of the month start (Asia/Singapore) and the first recorded poll. Time while the app was stopped during an open incident counts as down.
+- **Fallbacks this month** counts polls that did not return a fresh price, so residents were shown the last stored price marked stale.
 
 ## Tests
 
