@@ -11,7 +11,8 @@ public class UsepClient {
     private final String url;
     private final FeedOutageSwitch outage;
 
-    public UsepClient(RestClient usepRestClient, @Value("${market.feed.url}") String url, FeedOutageSwitch outage) {
+    public UsepClient(RestClient usepRestClient, @Value("${wattly.nems.base-url}") String url,
+            FeedOutageSwitch outage) {
         this.restClient = usepRestClient;
         this.url = url;
         this.outage = outage;

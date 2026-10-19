@@ -43,7 +43,7 @@ public class MarketIngestionService {
         this.events = events;
     }
 
-    public void poll() {
+    public synchronized void poll() {
         Instant startedAt = clock.instant();
         var previousStatus = runs.findLatest().map(IngestionRun::status);
         IngestionRun run;

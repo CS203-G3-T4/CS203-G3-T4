@@ -10,13 +10,17 @@ spring:
 
 market:
   feed:
-    url: ${USEP_FEED_URL:https://nems.sn.sg/api/status.json}
+    url: ${wattly.nems.base-url}
     enabled: ${USEP_POLLING_ENABLED:true}
     # Retry regularly: NEMS can publish a new half-hour price after the :02/:32 poll.
     cron: ${USEP_POLL_CRON:0 */5 * * * *}
     connect-timeout: 3s
     read-timeout: 5s
     stale-after: 40m
+
+wattly:
+  nems:
+    base-url: ${WATTLY_NEMS_BASE_URL:${USEP_FEED_URL:https://nems.sn.sg/api/status.json}}
 
 management:
   endpoints:
