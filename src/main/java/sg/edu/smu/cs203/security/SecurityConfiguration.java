@@ -18,7 +18,7 @@ public class SecurityConfiguration {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/login.html", "/login", "/api/v1/csrf",
+                        .requestMatchers("/", "/login", "/api/v1/csrf",
                                 "/css/**", "/js/**", "/images/**", "/favicon.ico")
                         .permitAll()
                         .requestMatchers("/actuator/health", "/actuator/health/**",
@@ -37,11 +37,12 @@ public class SecurityConfiguration {
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                         .csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler()))
                 .formLogin(form -> form
-                        .loginPage("/login.html")
+                        .loginPage("/")
                         .loginProcessingUrl("/login")
-                        .failureUrl("/login.html?error")
+                        .failureUrl("/?error")
                         .successHandler(new AccountLoginSuccessHandler())
-                        .permitAll());
+                        .permitAll())
+                .logout(logout -> logout.logoutSuccessUrl("/?logout"));
         return http.build();
     }
 

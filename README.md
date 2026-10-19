@@ -22,6 +22,29 @@ The default PostgreSQL connection is `jdbc:postgresql://localhost:55432/energy_m
 
 The application applies the Flyway migration automatically. The source URL can be overridden with `USEP_FEED_URL`. Set `USEP_POLLING_ENABLED=false` to disable the startup and scheduled polls, such as when running against a prepared test database.
 
+For local frontend testing, start with the opt-in demo profile:
+
+```sh
+docker compose up -d postgres
+SPRING_PROFILES_ACTIVE=demo ./mvnw spring-boot:run
+```
+
+Open `http://localhost:8080/` to sign in. The root URL serves the static
+`index.html` login page; its form submits credentials to the `/login` processing
+endpoint.
+
+It creates a resident account (`resident` / `resident-demo`) linked to Home and
+an admin account (`admin` / `admin-demo`). Passwords are stored as
+BCrypt hashes. The demo accounts are created only when missing, and the demo
+profile should not be enabled for production deployments.
+
+Sign in as the resident to view only Home. Sign in as the admin to manage the
+seeded property portfolio: Home, Office 1, Office 2, Office 3, and Rented Condo.
+The labels are defined directly in the V5 and V7 seed migrations. Flyway only
+runs those seeds on a fresh database; an existing database that already applied
+V5/V7 retains its old seed names, and editing applied migrations changes their
+checksums. Use a fresh disposable local database to try the renamed seed data.
+
 ## Run an already restored team dataset
 
 Copy `.env.team-demo.example` to `.env.team-demo`, set `DB_URL` to the restored
@@ -162,7 +185,7 @@ Start with the [F3 runbook](docs/forecasting/runbook.md),
 The current evidence is exploratory: long-history acquisition and verification of
 NEMS settlement-period mapping remain blocked. No AI improvement is claimed, and
 unverified forecasts are not actionable. The admin accuracy endpoint requires an
-ADMIN servlet role. The shared `/login.html` form authenticates accounts from
+ADMIN servlet role. The shared root login page authenticates accounts from
 the `user_account` table without a role selector. Residents land on their linked
 household dashboard; admins land on household administration. Route-specific
 admin and household access rules are tracked in CSDT4-64 and CSDT4-65.
