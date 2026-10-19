@@ -4,8 +4,8 @@ import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,20 +14,24 @@ import org.springframework.stereotype.Service;
 
 import sg.edu.smu.cs203.household.load.LoadArchetype;
 import sg.edu.smu.cs203.household.load.LoadArchetypeRepository;
+import sg.edu.smu.cs203.security.AccountRole;
+import sg.edu.smu.cs203.security.UserAccount;
 
 @Service
 public class HouseholdService {
 
     private final HouseholdRepository households;
     private final LoadArchetypeRepository archetypes;
+    private final HouseholdOwnershipService ownership;
     private final Clock clock;
     // Lets F4 recompute suggestions when a household's plan changes (CSDT4-37). No-op until set.
     private ApplicationEventPublisher events = event -> { };
 
     public HouseholdService(HouseholdRepository households, LoadArchetypeRepository archetypes,
-                            Clock clock) {
+                            HouseholdOwnershipService ownership, Clock clock) {
         this.households = households;
         this.archetypes = archetypes;
+        this.ownership = ownership;
         this.clock = clock;
     }
 
@@ -38,6 +42,17 @@ public class HouseholdService {
 
     public List<HouseholdResponse> list(boolean includeSimulated) {
         List<HouseholdResponse> result = new ArrayList<>();
+        UserAccount account = ownership.currentAccount();
+        if (account.role() == AccountRole.RESIDENT) {
+            if (account.householdId() == null || account.simulatedHousehold()) {
+                return result;
+            }
+            households.findById(account.householdId())
+                    .filter(household -> !household.simulated())
+                    .map(HouseholdResponse::from)
+                    .ifPresent(result::add);
+            return result;
+        }
         for (Household household : households.findAll(includeSimulated)) {
             result.add(HouseholdResponse.from(household));
         }
@@ -45,7 +60,9 @@ public class HouseholdService {
     }
 
     public HouseholdResponse get(long householdId) {
-        return HouseholdResponse.from(find(householdId));
+        Household household = find(householdId);
+        ownership.requireAccess(householdId);
+        return HouseholdResponse.from(household);
     }
 
     public HouseholdResponse create(HouseholdRequest request) {
@@ -55,12 +72,15 @@ public class HouseholdService {
                 request.occupants(), request.planType(), fixedRateFor(request),
                 archetypeIdFor(request.dwellingType()), false, now, now);
         long id = households.insert(toSave);
-        events.publishEvent(new HouseholdChanged(id));
-        return get(id);
+        Household created = new Household(id, toSave.name(), toSave.dwellingType(),
+                toSave.occupants(), toSave.planType(), toSave.fixedRateCentsPerKwh(),
+                toSave.archetypeId(), toSave.simulated(), toSave.createdAt(), toSave.updatedAt());
+        return HouseholdResponse.from(created);
     }
 
     public HouseholdResponse update(long householdId, HouseholdRequest request) {
         Household existing = find(householdId);
+        ownership.requireAccess(householdId);
         rejectSimulated(existing);
         checkPlanRules(request);
         Household updated = new Household(existing.id(), request.name().trim(),
@@ -80,6 +100,7 @@ public class HouseholdService {
      */
     public void delete(long householdId) {
         Household existing = find(householdId);
+        ownership.requireAccess(householdId);
         if (existing.simulated()) {
             throw new HouseholdNotDeletableException(householdId);
         }
@@ -88,16 +109,19 @@ public class HouseholdService {
         }
     }
 
-    /** Used by other F2 services (and later F4) to reject requests for unknown households. */
+    /** Used by other services to reject unknown or unauthorized household IDs. */
     public void requireExists(long householdId) {
         if (!households.exists(householdId)) {
             throw new HouseholdNotFoundException(householdId);
         }
+        ownership.requireAccess(householdId);
     }
 
     /** Simulated households are seeded admin data and must remain unchanged. */
     public void requireWritable(long householdId) {
-        rejectSimulated(find(householdId));
+        Household household = find(householdId);
+        ownership.requireAccess(householdId);
+        rejectSimulated(household);
     }
 
     private static void rejectSimulated(Household household) {

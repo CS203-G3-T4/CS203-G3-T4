@@ -34,15 +34,17 @@ public class ForecastJob {
     private final ForecastService service;
     private final ObjectMapper mapper;
     private final Clock clock;
+    private final ForecastOperationsRepository operations;
     // ponytail: one coalescing worker per process; DB uniqueness handles retries across processes.
     private final ExecutorService worker=Executors.newSingleThreadExecutor(Thread.ofPlatform().name("forecast-worker").daemon().factory());
     private final AtomicBoolean running=new AtomicBoolean();
     private final AtomicBoolean pending=new AtomicBoolean();
 
     public ForecastJob(MarketHistoryRepository history,ForecastRepository repository,BaselineForecastService baselines,
-            CurrentAssessmentService assessments,PythonForecastClient python,ForecastService service,ObjectMapper mapper,Clock clock) {
+            CurrentAssessmentService assessments,PythonForecastClient python,ForecastService service,ObjectMapper mapper,Clock clock,
+            ForecastOperationsRepository operations) {
         this.history=history; this.repository=repository; this.baselines=baselines; this.assessments=assessments;
-        this.python=python; this.service=service; this.mapper=mapper; this.clock=clock;
+        this.python=python; this.service=service; this.mapper=mapper; this.clock=clock; this.operations=operations;
     }
     @EventListener
     public void onObservation(MarketObservationSaved ignored) {
@@ -66,8 +68,10 @@ public class ForecastJob {
     public synchronized void runOnce() {
         Instant asOf=clock.instant();
         List<MarketRevision> rows=history.asOf(asOf);
-        String snapshot=mapper.writeValueAsString(rows);
-        String input=hash(snapshot);
+        var demand=operations.demand(asOf);
+        String snapshot=demand.isEmpty() ? mapper.writeValueAsString(rows) : mapper.writeValueAsString(Map.of("priceHistory",rows,"expectedDemand",demand));
+        var independentRanking=operations.ranking(asOf,service.mode());
+        String input=hash(snapshot+(independentRanking.isEmpty()?"":"|validated-baselines:"+mapper.writeValueAsString(independentRanking)));
         String requestId=hash(service.mode()+"|"+BaselineForecastService.floor(asOf)+"|"+input);
         boolean stale=service.stale(rows,asOf);
         boolean verified=service.mappingVerified(rows);
@@ -76,13 +80,14 @@ public class ForecastJob {
         if (stale) flags.add("STALE_INPUT");
         Map<String,List<BigDecimal>> predictions=stale ? new LinkedHashMap<>() : new LinkedHashMap<>(baselines.calculate(rows,asOf));
         List<String> savedRanking=repository.baselineRanking(asOf,service.mode());
+        if (!independentRanking.isEmpty()) savedRanking=independentRanking;
         List<String> ranking=savedRanking;
         String reason=stale ? "STALE_INPUT" : !verified ? "PERIOD_MAPPING_UNVERIFIED" : null;
         JsonNode model=null;
         List<String> modelFlags=List.of();
         if (!stale && verified) {
             try {
-                JsonNode response=python.forecast(requestId,asOf,rows);
+                JsonNode response=demand.isEmpty() ? python.forecast(requestId,asOf,rows) : python.forecast(requestId,asOf,rows,demand);
                 assessments.requireModelConfig(response.path("manifest").path("spikeConfig"));
                 List<BigDecimal> ai=new ArrayList<>();
                 for (JsonNode p : response.path("points")) ai.add(p.path("predictedUsep").decimalValue());

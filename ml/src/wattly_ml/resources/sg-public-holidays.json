@@ -1,0 +1,68 @@
+{
+  "version": "MOM_SG_2025_2027_20261018_V1",
+  "asOf": "2026-10-18",
+  "years": {
+    "2025": {
+      "publishedAt": "2025-04-15T23:59:59+08:00",
+      "dates": [
+        "2025-01-01",
+        "2025-01-29",
+        "2025-01-30",
+        "2025-03-31",
+        "2025-04-18",
+        "2025-05-01",
+        "2025-05-03",
+        "2025-05-12",
+        "2025-06-07",
+        "2025-08-09",
+        "2025-10-20",
+        "2025-12-25"
+      ],
+      "sourceUrl": "https://www.mom.gov.sg/newsroom/press-releases/2025/0415-public-holiday-on-polling-day_3-may-2025"
+    },
+    "2026": {
+      "publishedAt": "2025-06-16T23:59:59+08:00",
+      "dates": [
+        "2026-01-01",
+        "2026-02-17",
+        "2026-02-18",
+        "2026-03-21",
+        "2026-04-03",
+        "2026-05-01",
+        "2026-05-27",
+        "2026-05-31",
+        "2026-06-01",
+        "2026-08-09",
+        "2026-08-10",
+        "2026-11-08",
+        "2026-11-09",
+        "2026-12-25"
+      ],
+      "sourceUrl": "https://www.mom.gov.sg/newsroom/press-releases/2025/0616-public-holidays-for-2026"
+    },
+    "2027": {
+      "publishedAt": "2026-06-18T23:59:59+08:00",
+      "dates": [
+        "2027-01-01",
+        "2027-02-06",
+        "2027-02-07",
+        "2027-02-08",
+        "2027-03-10",
+        "2027-03-26",
+        "2027-05-01",
+        "2027-05-17",
+        "2027-05-20",
+        "2027-08-09",
+        "2027-10-28",
+        "2027-12-25"
+      ],
+      "sourceUrl": "https://www.mom.gov.sg/newsroom/press-releases/2026/0618-public-holidays-for-2027"
+    }
+  },
+  "notes": [
+    "Year-level publication is conservatively end of announcement day; this is documented publication, not a fabricated observed receipt time.",
+    "2025 publication is April 15, not August 5 2024, because this version includes the later Polling Day announcement. Origins before April 16 2025 must not treat this full year version as known.",
+    "2026 March 21 and May 27 were explicitly tentative in the June16 2025 release; they are present as announced planned dates, not retroactively labelled confirmed.",
+    "Monday substitutes included exactly as MOM releases specify; household-specific employer substitutions are outside this calendar."
+  ]
+}

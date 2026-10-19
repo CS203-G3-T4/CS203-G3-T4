@@ -52,6 +52,9 @@ a:hover { color: #1d5ba8; }
 .nav .nav-soon { color: var(--muted); cursor: default; }
 .nav .nav-soon small { font-size: 11px; }
 .sidebar .spacer { flex: 1; }
+.logout-form { width: 100%; }
+.logout-button { width: 100%; text-align: center; }
+.logout-status { width: 100%; margin: -16px 0 0; color: var(--critical); font-size: 12px; }
 /* Sidebar household card: click it to switch household */
 .household-picker { position: relative; }
 .household-card {

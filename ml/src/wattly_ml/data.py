@@ -15,6 +15,32 @@ from datetime import datetime, timezone
 from .timebase import DAY, SGT, STEP, floor, instant
 
 
+class DatasetRows(list):
+    """Price revisions plus independently sourced, timestamped demand forecasts."""
+    def __init__(self, rows=(), demand_forecasts=()):
+        super().__init__(rows)
+        self.demand_forecasts = list(demand_forecasts)
+
+
+class KnownPrices(dict):
+    def __init__(self, prices=(), demand_forecasts=()):
+        super().__init__(prices)
+        self.demand_forecasts = list(demand_forecasts)
+
+
+def validate_demand(row):
+    row = dict(row)
+    target, published, available = (instant(row[k]) for k in ('targetPeriod', 'publishedAt', 'availableAt'))
+    if target != floor(target) or published > available or not row.get('source'):
+        raise ValueError('Invalid expected-demand provenance')
+    row['demandMw'] = finite(row['demandMw'])
+    if row['demandMw'] < 0:
+        raise ValueError('Negative expected demand')
+    for key, value in [('targetPeriod', target), ('publishedAt', published), ('availableAt', available)]:
+        row[key] = value.isoformat()
+    return row
+
+
 def digest(path: Path) -> str:
     with path.open("rb") as stream:
         return hashlib.file_digest(stream, "sha256").hexdigest()
@@ -207,7 +233,7 @@ def quality(rows, errors=()):
             "publicationVintages": bool(rows) and all(r.get("availableAt") for r in rows)}
 
 
-def prepare(snapshots: list[Path], destination: Path, offset_minutes=0):
+def prepare(snapshots: list[Path], destination: Path, offset_minutes=0, demand_file=None):
     if destination.exists():
         raise ValueError("Dataset directory already exists; datasets are immutable")
     rows, errors, manifests = [], [], []
@@ -232,6 +258,12 @@ def prepare(snapshots: list[Path], destination: Path, offset_minutes=0):
                 out.write(json.dumps(row, allow_nan=False) + "\n")
         manifest = {"schemaVersion": 1, "sha256": digest(data), "sources": manifests,
                     "provisionalOffsetMinutes": offset_minutes, "quality": quality(rows, errors)}
+        if demand_file is not None:
+            forecasts = [validate_demand(json.loads(line)) for line in Path(demand_file).read_text().splitlines()]
+            output = work/'demand-forecasts.jsonl'
+            output.write_text(''.join(json.dumps(row, allow_nan=False)+'\n' for row in forecasts))
+            manifest['expectedDemand'] = {'file': output.name, 'sha256': digest(output), 'records': len(forecasts)}
+            manifest['featureInputsDigest'] = hashlib.sha256((manifest['sha256']+'|'+digest(output)).encode()).hexdigest()
         write_json(work / "manifest.json", manifest)
         for file in work.iterdir():
             file.chmod(0o444)
@@ -247,7 +279,15 @@ def load_dataset(directory: Path):
     if digest(directory / "prices.jsonl") != manifest["sha256"]:
         raise ValueError("Dataset checksum mismatch")
     rows = [validate(json.loads(line)) for line in (directory / "prices.jsonl").read_text().splitlines()]
-    return rows, manifest
+    demands = []
+    if 'expectedDemand' in manifest:
+        path = directory/'demand-forecasts.jsonl'
+        if manifest['expectedDemand']['file'] != path.name or digest(path) != manifest['expectedDemand']['sha256']:
+            raise ValueError('Demand dataset checksum mismatch')
+        if manifest.get('featureInputsDigest') != hashlib.sha256((manifest['sha256']+'|'+digest(path)).encode()).hexdigest():
+            raise ValueError('Incompatible combined feature dataset identity')
+        demands = [validate_demand(json.loads(line)) for line in path.read_text().splitlines()]
+    return DatasetRows(rows, demands), manifest
 
 
 def as_of(rows, origin, retrospective=False):
@@ -268,7 +308,9 @@ def as_of(rows, origin, retrospective=False):
             raise ValueError("Conflicting revisions with identical publication/availability")
         if prior is None or rank > prior[0]:
             selected[period] = (rank, row)
-    return {p: r for p, (_, r) in selected.items()}
+    demands = [d for d in getattr(rows, 'demand_forecasts', ())
+               if max(instant(d['publishedAt']), instant(d['availableAt'])) <= origin]
+    return KnownPrices({p: r for p, (_, r) in selected.items()}, demands)
 
 
 def truth(rows, policy="FINAL", cutoff=None, retrospective=False):

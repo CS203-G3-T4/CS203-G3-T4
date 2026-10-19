@@ -22,6 +22,29 @@ The default PostgreSQL connection is `jdbc:postgresql://localhost:55432/energy_m
 
 The application applies the Flyway migration automatically. The source URL can be overridden with `USEP_FEED_URL`. Set `USEP_POLLING_ENABLED=false` to disable the startup and scheduled polls, such as when running against a prepared test database.
 
+For local frontend testing, start with the opt-in demo profile:
+
+```sh
+docker compose up -d postgres
+SPRING_PROFILES_ACTIVE=demo ./mvnw spring-boot:run
+```
+
+Open `http://localhost:8080/` to sign in. The root URL serves the static
+`index.html` login page; its form submits credentials to the `/login` processing
+endpoint.
+
+It creates a resident account (`resident` / `resident-demo`) linked to Home and
+an admin account (`admin` / `admin-demo`). Passwords are stored as
+BCrypt hashes. The demo accounts are created only when missing, and the demo
+profile should not be enabled for production deployments.
+
+Sign in as the resident to view only Home. Sign in as the admin to manage the
+seeded property portfolio: Home, Office 1, Office 2, Office 3, and Rented Condo.
+The labels are defined directly in the V5 and V7 seed migrations. Flyway only
+runs those seeds on a fresh database; an existing database that already applied
+V5/V7 retains its old seed names, and editing applied migrations changes their
+checksums. Use a fresh disposable local database to try the renamed seed data.
+
 ## Deploy
 
 Production runs on Railway with the `prod` profile, which requires `DB_URL`,
@@ -164,10 +187,44 @@ polling and F2 pages remain in place. The standalone collector is unchanged.
 Start with the [F3 runbook](docs/forecasting/runbook.md),
 [contracts](docs/forecasting/contracts.md), and
 [measured results/remaining acceptance work](docs/forecasting/results.md).
-The current evidence is exploratory: long-history acquisition and verification of
-NEMS settlement-period mapping remain blocked. No AI improvement is claimed, and
-unverified forecasts are not actionable. The admin accuracy endpoint requires an
-ADMIN servlet role; this repository has no login integration yet.
+The [18 October acceptance report](docs/forecasting/acceptance-2026-10-18.md)
+contains the current evidence and remaining dependencies. Official EMC final-price
+history now covers June 2025–September 2026. The twelve-month model and 56-day
+unseen study are explicitly retrospective; they do not establish what final prices
+or future demand forecasts were available historically. Research artifacts remain
+unapproved. Live Java baselines continue when Python is absent or invalid.
+
+### Model runtime decision (CSDT4-34)
+
+| Option | Benefits | Costs and decision |
+| --- | --- | --- |
+| A. Train/run inside Java | One application runtime | Reimplementing the existing scikit-learn training/features changes behavior and adds maintenance. Rejected for this implementation. |
+| B. Separate Python inference service | Same fitted pipeline and feature code in training, evaluation and serving; pinned supported libraries | A second local process and bounded HTTP dependency. **Selected; preserves the existing architecture.** Java owns validation, persistence and baseline fallback. |
+| C. Python training, exported Java inference | One serving runtime and potentially lower request overhead | Requires an export runtime/dependency and verified parity for 24 HGB models, missing values, holidays and demand. No validated export exists here. Deferred; no parity/performance claim. |
+
+Spring callers keep `ForecastService` and saved forecast endpoints; browsers never
+call Python. Python binds to loopback, accepts bounded provenance-bearing schema2
+JSON, and loads only trusted immutable bundles with matching feature/calendar
+checksums and dependencies. Deploy Java21, PostgreSQL15+ and the dedicated pinned
+Python3.12 environment; keep model storage persistent and inference private. The
+local reproduction uses real Spring/FastAPI HTTP and Chromium, with native
+PostgreSQL16.15 and17.11 verified; the Compose container itself was not exercised. No
+cloud deployment or performance benchmark was performed. Python reloads an atomic
+approved pointer on readiness/forecast requests; failed reloads return503 and Java
+falls back. Promotion and rollback never alter a bundle in place.
+
+Resident `/forecast.html` shows saved forecasts and today's actuals. Protected
+`/admin-forecast.html` shows seven-day forecast/actual series and common-pair MAE.
+For local/demo use only, explicitly set `WATTLY_FORECAST_LOCAL_ADMIN_ENABLED=true`
+on Spring plus private `WATTLY_ADMIN_USER` and `WATTLY_ADMIN_PASSWORD`. Credentials
+alone do not enable it; there are no defaults. Keep demos on loopback. Production
+uses shared authentication with this fallback disabled; server-side ADMIN checks
+remain mandatory. See the auth-owner decision below.
+
+A configurable weekly user-systemd timer, audit/failure inspection, paired
+challenger validation, reload and rollback are documented in the
+[runbook](docs/forecasting/runbook.md). Installation is explicit; verification does
+not install a permanent timer pointing at the disposable test application.
 
 ## F4: recommendations
 
@@ -188,3 +245,9 @@ the projected total. `PUT` to the same path saves `monthlyBudgetSgd` and
 use the rate in Household Settings. Price-linked plans need a resident-entered planning
 rate before spending can be estimated. Amounts exclude taxes and fixed fees. These
 figures use F2's load model, not meter readings or a live retail bill.
+
+Forecasting review updates: [V15 database compatibility](docs/forecasting/migration-v15.md),
+[temporary local admin boundary](docs/forecasting/auth-owner-decision.md), and
+[verified research archives](docs/forecasting/artifacts.md). Check migration lineage
+before upgrading any persistent database; legacy forecast V12/V13 is not automatically
+rewritten or repaired.

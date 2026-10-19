@@ -1,0 +1,16 @@
+{
+  "source": "SYNTHETIC_PERSISTENCE_REGRESSION_ONLY",
+  "actualPageRequests": true,
+  "anonymousApiStatus": 403,
+  "anonymousPageStatus": 401,
+  "adminAuthorized": true,
+  "residentAvailable": true,
+  "residentMethod": "B2",
+  "residentForecastRows": 24,
+  "actualPeriods": 0,
+  "adminSeriesPairs": 3,
+  "adminCommonPairs": 1,
+  "horizonSelector": true,
+  "mobileOverflow": false,
+  "browserErrors": []
+}

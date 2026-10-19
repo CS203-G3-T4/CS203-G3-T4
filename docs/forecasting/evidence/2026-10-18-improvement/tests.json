@@ -1,0 +1,36 @@
+{
+  "python": {
+    "tests": 44,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "durationSeconds": 543.0,
+  "warnings": [
+    "One upstream Starlette/AnyIO deprecation warning"
+  ],
+  "wheelBuild": "PASS; wattly_ml/improvement.py present in the built wheel",
+  "independentRecalculation": "PASS; overall and per-horizon MAE, common pairs, canonical actuals and split purging",
+  "artifactReload": "PASS; 24 finite forecasts",
+  "earlyConfirmation": {
+    "exitCode": 2,
+    "expected": true,
+    "resultsDirectoryCreated": false,
+    "pendingUntil": "2026-11-02T00:00:00+08:00"
+  },
+  "futureBranchTests": "Synthetic regression covers frozen future evaluation without fitting and corrupt-artifact rejection; not project performance evidence",
+  "sourcePreservation": {
+    "previousModelHashesUnchanged": true,
+    "servingPointerChanged": false,
+    "liveDatabaseUsed": false,
+    "collectorModifiedOrRestarted": false
+  },
+  "notRepeated": [
+    "Java",
+    "frontend",
+    "PostgreSQL integration",
+    "browser"
+  ],
+  "reasonForNotRepeating": "Only offline Python research commands, tests and evidence changed; no Java, frontend, migrations, serving or runtime configuration changes",
+  "rawLogs": ".local/improvement-2026-10-18-v1"
+}

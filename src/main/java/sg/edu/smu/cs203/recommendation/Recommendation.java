@@ -61,6 +61,19 @@ public record Recommendation(
         return AVOID.equals(kind);
     }
 
+    /**
+     * When this suggestion stops being useful: its start (it then expires), or for a warning the
+     * earlier of the alternative start and the usual start it warns about. "Remind me later" must
+     * bring it back before this (CSDT4-40).
+     */
+    public Instant deadline() {
+        return deadline(isWarning(), suggestedStart, usualStart);
+    }
+
+    static Instant deadline(boolean warning, Instant suggestedStart, Instant usualStart) {
+        return warning && usualStart.isBefore(suggestedStart) ? usualStart : suggestedStart;
+    }
+
     /** True while "Remind me later" hides it. */
     public boolean snoozedAt(Instant now) {
         return snoozedUntil != null && snoozedUntil.isAfter(now);

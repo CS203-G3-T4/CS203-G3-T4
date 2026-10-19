@@ -11,6 +11,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import sg.edu.smu.cs203.household.HouseholdAccessDeniedException;
 import sg.edu.smu.cs203.household.HouseholdNotFoundException;
 import sg.edu.smu.cs203.household.ValidationFailedException;
 
@@ -23,6 +24,14 @@ public class RecommendationApiExceptionHandler {
         return problem(HttpStatus.NOT_FOUND, "Household not found", exception.getMessage());
     }
 
+    @ExceptionHandler(HouseholdAccessDeniedException.class)
+    public ProblemDetail householdAccessDenied(HouseholdAccessDeniedException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN,
+                exception.getMessage());
+        problem.setTitle("Access denied");
+        return problem;
+    }
+
     @ExceptionHandler(RecommendationNotFoundException.class)
     public ProblemDetail recommendationNotFound(RecommendationNotFoundException exception) {
         return problem(HttpStatus.NOT_FOUND, "Recommendation not found", exception.getMessage());
@@ -31,6 +40,11 @@ public class RecommendationApiExceptionHandler {
     @ExceptionHandler(RecommendationNotActiveException.class)
     public ProblemDetail notActive(RecommendationNotActiveException exception) {
         return problem(HttpStatus.CONFLICT, "Recommendation is not open", exception.getMessage());
+    }
+
+    @ExceptionHandler(DemoForecastNotInUseException.class)
+    public ProblemDetail demoForecastNotInUse(DemoForecastNotInUseException exception) {
+        return problem(HttpStatus.NOT_FOUND, "Demo forecast not in use", exception.getMessage());
     }
 
     @ExceptionHandler(RecommendationActionNotAllowedException.class)
