@@ -17,6 +17,7 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -51,8 +52,8 @@ public class ForecastAdminAuthentication extends OncePerRequestFilter {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         boolean anonymous = authentication instanceof AnonymousAuthenticationToken;
         boolean authenticated = authentication != null && authentication.isAuthenticated() && !anonymous;
-        if (authenticated || request.getUserPrincipal() != null && !anonymous) {
-            if (request.isUserInRole("ADMIN")) chain.doFilter(request,response);
+        if (authenticated) {
+            if (hasAdminRole(authentication)) chain.doFilter(request,response);
             else response.sendError(403);
             return;
         }
@@ -75,5 +76,11 @@ public class ForecastAdminAuthentication extends OncePerRequestFilter {
             @Override public String getRemoteUser() { return username; }
             @Override public boolean isUserInRole(String role) { return role.equals("ADMIN"); }
         },response);
+    }
+
+    private static boolean hasAdminRole(Authentication authentication) {
+        return authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(authority -> authority.equals("ROLE_ADMIN") || authority.equals("ADMIN"));
     }
 }

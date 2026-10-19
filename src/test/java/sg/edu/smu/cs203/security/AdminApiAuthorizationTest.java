@@ -51,6 +51,8 @@ class AdminApiAuthorizationTest {
     void forecastPageIsPublicButAdminForecastPageRequiresForecastAuthentication() throws Exception {
         mvc.perform(get("/forecast.html")).andExpect(status().isOk());
         mvc.perform(get("/admin-forecast.html")).andExpect(status().isUnauthorized());
+        mvc.perform(get("/admin-forecast.html").with(user("resident").roles("RESIDENT")))
+                .andExpect(status().isForbidden());
     }
 
     @Test
