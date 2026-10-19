@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>USEP price feed · Wattly admin</title><link rel="stylesheet" href="/css/wattly.css">
+<style>
+.feed-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:16px 0}
+.feed-tile{padding:16px}.feed-tile dt{font-size:13px;color:var(--muted)}.feed-tile dd{margin:6px 0 0;font-size:24px;font-weight:600}
+.feed-tile small{display:block;font-size:12.5px;font-weight:400;color:var(--muted);margin-top:4px}
+table{border-collapse:collapse;width:100%;margin:16px 0;font-size:14px}th,td{text-align:left;padding:8px;border-bottom:1px solid var(--gridline);vertical-align:top}
+caption{text-align:left;font-weight:600;margin-bottom:8px}h1,p{margin-bottom:12px}.table-wrap{overflow-x:auto}
+</style></head>
+<body><main style="max-width:1100px;margin:32px auto;padding:16px">
+<h1>USEP price feed</h1>
+<p>Health of the NEMS price feed. Uptime and fallbacks cover this calendar month in Singapore time. Refreshes every minute.</p>
+<p id="feed-status" role="status" aria-live="polite">Loading…</p>
+<div id="feed-banner" class="banner" hidden></div>
+<dl class="feed-tiles">
+  <div class="card feed-tile"><dt>Last successful sync</dt><dd id="feed-last-sync">—</dd></div>
+  <div class="card feed-tile"><dt>Consecutive failed polls</dt><dd id="feed-failures">—</dd></div>
+  <div class="card feed-tile"><dt>Uptime this month</dt><dd id="feed-uptime">—</dd></div>
+  <div class="card feed-tile"><dt>Fallbacks this month</dt><dd id="feed-fallbacks">—</dd></div>
+</dl>
+<div class="table-wrap"><table><caption>Recent incidents</caption>
+<thead><tr><th>Started (SGT)</th><th>Ended (SGT)</th><th>Duration</th><th>Failed polls</th><th>Reason</th></tr></thead>
+<tbody id="feed-incidents"></tbody></table></div>
+<p><a href="/admin-forecast.html">Forecast accuracy</a> · <a href="/dashboard.html">Dashboard</a></p>
+</main><script src="/js/admin-feed.js"></script></body></html>

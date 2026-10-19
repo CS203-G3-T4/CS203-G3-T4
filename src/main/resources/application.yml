@@ -22,6 +22,7 @@ market:
     cron: ${PRICE_GAP_CRON:0 15 0 * * *}
     days: ${PRICE_GAP_DAYS:7}
 
+# CSDT4-74: WATTLY_NEMS_BASE_URL overrides the NEMS URL; the older USEP_FEED_URL remains supported.
 wattly:
   nems:
     base-url: ${WATTLY_NEMS_BASE_URL:${USEP_FEED_URL:https://nems.sn.sg/api/status.json}}

@@ -12,12 +12,25 @@ import org.junit.jupiter.api.Test;
 import sg.edu.smu.cs203.market.price.LatestPriceResponse;
 import sg.edu.smu.cs203.market.price.MarketPriceService;
 import sg.edu.smu.cs203.market.price.NoMarketPriceException;
+import sg.edu.smu.cs203.market.price.FeedOutageSwitch;
 import sg.edu.smu.cs203.market.price.PriceFreshness;
 
 class MarketPriceFeedStatusTest {
 
     private final MarketPriceService prices = mock(MarketPriceService.class);
-    private final MarketPriceFeedStatus feed = new MarketPriceFeedStatus(prices);
+    private final FeedOutageSwitch outage = new FeedOutageSwitch();
+    private final MarketPriceFeedStatus feed = new MarketPriceFeedStatus(prices, outage);
+
+    @Test
+    void theSimulatedOutageFollowsTheAdminSwitch() {
+        assertThat(feed.simulatedOutage()).isFalse();
+
+        outage.turnOn(Instant.parse("2026-10-19T08:00:00Z"));
+        assertThat(feed.simulatedOutage()).isTrue();
+
+        outage.turnOff();
+        assertThat(feed.simulatedOutage()).isFalse();
+    }
 
     @Test
     void aLivePriceIsNotStale() {
