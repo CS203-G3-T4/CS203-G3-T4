@@ -33,6 +33,23 @@
     .chart-key .future-key { background: var(--base-load); margin-left: 14px; }
     .assumption { margin: 0; }
     @media (max-width: 1000px) { .spending-grid { grid-template-columns: 1fr; } }
+    .spend-breakdown { margin-top: 16px; padding: 20px 22px; }
+    .spend-breakdown h2 { font-size: 17px; }
+    .spend-table-scroll { overflow-x: auto; margin-top: 10px; }
+    .spend-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .spend-table th, .spend-table td { padding: 8px 10px 8px 0; border-top: 1px solid var(--gridline); text-align: left; vertical-align: top; }
+    .spend-table thead th { border-top: 0; color: var(--muted); font-size: 12px; font-weight: 600; }
+    .spend-table tbody th { font-weight: 600; }
+    .spend-table .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .spend-table td:last-child { color: var(--ink-2); font-size: 12px; }
+    .spend-table tr.total th, .spend-table tr.total td { font-weight: 700; color: var(--ink); }
+    .spend-notes { margin: 12px 0 0; padding-left: 18px; color: var(--ink-2); font-size: 12.5px; }
+    @media (max-width: 620px) {
+      .spend-table thead { display: none; }
+      .spend-table tr { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; column-gap: 10px; border-top: 1px solid var(--gridline); padding: 8px 0; }
+      .spend-table th, .spend-table td { border-top: 0; padding: 0; }
+      .spend-table td:last-child { grid-column: 1 / -1; margin-top: 4px; }
+    }
     @media (max-width: 620px) { .summary { grid-template-columns: 1fr 1fr; } .summary .metric:last-child { grid-column: 1 / -1; } }
   </style>
 </head>
@@ -76,7 +93,7 @@
     <div class="page-head"><h1>Spending &amp; Budget</h1><p id="month-label">Your monthly energy estimate and budget.</p></div>
     <div id="page-banner" aria-live="polite"></div>
     <div class="summary" aria-label="Monthly spending summary">
-      <div class="card metric"><span class="metric-label">Modelled through today</span><strong class="metric-value" id="spent-to-date">—</strong><span class="metric-detail" id="energy-to-date">Includes the full day</span></div>
+      <div class="card metric"><span class="metric-label">Spent so far this month</span><strong class="metric-value" id="spent-to-date">—</strong><span class="metric-detail" id="energy-to-date">Working it out…</span></div>
       <div class="card metric"><span class="metric-label">Projected this month</span><strong class="metric-value" id="projected-spend">—</strong><span class="metric-detail" id="energy-month">Modelled use</span></div>
       <div class="card metric"><span class="metric-label">Monthly budget</span><strong class="metric-value" id="budget-value">—</strong><span class="metric-detail" id="budget-remaining">Set a budget to compare</span></div>
     </div>
@@ -109,9 +126,21 @@
       </section>
     </div>
     <div class="banner info assumption" id="assumption-note">Estimates use Wattly's modelled household load, not meter readings. They exclude taxes, fixed fees and other bill charges.</div>
+    <section class="card spend-breakdown" id="spend-breakdown" aria-labelledby="spend-breakdown-title" hidden>
+      <h2 id="spend-breakdown-title">How “spent so far” is worked out</h2>
+      <p id="spend-breakdown-intro"></p>
+      <div class="spend-table-scroll">
+        <table class="spend-table">
+          <thead><tr><th scope="col">Charge</th><th scope="col">Rate</th><th scope="col" class="num">So far</th><th scope="col">Source</th></tr></thead>
+          <tbody id="spend-breakdown-rows"></tbody>
+        </table>
+      </div>
+      <ul class="spend-notes" id="spend-notes"></ul>
+    </section>
   </main>
 </div>
 <script src="/js/wattly.js"></script>
+<script src="/js/spend.js"></script>
 <script src="/js/spending.js"></script>
 </body>
 </html>
