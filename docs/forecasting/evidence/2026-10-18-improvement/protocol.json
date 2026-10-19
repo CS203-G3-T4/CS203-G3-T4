@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "historyStart": "2025-07-01T00:00:00+08:00",
+  "historyEnd": "2026-07-29T00:00:00+08:00",
+  "collectorStart": "2026-09-24T00:00:00+08:00",
+  "folds": [
+    {
+      "start": "2026-10-10T00:00:00+08:00",
+      "end": "2026-10-13T00:00:00+08:00"
+    },
+    {
+      "start": "2026-10-13T00:00:00+08:00",
+      "end": "2026-10-15T00:00:00+08:00"
+    },
+    {
+      "start": "2026-10-15T00:00:00+08:00",
+      "end": "2026-10-17T00:00:00+08:00"
+    }
+  ],
+  "protectedIntervals": [
+    {
+      "purpose": "original-eight-week-test",
+      "start": "2026-07-29T00:00:00+08:00",
+      "end": "2026-09-23T00:00:00+08:00"
+    },
+    {
+      "purpose": "presentation-demo",
+      "start": "2026-09-28T00:00:00+08:00",
+      "end": "2026-09-29T00:00:00+08:00"
+    },
+    {
+      "purpose": "reported-october-17-test",
+      "start": "2026-10-17T00:00:00+08:00",
+      "end": "2026-10-18T00:00:00+08:00"
+    }
+  ],
+  "confirmationDays": 14,
+  "selection": "Lowest pooled MAE on identical eligible pairs across all three earlier validation folds; no test-based selection",
+  "scope": "Exploratory development, not untouched test or production approval; demand vintages absent",
+  "dataAuditSha256": "3619af3846d4b80ee3085140f54d2f2c3245d754aa773430f6a699da10cd7068",
+  "foldDesign": "Consecutive earlier windows; eligible baseline-input coverage checked before any candidate fit; no outcome-based window choice",
+  "candidates": {
+    "LONG_DEFAULT": {
+      "window": "LONG",
+      "family": "DEFAULT",
+      "parameters": {
+        "max_iter": 40,
+        "max_leaf_nodes": 15,
+        "l2_regularization": 1,
+        "random_state": 42
+      }
+    },
+    "LONG_ROBUST": {
+      "window": "LONG",
+      "family": "ROBUST",
+      "parameters": {
+        "loss": "absolute_error",
+        "max_iter": 40,
+        "max_leaf_nodes": 7,
+        "l2_regularization": 10,
+        "random_state": 42
+      }
+    },
+    "LONG_RESIDUAL_B2": {
+      "window": "LONG",
+      "family": "RESIDUAL_B2",
+      "parameters": {
+        "alpha": 10.0
+      }
+    },
+    "RECENT_DEFAULT": {
+      "window": "RECENT",
+      "family": "DEFAULT",
+      "parameters": {
+        "max_iter": 40,
+        "max_leaf_nodes": 15,
+        "l2_regularization": 1,
+        "random_state": 42
+      }
+    },
+    "RECENT_ROBUST": {
+      "window": "RECENT",
+      "family": "ROBUST",
+      "parameters": {
+        "loss": "absolute_error",
+        "max_iter": 40,
+        "max_leaf_nodes": 7,
+        "l2_regularization": 10,
+        "random_state": 42
+      }
+    },
+    "RECENT_RESIDUAL_B2": {
+      "window": "RECENT",
+      "family": "RESIDUAL_B2",
+      "parameters": {
+        "alpha": 10.0
+      }
+    }
+  },
+  "featureSchemaVersion": 2,
+  "createdAt": "2026-10-18T07:38:53.197025+00:00",
+  "collectorDatasetDigest": "71174a1eac9e625d41cedb25bda071dc7dcfcbef6b92d58fc8de9a0b08acabf0",
+  "historicalDatasetDigest": "94c1b473cf1963976330e3cbf2abdd5f894c45fc5a4e338eb7ddd0ce5b37cd3b",
+  "collectorDatasetPath": "/home/bryan/CS203_T4/CS203-G3-T4/.local/improvement-2026-10-18-v1/collector",
+  "historicalDatasetPath": "/home/bryan/CS203_T4/CS203-G3-T4/.local/acceptance-2026-10-18/datasets/official-final-v1",
+  "historicalTruth": "RETROSPECTIVE_FINAL_PRICE; period-end availability is an assumption, not a receipt timestamp",
+  "recentTruth": "PROVISIONAL; real publication and collection vintages",
+  "researchOnly": true,
+  "productionEligible": false
+}

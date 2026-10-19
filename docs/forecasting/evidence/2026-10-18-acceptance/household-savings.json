@@ -1,0 +1,101 @@
+{
+  "status": "COMPLETE",
+  "modelled": true,
+  "simulatedSavings": true,
+  "aiSavingsSgd": "168.9872190359428571428571428",
+  "baselineSavingsSgd": "176.4330944647428571428571432",
+  "aiMinusBaselineSgd": "-7.4458754288000000000000004",
+  "baselineMethod": "B3",
+  "uniqueApplianceRuns": 497,
+  "fixedRateHouseholdsNotShifted": [
+    3
+  ],
+  "exclusions": {
+    "USUAL_RUN_OUTSIDE_FORECAST": 724,
+    "INCOMPLETE_IDENTICAL_FORECAST_WINDOW": 1
+  },
+  "householdContexts": {
+    "1": {
+      "id": 1,
+      "name": "The Tan Household",
+      "dwellingType": "HDB_4_ROOM",
+      "occupants": 4,
+      "planType": "PRICE_LINKED",
+      "fixedRateCentsPerKwh": null,
+      "archetypeId": 3,
+      "exposedToWholesalePrice": true,
+      "exposureLabel": "Price-linked (USEP)",
+      "simulated": false,
+      "updatedAt": "2026-10-17T19:56:05.045773Z"
+    },
+    "2": {
+      "id": 2,
+      "name": "Lim Family",
+      "dwellingType": "HDB_3_ROOM",
+      "occupants": 3,
+      "planType": "PRICE_LINKED",
+      "fixedRateCentsPerKwh": null,
+      "archetypeId": 2,
+      "exposedToWholesalePrice": true,
+      "exposureLabel": "Price-linked (USEP)",
+      "simulated": false,
+      "updatedAt": "2026-10-17T19:56:05.089847Z"
+    },
+    "3": {
+      "id": 3,
+      "name": "Rahman Residence",
+      "dwellingType": "HDB_5_ROOM_EXECUTIVE",
+      "occupants": 5,
+      "planType": "FIXED",
+      "fixedRateCentsPerKwh": 29.5,
+      "archetypeId": 4,
+      "exposedToWholesalePrice": false,
+      "exposureLabel": "Not exposed (fixed rate)",
+      "simulated": false,
+      "updatedAt": "2026-10-17T19:56:05.089847Z"
+    },
+    "4": {
+      "id": 4,
+      "name": "Ong Household",
+      "dwellingType": "PRIVATE_APARTMENT_CONDO",
+      "occupants": 3,
+      "planType": "PRICE_LINKED",
+      "fixedRateCentsPerKwh": null,
+      "archetypeId": 5,
+      "exposedToWholesalePrice": true,
+      "exposureLabel": "Price-linked (USEP)",
+      "simulated": false,
+      "updatedAt": "2026-10-17T19:56:05.089847Z"
+    },
+    "5": {
+      "id": 5,
+      "name": "Nair Family",
+      "dwellingType": "LANDED",
+      "occupants": 6,
+      "planType": "PRICE_LINKED",
+      "fixedRateCentsPerKwh": null,
+      "archetypeId": 6,
+      "exposedToWholesalePrice": true,
+      "exposureLabel": "Price-linked (USEP)",
+      "simulated": false,
+      "updatedAt": "2026-10-17T19:56:05.089847Z"
+    }
+  },
+  "householdIds": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "modelVersion": "price-calendar-holiday-demand-v2-20261018",
+  "datasetDigest": "94c1b473cf1963976330e3cbf2abdd5f894c45fc5a4e338eb7ddd0ce5b37cd3b",
+  "validationEnd": "2026-07-28T16:00:00+00:00",
+  "assumptions": [
+    "Current F2 project profiles held fixed as counterfactual configurations; not verified historical residents",
+    "Unchanged F4 optimizer and appliance constraints; identical feasible windows and realized prices",
+    "Two preset forecast origins per day (00:00,12:00SGT); earliest eligible decision per appliance run",
+    "Expected runs weighted runsPerWeek/7; accepted recommendations assumed followed; no actual bill-savings claim",
+    "Losses retained; fixed-rate households never shifted. Missing actual/window cases excluded for both methods."
+  ]
+}
