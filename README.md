@@ -22,6 +22,11 @@ The default PostgreSQL connection is `jdbc:postgresql://localhost:55432/energy_m
 
 The application applies the Flyway migration automatically. The source URL can be overridden with `USEP_FEED_URL`. Set `USEP_POLLING_ENABLED=false` to disable the startup and scheduled polls, such as when running against a prepared test database.
 
+## Deploy
+
+Production runs on Railway with the `prod` profile, which requires `DB_URL`,
+`DB_USER` and `DB_PASSWORD`. See [docs/deployment.md](docs/deployment.md).
+
 ## Run an already restored team dataset
 
 Copy `.env.team-demo.example` to `.env.team-demo`, set `DB_URL` to the restored
