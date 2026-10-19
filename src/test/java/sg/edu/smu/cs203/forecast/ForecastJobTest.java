@@ -16,6 +16,7 @@ class ForecastJobTest {
     final MarketHistoryRepository history=mock(MarketHistoryRepository.class);
     final ForecastRepository saved=mock(ForecastRepository.class);
     final IngestionRunRepository ingestion=mock(IngestionRunRepository.class);
+    final ForecastOperationsRepository operations=mock(ForecastOperationsRepository.class);
     final PythonForecastClient python=mock(PythonForecastClient.class);
 
     ForecastService service(String mode,String evidence) {
@@ -24,7 +25,7 @@ class ForecastJobTest {
     ForecastJob job(ForecastService service) {
         return new ForecastJob(history,saved,new BaselineForecastService(),
                 new CurrentAssessmentService(history,CLOCK,service,14,BigDecimal.valueOf(3),BigDecimal.ONE,BigDecimal.ONE),
-                python,service,new ObjectMapper(),CLOCK);
+                python,service,new ObjectMapper(),CLOCK,operations);
     }
     @Test
     void pythonDownUsesJavaBaselineAndRepeatedInputKeepsSameRunIdentity() {

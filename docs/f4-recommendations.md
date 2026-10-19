@@ -51,10 +51,15 @@ made-up numbers, and the label keeps it from being presented as an AI prediction
 
 | Endpoint | What it does |
 | --- | --- |
-| `POST /api/v1/households/{id}/recommendations/generate` | Re-checks the forecast and saves a suggestion per flexible appliance where a cheaper start exists. Safe to repeat (the dashboard calls it on load and on Refresh). |
-| `GET /api/v1/households/{id}/recommendations` | Open (`ACTIVE`) suggestions without re-checking. |
+| `GET /api/v1/households/{id}/recommendations` | Open (`ACTIVE`) suggestions not snoozed, best saving first, plus the latest background recompute's outcome. What the dashboard calls. |
+| `GET /api/v1/households/{id}/recommendations?status=ACTIVE\|ACCEPTED\|DISMISSED\|HISTORY` | One tab of the Recommendations page (CSDT4-40). `ACTIVE` includes snoozed ones (with `remindAt`); the others cover the last 30 days, newest first. |
+| `GET /api/v1/recommendations/demo-forecast` | The demo forecast behind demo suggestions, for the page's mini charts. 404 while suggestions use F3. |
+| `POST /api/v1/recommendations/{recId}/snooze` | "Remind me later" until a chosen time: body `{"until": "15:30"}` (Singapore time, the next time the clock shows it). Must be before the suggestion runs out (`deadline`); 400 otherwise. |
+| `POST /api/v1/households/{id}/recommendations/generate` | Recomputes one household now. Normally done in the background (CSDT4-37). Safe to repeat. |
 | `POST /api/v1/recommendations/{recId}/accept` | Accepts. Optional body `{"startTime": "15:10"}` is the resident's own start (Singapore `HH:mm`) inside the same window. |
 | `POST /api/v1/recommendations/{recId}/dismiss` | Dismisses. The same run is not suggested again. |
+| `POST /api/v1/recommendations/{recId}/got-it` | "Got it" on a spike warning (CSDT4-38). That run is not warned about again. |
+| `POST /api/v1/recommendations/{recId}/remind-later` | One-tap "Remind me later" on any open suggestion: hidden for an hour, or until an hour before it runs out if sooner. 409 when that is under an hour away. |
 
 Errors: 404 for an unknown household or suggestion, 409 if the suggestion was already decided or
 expired, 400 with `errors.startTime` for an override outside the window.
@@ -74,34 +79,149 @@ the other because of a per-household PostgreSQL advisory lock, so they can't bot
   must finish by `mustFinishBy`. A 60-minute dryer that must finish by 21:00 can start at 20:00
   at the latest, never 21:30 (`CheapestStartCalculatorTest`).
 - A suggestion is saved only if it saves at least `RECOMMENDATION_MINIMUM_SAVING_SGD` (default
-  $0.01). Ties keep the earlier start.
+  $0.05, CSDT4-37). Ties keep the earlier start.
 - If the forecast doesn't cover the whole usual run, nothing is compared. This can happen with
   F3's 12-hour horizon late in the day.
 
 ## Tables and statuses
 
-`recommendation` stores kind (`SHIFT_START`), suggested_start, usual_start, est_saving, both
-costs, reason, forecast_source/model, status, accepted_start and decided_at.
+`recommendation` stores kind (`SHIFT_START` or `AVOID`), suggested_start, usual_start,
+est_saving, both costs, reason, forecast_source/model, status, accepted_start, decided_at, and for
+warnings spike_start and snoozed_until (V13).
 
 `recommendation_event` logs every change: `CREATED`, `ACCEPTED` (with the start and whether it
-was an override), `DISMISSED`, `SUPERSEDED` and `EXPIRED`.
+was an override), `DISMISSED`, `ACKNOWLEDGED`, `SNOOZED` (with the remind time), `SUPERSEDED`
+and `EXPIRED`.
 
 Statuses:
 
 - `ACTIVE`: waiting for the resident. At most one per appliance, enforced by a unique index.
-- `ACCEPTED` / `DISMISSED`: the resident's decision.
+- `ACCEPTED` / `DISMISSED`: the resident's decision on a shift suggestion.
+- `ACKNOWLEDGED`: "Got it" on a spike warning.
 - `SUPERSEDED`: replaced by newer advice, or the appliance changed.
-- `EXPIRED`: the suggested start passed without a decision.
+- `EXPIRED`: the suggested start passed without a decision (for a warning, also once the usual
+  start it warns about has passed).
 
 Both tables cascade when a household or appliance is deleted (CSDT4-62).
 
+## Guards, ranking and background recompute (CSDT4-37)
+
+Every suggestion passes five guards in `RecommendationService.generate`:
+
+| Guard | Rule |
+| --- | --- |
+| Time window | The run must start and finish inside the appliance's window, including windows that cross midnight (`CheapestStartCalculator`, following F2's `TimeWindow`) |
+| Past start | Never a start before now |
+| Disabled appliance | Only enabled `FLEXIBLE` appliances are considered (`HouseholdDirectory.flexibleAppliances`); a switched-off appliance's open suggestion is closed |
+| Fixed-rate household | `exposedToWholesalePrice` must be true; switching to a fixed plan closes open suggestions |
+| Stale feed | While F1's price is `STALE` (or there is no price yet), no new suggestions from F3's forecast. The labelled demo forecast doesn't use the live feed, so it is only blocked when `RECOMMENDATION_STALE_FEED_BLOCKS_DEMO=true` |
+
+**Ranking.** Each appliance's best shift is ranked by expected saving against its usual start
+(ties: earlier start first). Savings under `RECOMMENDATION_MINIMUM_SAVING_SGD` ($0.05) are skipped,
+and at most `RECOMMENDATION_MAX_ACTIVE` (3) suggestions per household are open at once. A
+suggestion pushed out of the top 3 is closed as `SUPERSEDED`. The list endpoint returns them best
+saving first.
+
+**Background recompute, not on page load.** `RecommendationRecomputeJob` recomputes every real
+household (simulated ones are skipped) on startup, when F1 saves a new price, every 30 minutes at
+:01 and :31 (`RECOMMENDATION_RECOMPUTE_CRON`), and recomputes one household when F2 announces a
+change to it or its appliances (`HouseholdChanged`, published by `HouseholdService` and
+`ApplianceService`). A new F3 forecast is picked up by the next 30-minute run. The pages only call
+`GET /households/{id}/recommendations`, which reads the open suggestions and the latest outcome
+saved in `recommendation_refresh` (V12): when it ran, which forecast it used, and why there are no
+suggestions. `POST …/generate` still exists for recomputing one household by hand (Swagger).
+Set `RECOMMENDATION_AUTO_RECOMPUTE=false` to turn the background job off.
+
+## Price spike warnings (CSDT4-38)
+
+When the forecast marks a spike in any half-hour an appliance's usual run touches, its suggestion
+becomes an `AVOID` warning: "avoid your usual time", with the cheapest start in the window that
+touches no spike, and the cost avoided by using it (usual cost minus that start's cost).
+
+- **Where spikes come from.** F3 marks each forecast half-hour with `spikeFlag` (above the 28-day
+  typical price for that time plus 3 spreads; `forecast.spike.*`). A missing flag (too little
+  history) is not a spike. The demo forecast applies the same rule to the 28 days before its
+  replay day (26 Sep), using the saved market history, so the demo can show warnings.
+  `RECOMMENDATION_DEMO_SPIKES=false` turns that off; with too little history nothing is marked.
+- **Same rules as other suggestions.** Warnings are made in the same background recompute, so the
+  fixed-rate, stale-feed, disabled-appliance, time-window and past-start guards all apply. Savings
+  under $0.05 are skipped, and warnings are ranked with shift suggestions by saving (max 3 open).
+- **One card per appliance.** A warning replaces that appliance's shift suggestion. If no
+  spike-free start in the window saves at least $0.05, the appliance gets an ordinary suggestion
+  (or none) instead.
+- **Got it** closes the warning (`ACKNOWLEDGED`); the same run is not warned about or suggested
+  again. A run whose shift suggestion was only dismissed can still get a warning, since the
+  resident will run at the usual time.
+- **Remind me later** keeps the warning open but hidden (CSDT4-40 extends this to every suggestion
+  and a chosen time; see below). The one-tap version hides it until `min(now + 1 h, deadline - 1 h)`.
+  The button isn't shown once the usual start is under an hour away. A newer warning for the same
+  run (e.g. after a forecast update) keeps the reminder time.
+- Shift suggestions are answered with Accept / Dismiss, warnings with Got it / Remind me later;
+  the wrong pair returns 409.
+
+## Explanations, confidence and estimated savings (CSDT4-39)
+
+**Explanations with real numbers** (`RecommendationExplanation`). Each suggestion says what the
+forecast shows and why the time works, e.g. "Prices are forecast to fall from 31¢ to 20¢/kWh by
+10:00 PM. Starting at 10:00 PM still finishes by 11:00 PM, before your 11:30 PM limit. Estimated
+saving: $0.55 on this run ($1.00 vs $1.55)." Spike warnings give the spike time and both average
+prices. Prices are the forecast average over each run in ¢/kWh (cost ÷ energy; 1 SGD/MWh =
+0.1¢/kWh), times are Singapore time, and the limit is the appliance's "must finish by".
+
+**Confidence, option A** (`BacktestConfidence`). On each of the last 28 days, using actual prices
+(F1's saved history as it was known at the time; read only, nothing changed or filled in), was the
+suggested time really cheaper than the usual time for this run? The card shows "How sure: 1:00 PM
+was really cheaper than 7:45 PM on 23 of 26 past days (88%)." A day with any missing price is
+skipped. With fewer than 14 days checked it says "not enough price history yet" and stores no
+number (V14: `confidence_cheaper_days`, `confidence_days_checked`, both NULL). For the demo
+forecast the 28 days are the ones before its replay day (26 Sep), since it replays that day.
+
+**Estimated saving.** Every saving is shown as "Estimated saving" and the API sends
+`savingEstimated: true`: it comes from the forecast. Realised savings from actual prices are
+CSDT4-53, which will set it to false and show "Saved $x".
+
+**Next sprint: confidence option B.** Once F3 has saved a few weeks of forecasts
+(`forecast_run` / `forecast_point`), also measure how often F3's forecast was right: for past
+forecasts that said the suggested time would be cheaper, compare with the actual prices that
+followed. Option A answers "is this time usually cheaper?"; option B answers "can we trust the
+forecast?". Keep the same rules: only real data, a minimum number of cases, otherwise no number.
+
+## Recommendations page: tabs, Remind me later and mini charts (CSDT4-40)
+
+**Tabs.** `recommendations.html` has Active, Accepted, Dismissed and History tabs, each loaded from
+`GET …/recommendations?status=…` (`#accepted` etc. in the URL opens a tab directly):
+
+| Tab | Shows |
+| --- | --- |
+| Active | Open suggestions with their buttons and chart, then a "Snoozed" section with the ones "Remind me later" is hiding and when each comes back |
+| Accepted | `ACCEPTED`, last 30 days |
+| Dismissed | `DISMISSED` and spike warnings answered with "Got it" (`ACKNOWLEDGED`), last 30 days |
+| History | Everything, including `SUPERSEDED` (replaced by newer advice) and `EXPIRED`, last 30 days |
+
+Decided cards are read-only and say what happened and when. The header figures always describe the
+open suggestions. Every figure on the page comes from the API.
+
+**Remind me later until a chosen time.** Every open card (shift suggestions and spike warnings, on
+the dashboard and the page) has "Remind me later" with a time picker that starts at an hour from
+now. `POST …/snooze` hides the card until then; it comes back by itself (both the dashboard and
+the Active tab hide snoozed cards until `snoozed_until`). The time must be before the suggestion
+runs out (`deadline`: its start, or for a warning the earlier of the alternative and the usual
+start), otherwise it would only come back once it's useless. If the background recompute replaces
+a snoozed suggestion for the same run, the reminder carries over while it still comes back in time.
+V16 lets any suggestion be snoozed (V13 allowed warnings only).
+
+**Mini forecast chart.** Each open card on the page draws the forecast it was built from, one bar
+per half-hour in ¢/kWh, with the usual run in blue and the suggested run in teal. The page picks
+the source by the card's `forecastSource`: `F3_FORECAST` → `GET /api/v1/forecast/latest`,
+`DEMO_FORECAST` → `GET /api/v1/recommendations/demo-forecast`, so the chart always shows the same
+prices as the explanation. A spike that would flatten the other bars is drawn full height and
+marked off the scale (the exact price is in its tooltip).
+
 ## Not done here (later stories)
 
-- Scheduled generation (it currently runs when the dashboard loads), ranking across appliances
-  and household guards (CSDT4-37).
-- Richer explanations (CSDT4-39).
-- Realised savings from actual prices (CSDT4-53), and feeding accepted runs into F2's load
-  profile.
+- Confidence option B (next sprint, see above).
+- Realised savings from actual prices (CSDT4-53; the "estimated" label is ready for it), and
+  feeding accepted runs into F2's load profile.
 - Login: accept/dismiss are open to anyone until CSDT4-23.
 
 ## Try it

@@ -14,6 +14,7 @@ import sg.edu.smu.cs203.market.price.MarketRevision;
 @Service
 public class BaselineForecastService {
     public static final List<String> DEFAULT_ORDER = List.of("B1", "B2", "B3");
+    private static final List<ForecastPredictor> PREDICTORS=List.of(new RecentMean(),new Yesterday(),new SevenDayMean());
     public static Instant floor(Instant value) {
         return Instant.ofEpochSecond(Math.floorDiv(value.getEpochSecond(),1800)*1800);
     }
@@ -31,11 +32,30 @@ public class BaselineForecastService {
     public Map<String,List<BigDecimal>> calculate(List<MarketRevision> history, Instant asOf) {
         Map<Instant,BigDecimal> prices = values(history,asOf);
         Map<String,List<BigDecimal>> result = new LinkedHashMap<>();
+        for (ForecastPredictor predictor:PREDICTORS) {
+            List<BigDecimal> points=predictor.predict(prices,asOf);
+            if (points.size()==24) result.put(predictor.identifier(),points);
+        }
+        return result;
+    }
+    public static final class RecentMean implements ForecastPredictor {
+        public String identifier() { return "B1"; }
+        public List<BigDecimal> predict(Map<Instant,BigDecimal> prices,Instant asOf) {
         List<BigDecimal> recent = new ArrayList<>();
         Instant latest=prices.containsKey(floor(asOf)) ? floor(asOf) : floor(asOf).minusSeconds(1800);
         for (int i=0;i<6;i++) recent.add(prices.get(latest.minusSeconds(i*1800L)));
-        if (!recent.contains(null)) result.put("B1",java.util.Collections.nCopies(24,mean(recent)));
-        for (int days : List.of(1,7)) {
+        return recent.contains(null) ? List.of() : java.util.Collections.nCopies(24,mean(recent));
+        }
+    }
+    public static final class Yesterday implements ForecastPredictor {
+        public String identifier() { return "B2"; }
+        public List<BigDecimal> predict(Map<Instant,BigDecimal> prices,Instant asOf) { return daily(prices,asOf,1); }
+    }
+    public static final class SevenDayMean implements ForecastPredictor {
+        public String identifier() { return "B3"; }
+        public List<BigDecimal> predict(Map<Instant,BigDecimal> prices,Instant asOf) { return daily(prices,asOf,7); }
+    }
+    private static List<BigDecimal> daily(Map<Instant,BigDecimal> prices,Instant asOf,int days) {
             List<BigDecimal> predictions = new ArrayList<>();
             for (Instant target : targets(asOf)) {
                 List<BigDecimal> previous = new ArrayList<>();
@@ -43,9 +63,7 @@ public class BaselineForecastService {
                 if (previous.contains(null)) break;
                 predictions.add(mean(previous));
             }
-            if (predictions.size()==24) result.put(days==1 ? "B2" : "B3",List.copyOf(predictions));
-        }
-        return result;
+        return predictions.size()==24 ? List.copyOf(predictions) : List.of();
     }
     private static BigDecimal mean(List<BigDecimal> values) {
         return values.stream().reduce(BigDecimal.ZERO,BigDecimal::add)

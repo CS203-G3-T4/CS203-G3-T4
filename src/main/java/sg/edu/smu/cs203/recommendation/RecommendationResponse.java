@@ -6,6 +6,18 @@ import java.time.Instant;
 /**
  * What the pages receive. Costs and saving are SGD for one run. demoForecast is true when the
  * suggestion came from the demo curve, so the page can label it rather than call it a prediction.
+ *
+ * kind AVOID is a spike warning (CSDT4-38): usualStart is the time to avoid, spikeStart the first
+ * spike half-hour, suggestedStart the spike-free alternative and estSavingSgd the cost avoided.
+ * remindAt is set after "Remind me later".
+ *
+ * CSDT4-39: reason explains the suggestion with the forecast prices (¢/kWh), times and window
+ * limit. confidence* say on how many of the last 28 days (with actual prices) the suggested time
+ * was really cheaper; all null when there wasn't enough history. savingEstimated is true while the
+ * saving comes from the forecast; realised savings from actual prices come with CSDT4-53.
+ *
+ * CSDT4-40: runMinutes (from the appliance, when known) lets the page mark both runs on the mini
+ * forecast chart; remindAt is when a snoozed suggestion comes back; deadline is when it runs out.
  */
 public record RecommendationResponse(
         long id,
@@ -25,9 +37,23 @@ public record RecommendationResponse(
         boolean demoForecast,
         RecommendationStatus status,
         Instant createdAt,
-        Instant decidedAt) {
+        Instant decidedAt,
+        Instant spikeStart,
+        Instant remindAt,
+        Integer confidenceCheaperDays,
+        Integer confidenceDaysChecked,
+        Integer confidencePercent,
+        boolean savingEstimated,
+        Integer runMinutes,
+        Instant deadline) {
 
     public static RecommendationResponse from(Recommendation r) {
+        return from(r, null);
+    }
+
+    public static RecommendationResponse from(Recommendation r, Integer runMinutes) {
+        Integer percent = r.confidenceDaysChecked() == null ? null
+                : new BacktestConfidence.Confidence(r.confidenceCheaperDays(), r.confidenceDaysChecked()).percent();
         return new RecommendationResponse(
                 r.id(),
                 r.householdId(),
@@ -46,6 +72,14 @@ public record RecommendationResponse(
                 PriceForecast.DEMO.equals(r.forecastSource()),
                 r.status(),
                 r.createdAt(),
-                r.decidedAt());
+                r.decidedAt(),
+                r.spikeStart(),
+                r.snoozedUntil(),
+                r.confidenceCheaperDays(),
+                r.confidenceDaysChecked(),
+                percent,
+                true,
+                runMinutes,
+                r.deadline());
     }
 }

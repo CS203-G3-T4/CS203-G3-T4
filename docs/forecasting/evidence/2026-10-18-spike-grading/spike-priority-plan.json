@@ -1,0 +1,50 @@
+{
+  "createdAt": "2026-10-18T08:24:36.052869+00:00",
+  "priority": "Spike detection and advance warning; MAE is secondary context",
+  "source": "User requested spike prediction as the important grading criterion",
+  "futureWindow": {
+    "start": "2026-10-19T00:00:00+08:00",
+    "end": "2026-11-02T00:00:00+08:00"
+  },
+  "fixedLeadMinutes": [
+    30,
+    180,
+    360,
+    720
+  ],
+  "primaryMeasures": [
+    "Missed fully observed price-spike events",
+    "Events warned before onset",
+    "Warning lead time"
+  ],
+  "requiredTradeoffs": [
+    "False-alarm target periods and episodes",
+    "Precision",
+    "Spike-half-hour recall",
+    "Coverage and censored-event counts"
+  ],
+  "pooledPairWarning": "Repeated forecast origins are dependent predictions, not independent spike events",
+  "existingSpikeRule": {
+    "windowDays": 28,
+    "sameHalfHour": true,
+    "minimumSamples": 14,
+    "k": 3.0,
+    "spreadFloor": 1.0
+  },
+  "minimumSupport": {
+    "distinctPositiveTargetsForRates": 20,
+    "distinctNegativeTargetsForRates": 20,
+    "fullyObservedEventsForEventRate": 20
+  },
+  "genuineEventLabelsAvailable": false,
+  "falseAlarmBudgetAgreed": false,
+  "scalarGradeOrAutomaticWinner": null,
+  "frozenCandidateSha256": "b06bcee658d155f20a31c5be8e467dca67d337627e8f5f14535acad2dfd121bd",
+  "existingSelectionSha256": "eb0e24d8b6f0295cb0b9d26dc8ad5fe847e8744ce23519a8a584c82248bd18f2",
+  "existingFuturePlanSha256": "c953a28d575ba52b087941657842743466edc491ffb531fd43e80b521aab0b32",
+  "modelRetrainedOrReselected": false,
+  "thresholdChanged": false,
+  "productionApprovalChanged": false,
+  "teamApproved": false,
+  "futureReport": "confirm-improvement writes spikes/summary.json and spikes/scoreboard.csv alongside its existing accuracy report"
+}

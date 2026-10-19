@@ -9,8 +9,11 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Predicate;
 
 import sg.edu.smu.cs203.household.appliance.TimeWindow;
 
@@ -25,6 +28,10 @@ import sg.edu.smu.cs203.household.appliance.TimeWindow;
  * (not before now, and not before the first forecast half-hour). A suggestion must start on a
  * :00/:30 boundary, not before now, not before the window opens, and must finish by the
  * window's end.
+ *
+ * CSDT4-38: if the usual run touches a half-hour the forecast marks as a spike, the outcome is
+ * AVOID instead, with the cheapest start that touches no spike as the alternative and the cost
+ * avoided as the saving.
  * No Spring and no system clock here: the caller passes "now", so tests are exact.
  */
 public final class CheapestStartCalculator {
@@ -45,23 +52,37 @@ public final class CheapestStartCalculator {
     public enum Outcome {
         /** A cheaper start exists; suggest it. */
         SHIFT,
+        /** A price spike is forecast during the usual run; warn, with a spike-free alternative. */
+        AVOID,
         /** The usual start is already the cheapest (or saves less than the minimum). */
         USUAL_IS_CHEAPEST,
         /** The forecast doesn't cover the next usual run, so nothing can be compared. */
         NOT_ENOUGH_FORECAST
     }
 
-    /** Costs are in SGD for one run, rounded to 4 decimal places. Fields are null when not known. */
+    /**
+     * Costs are in SGD for one run, rounded to 4 decimal places. Fields are null when not known.
+     * spikeStart is the first spike half-hour the usual run touches (AVOID only).
+     */
     public record Result(Outcome outcome, Instant usualStart, BigDecimal usualCost,
-                         Instant bestStart, BigDecimal bestCost, BigDecimal saving) {
+                         Instant bestStart, BigDecimal bestCost, BigDecimal saving, Instant spikeStart) {
+
+        public Result(Outcome outcome, Instant usualStart, BigDecimal usualCost,
+                      Instant bestStart, BigDecimal bestCost, BigDecimal saving) {
+            this(outcome, usualStart, usualCost, bestStart, bestCost, saving, null);
+        }
     }
 
     public static Result cheapestStart(ShiftableRun run, List<PriceForecast.HalfHourPrice> forecast,
                                        Instant now, BigDecimal minimumSaving) {
         Map<Instant, BigDecimal> prices = new HashMap<>();
+        Set<Instant> spikes = new HashSet<>();
         Instant firstPeriod = null;
         for (PriceForecast.HalfHourPrice point : forecast) {
             prices.put(point.periodStart(), point.usepSgdPerMwh());
+            if (point.spike()) {
+                spikes.add(point.periodStart());
+            }
             if (firstPeriod == null || point.periodStart().isBefore(firstPeriod)) {
                 firstPeriod = point.periodStart();
             }
@@ -80,22 +101,26 @@ public final class CheapestStartCalculator {
             return notEnoughForecast(occurrence.usualStart());
         }
 
-        Instant bestStart = null;
-        BigDecimal bestCost = null;
-        for (Instant start : prices.keySet().stream().sorted().toList()) {
-            Instant finish = start.plus(Duration.ofMinutes(run.runMinutes()));
-            if (start.isBefore(now) || start.isBefore(occurrence.opens()) || finish.isAfter(occurrence.closes())) {
-                continue;
+        BigDecimal usual = round(usualCost);
+
+        Instant spikeStart = firstSpikeTouched(occurrence.usualStart(), run, spikes);
+        if (spikeStart != null) {
+            Best alternative = best(run, prices, occurrence, now,
+                    start -> firstSpikeTouched(start, run, spikes) == null);
+            if (alternative != null) {
+                BigDecimal saving = round(usualCost.subtract(alternative.cost()));
+                if (saving.signum() > 0 && saving.compareTo(minimumSaving) >= 0) {
+                    return new Result(Outcome.AVOID, occurrence.usualStart(), usual, alternative.start(),
+                            round(alternative.cost()), saving, spikeStart);
+                }
             }
-            BigDecimal cost = costOf(start, run, prices);
-            // Strictly cheaper only, so a tie keeps the earlier start.
-            if (cost != null && (bestCost == null || cost.compareTo(bestCost) < 0)) {
-                bestStart = start;
-                bestCost = cost;
-            }
+            // No spike-free start in the window saves enough: fall back to the ordinary comparison.
         }
 
-        BigDecimal usual = round(usualCost);
+        Best cheapest = best(run, prices, occurrence, now, start -> true);
+        Instant bestStart = cheapest == null ? null : cheapest.start();
+        BigDecimal bestCost = cheapest == null ? null : cheapest.cost();
+
         if (bestStart == null || bestStart.equals(occurrence.usualStart())) {
             return new Result(Outcome.USUAL_IS_CHEAPEST, occurrence.usualStart(), usual, null, null, null);
         }
@@ -105,6 +130,45 @@ public final class CheapestStartCalculator {
             return new Result(Outcome.USUAL_IS_CHEAPEST, occurrence.usualStart(), usual, bestStart, best, saving);
         }
         return new Result(Outcome.SHIFT, occurrence.usualStart(), usual, bestStart, best, saving);
+    }
+
+    private record Best(Instant start, BigDecimal cost) {
+    }
+
+    /** The cheapest allowed start inside this occurrence of the window, not before now. */
+    private static Best best(ShiftableRun run, Map<Instant, BigDecimal> prices, Occurrence occurrence,
+                             Instant now, Predicate<Instant> allowed) {
+        Best best = null;
+        for (Instant start : prices.keySet().stream().sorted().toList()) {
+            Instant finish = start.plus(Duration.ofMinutes(run.runMinutes()));
+            if (start.isBefore(now) || start.isBefore(occurrence.opens()) || finish.isAfter(occurrence.closes())
+                    || !allowed.test(start)) {
+                continue;
+            }
+            BigDecimal cost = costOf(start, run, prices);
+            // Strictly cheaper only, so a tie keeps the earlier start.
+            if (cost != null && (best == null || cost.compareTo(best.cost()) < 0)) {
+                best = new Best(start, cost);
+            }
+        }
+        return best;
+    }
+
+    /** The first half-hour a run from start touches that is a forecast spike, or null. */
+    static Instant firstSpikeTouched(Instant start, ShiftableRun run, Set<Instant> spikes) {
+        if (spikes.isEmpty()) {
+            return null;
+        }
+        Instant end = start.plus(Duration.ofMinutes(run.runMinutes()));
+        Instant period = Instant.ofEpochSecond(
+                Math.floorDiv(start.getEpochSecond(), HALF_HOUR_SECONDS) * HALF_HOUR_SECONDS);
+        while (period.isBefore(end)) {
+            if (spikes.contains(period)) {
+                return period;
+            }
+            period = period.plusSeconds(HALF_HOUR_SECONDS);
+        }
+        return null;
     }
 
     /**

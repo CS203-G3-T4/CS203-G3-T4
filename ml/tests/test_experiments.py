@@ -60,6 +60,17 @@ def test_paired_study_freezes_selection_before_test_and_preserves_every_candidat
     assert all((output/f'fold-{n}'/'candidates.joblib').exists() for n in (1, 2))
     assert b'\r' not in (output/'horizons.csv').read_bytes()
     assert result['selection']['validation']['table']['CURRENT']['spikes']['precision'] is None
+    exported = tmp_path/'latest.json'
+    presentation = experiments.presentation(output, reference, exported)
+    latest = json.loads(exported.read_text())
+    errors = [abs(p['AI']-p['actual']) for o in latest['origins'] for p in o['points']]
+    assert len(errors) == 576 and mean(errors) == pytest.approx(presentation['diagnosticMae'])
+    assert latest['test']['table']['AI']['mae'] == pytest.approx(mean(errors))
+    assert latest['study']['validationPairs'] == 1152
+    assert not latest['productionApproved'] and not latest['actionable']
+    assert latest['evaluationPurpose'] == 'ALREADY_SEEN_DIAGNOSTIC'
+    with pytest.raises(ValueError, match='immutable'):
+        experiments.presentation(output, reference, exported)
     with pytest.raises(ValueError, match='immutable'):
         experiments.compare(dataset, reference, output)
 

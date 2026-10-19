@@ -1,0 +1,75 @@
+{
+  "java": {
+    "tests": 135,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "fullPython": {
+    "tests": 39,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "focusedPythonAfterReloadFix": {
+    "tests": 8,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "frontendTap": [
+    "# tests 4",
+    "# suites 0",
+    "# pass 4",
+    "# fail 0",
+    "# cancelled 0",
+    "# skipped 0",
+    "# todo 0",
+    "# duration_ms 96.011248"
+  ],
+  "isolatedStack": {
+    "status": "PASS",
+    "isolatedPostgres": true,
+    "postgresVersion": "16",
+    "realSpringPythonHttp": true,
+    "realBrowserPages": true,
+    "weeklyShortDataAttemptExit": 2,
+    "nativeTimerFired": true,
+    "fullSuitesInThisInvocation": false,
+    "configuredHouseholdScenarios": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "collectorModified": false,
+    "liveDatabaseUsed": false,
+    "archivedCollectorFeed": "Original payload/timestamps preserved; only the isolated app receives this local archived feed"
+  },
+  "timerResult": "Result=exit-code\nExecMainStatus=2\nActiveState=failed\n",
+  "databaseAttemptOutcomes": [
+    "FAILED|RETAINED|Insufficient verified history; use --exploratory only for non-promotable experiments",
+    "FAILED|RETAINED|Insufficient verified history; use --exploratory only for non-promotable experiments"
+  ],
+  "pythonWarning": "One upstream Starlette/AnyIO BlockingPortal deprecation warning",
+  "skippedChecks": [
+    "PostgreSQL17 Compose",
+    "Cloud/container deployment",
+    "Real production model promotion (gates intentionally retained)",
+    "Persistent weekly activation against real API credentials",
+    "Long-running unattended operation",
+    "Full assistive-technology audit"
+  ],
+  "fullSuiteTiming": "Full Python39 passed before last serving reload snapshot change; focused8 passed afterward, covering40 unique tests in total",
+  "liveDatabaseUsed": false,
+  "collectorModifiedOrRestarted": false,
+  "latestHouseholdRecalculation": {
+    "uniqueApplianceRuns": 497,
+    "aiSavingsSgd": "168.9872190357142857142857142",
+    "baselineSavingsSgd": "176.4330944642857142857142860",
+    "realizedCostsIndependentlyRecomputed": true,
+    "modelled": true,
+    "simulatedSavings": true
+  }
+}

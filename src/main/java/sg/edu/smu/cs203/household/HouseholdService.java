@@ -8,6 +8,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import sg.edu.smu.cs203.household.load.LoadArchetype;
@@ -22,6 +24,8 @@ public class HouseholdService {
     private final LoadArchetypeRepository archetypes;
     private final HouseholdOwnershipService ownership;
     private final Clock clock;
+    // Lets F4 recompute suggestions when a household's plan changes (CSDT4-37). No-op until set.
+    private ApplicationEventPublisher events = event -> { };
 
     public HouseholdService(HouseholdRepository households, LoadArchetypeRepository archetypes,
                             HouseholdOwnershipService ownership, Clock clock) {
@@ -29,6 +33,11 @@ public class HouseholdService {
         this.archetypes = archetypes;
         this.ownership = ownership;
         this.clock = clock;
+    }
+
+    @Autowired(required = false)
+    public void setEvents(ApplicationEventPublisher events) {
+        this.events = events;
     }
 
     public List<HouseholdResponse> list(boolean includeSimulated) {
@@ -81,6 +90,7 @@ public class HouseholdService {
         if (!households.update(updated)) {
             throw new HouseholdNotFoundException(householdId);
         }
+        events.publishEvent(new HouseholdChanged(householdId));
         return get(householdId);
     }
 

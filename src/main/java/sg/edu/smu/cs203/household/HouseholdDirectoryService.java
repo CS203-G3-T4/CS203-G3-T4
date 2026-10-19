@@ -27,6 +27,11 @@ public class HouseholdDirectoryService implements HouseholdDirectory {
     }
 
     @Override
+    public List<HouseholdResponse> households() {
+        return households.list(false);
+    }
+
+    @Override
     public HouseholdResponse household(long householdId) {
         return households.get(householdId);
     }
