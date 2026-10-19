@@ -218,7 +218,7 @@ use the rate in Household Settings. Price-linked plans need a resident-entered p
 rate before spending can be estimated. Amounts exclude taxes and fixed fees. These
 figures use F2's load model, not meter readings or a live retail bill.
 
-Forecasting review updates: [V14 database compatibility](docs/forecasting/migration-v14.md),
+Forecasting review updates: [V15 database compatibility](docs/forecasting/migration-v15.md),
 [temporary local admin boundary](docs/forecasting/auth-owner-decision.md), and
 [verified research archives](docs/forecasting/artifacts.md). Check migration lineage
 before upgrading any persistent database; legacy forecast V12/V13 is not automatically

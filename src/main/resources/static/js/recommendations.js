@@ -1,5 +1,6 @@
 // F4 dashboard card: suggested start times (CSDT4-19) with Accept / Dismiss (CSDT4-20), and
-// price spike warnings (CSDT4-38) with Got it / Remind me later.
+// price spike warnings (CSDT4-38) with Got it / Remind me later, and explanations with real
+// numbers, a confidence from past prices and an "estimated" saving (CSDT4-39).
 // Needs wattly.js first. Decisions update the card in place; nothing reloads and nothing runs
 // automatically. Pure helpers are on WattlyRecommendations so they can be tested with Node.
 
@@ -19,6 +20,23 @@ const WattlyRecommendations = {};
 
   WattlyRecommendations.money = function (value) {
     return '$' + Number(value).toFixed(2);
+  };
+
+  // "Estimated saving $2.22" until actual prices are known (CSDT4-53 will show the real saving).
+  WattlyRecommendations.savingText = function (rec) {
+    return (rec.savingEstimated === false ? 'Saved ' : 'Estimated saving ') +
+      WattlyRecommendations.money(rec.estSavingSgd);
+  };
+
+  // How sure: from actual prices on past days, never made up (CSDT4-39).
+  WattlyRecommendations.confidenceText = function (rec) {
+    const suggested = Wattly.prettyTime(WattlyRecommendations.localTime(rec.suggestedStart));
+    const usual = Wattly.prettyTime(WattlyRecommendations.localTime(rec.usualStart));
+    if (rec.confidencePercent === null || rec.confidencePercent === undefined) {
+      return 'How sure: not enough price history yet to check this.';
+    }
+    return 'How sure: ' + suggested + ' was really cheaper than ' + usual + ' on ' + rec.confidenceCheaperDays +
+      ' of ' + rec.confidenceDaysChecked + ' past days (' + rec.confidencePercent + '%).';
   };
 
   WattlyRecommendations.listUrl = function (householdId) {
@@ -90,8 +108,9 @@ const WattlyRecommendations = {};
         '<div class="rec-when">Avoid <strong>' + Wattly.escape(usual) + '</strong>. Run at ' +
           Wattly.escape(instead) + ' instead</div>' +
         '<div class="rec-reason">' + Wattly.escape(rec.reason) + '</div>' +
+        '<div class="rec-confidence">' + Wattly.escape(WattlyRecommendations.confidenceText(rec)) + '</div>' +
       '</div>' +
-      '<div class="rec-saving">Save about ' + Wattly.escape(WattlyRecommendations.money(rec.estSavingSgd)) + '</div>' +
+      '<div class="rec-saving">' + Wattly.escape(WattlyRecommendations.savingText(rec)) + '</div>' +
       '<div class="rec-actions">' +
         '<button type="button" class="btn-primary btn-sm" data-action="got-it">Got it</button>' +
         (WattlyRecommendations.canRemindLater(rec, nowMs)
@@ -114,8 +133,9 @@ const WattlyRecommendations = {};
         '<div class="rec-when">Start at <strong>' + Wattly.escape(Wattly.prettyTime(suggested)) +
           '</strong> instead of ' + Wattly.escape(Wattly.prettyTime(usual)) + '</div>' +
         '<div class="rec-reason">' + Wattly.escape(rec.reason) + '</div>' +
+        '<div class="rec-confidence">' + Wattly.escape(WattlyRecommendations.confidenceText(rec)) + '</div>' +
       '</div>' +
-      '<div class="rec-saving">Save about ' + Wattly.escape(WattlyRecommendations.money(rec.estSavingSgd)) + '</div>' +
+      '<div class="rec-saving">' + Wattly.escape(WattlyRecommendations.savingText(rec)) + '</div>' +
       '<div class="rec-actions">' +
         '<button type="button" class="btn-primary btn-sm" data-action="accept">Accept</button>' +
         '<button type="button" class="btn-ghost btn-sm" data-action="dismiss">Dismiss</button>' +

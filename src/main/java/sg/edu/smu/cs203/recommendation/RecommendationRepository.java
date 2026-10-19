@@ -21,7 +21,8 @@ public class RecommendationRepository {
             SELECT r.id, r.household_id, r.appliance_id, a.name AS appliance_name, r.kind,
                    r.suggested_start, r.usual_start, r.suggested_cost, r.usual_cost, r.est_saving,
                    r.reason, r.forecast_source, r.forecast_model, r.status, r.accepted_start,
-                   r.created_at, r.decided_at, r.spike_start, r.snoozed_until
+                   r.created_at, r.decided_at, r.spike_start, r.snoozed_until,
+                   r.confidence_cheaper_days, r.confidence_days_checked
             FROM recommendation r
             JOIN appliance a ON a.id = r.appliance_id
             """;
@@ -45,7 +46,9 @@ public class RecommendationRepository {
             instant(rs, "created_at"),
             instant(rs, "decided_at"),
             instant(rs, "spike_start"),
-            instant(rs, "snoozed_until"));
+            instant(rs, "snoozed_until"),
+            rs.getObject("confidence_cheaper_days", Integer.class),
+            rs.getObject("confidence_days_checked", Integer.class));
 
     private final JdbcTemplate jdbc;
 
@@ -130,8 +133,8 @@ public class RecommendationRepository {
                 INSERT INTO recommendation
                     (household_id, appliance_id, kind, suggested_start, usual_start, suggested_cost,
                      usual_cost, est_saving, reason, forecast_source, forecast_model, status, created_at,
-                     spike_start, snoozed_until)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                     spike_start, snoozed_until, confidence_cheaper_days, confidence_days_checked)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 RETURNING id
                 """,
                 Long.class,
@@ -149,7 +152,9 @@ public class RecommendationRepository {
                 recommendation.status().name(),
                 Timestamp.from(recommendation.createdAt()),
                 timestamp(recommendation.spikeStart()),
-                timestamp(recommendation.snoozedUntil()));
+                timestamp(recommendation.snoozedUntil()),
+                recommendation.confidenceCheaperDays(),
+                recommendation.confidenceDaysChecked());
         return id;
     }
 

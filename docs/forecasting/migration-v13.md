@@ -1,4 +1,4 @@
-> Historical checkpoint at `2c7fbb4`. Current main now owns V13; use [V14 compatibility](migration-v14.md) for the replacement PR.
+> Historical checkpoint at `2c7fbb4`. Current main now owns V13; use [V15 compatibility](migration-v15.md) for the replacement PR.
 
 # Forecast operations migration: V12 to V13
 

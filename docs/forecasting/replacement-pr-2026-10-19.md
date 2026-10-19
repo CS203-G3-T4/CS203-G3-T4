@@ -1,10 +1,16 @@
 # Replacement F3 PR: current main integration
 
-This PR supersedes #11 for review. Its inputs are reviewed forecasting head `2c7fbb4` and main `b89bf25`. Main now owns V13 recommendation spike warnings, so forecasting moves to V14. Canonical V1-V13 and the forecast SQL bytes are unchanged. See [V14 compatibility](migration-v14.md) before startup; persistent legacy forecast V12/V13 requires an owner-approved copy/cutover.
+**Latest update:** PR #20 changed main to `c8ccfda`, adding recommendation V14.
+PR #21 now integrates that main and uses forecast **V15**. See
+[the merged-tree validation](main-sync-v15-2026-10-19.md) and
+[V15 compatibility](migration-v15.md). The 204-test result below is historical
+evidence for `195ab04`/`b89bf25`; it is not validation of the new merge.
+
+At reviewed checkpoint `195ab04`, this replacement PR superseded #11 using forecasting parent `2c7fbb4` and then-main `b89bf25`. That main owned V13 recommendation spike warnings, so forecasting used V14. Those V1–V13 and forecast SQL bytes were unchanged. This is historical context; current startup uses [V15 compatibility](migration-v15.md), including legacy forecast V12/V13/V14 decisions.
 
 Main also added the required `HalfHourPrice.spike` JSON field and F4 `AVOID` outcome. The first isolated runtime proof failed HTTP 400 at savings replay. Python now sends only saved origin-known forecast spike flags; truth flags cannot influence the recommendation. Java replay follows both SHIFT and AVOID alternatives. A regression deliberately makes the cheapest period a spike and verifies that replay chooses F4's spike-free alternative instead.
 
-## Fresh verification
+## Historical verification of 195ab04, before PR #20
 
 [Compact machine evidence](evidence/2026-10-19-replacement/verification.json) records this replacement tree separately from [historical V13 verification](review-response-2026-10-19.md).
 

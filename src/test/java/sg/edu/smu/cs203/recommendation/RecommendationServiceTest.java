@@ -65,7 +65,7 @@ class RecommendationServiceTest {
         assertThat(row.usualStart()).isEqualTo(sg("2026-09-30T19:45"));
         assertThat(row.estSaving()).isPositive();
         assertThat(row.forecastSource()).isEqualTo(PriceForecast.DEMO);
-        assertThat(row.reason()).startsWith("Start at 13:00 instead of 19:45").contains("demo forecast");
+        assertThat(row.reason()).startsWith("Prices are forecast to be lower earlier").contains("demo forecast");
         verify(repository).logEvent(eq(7L), eq("CREATED"), eq(now), eq(sg("2026-09-30T13:00")), eq(false));
         verify(repository).lockHousehold(1L);
     }

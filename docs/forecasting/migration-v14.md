@@ -1,17 +1,12 @@
-# Forecast operations migration V14
+# Historical forecast V14 checkpoint — superseded
 
-The replacement PR integrates main `b89bf25`, which adds `V13__recommendation_spike_warnings.sql`. Main V1-V13 are preserved unchanged. Forecast operations now use V14 with exactly the SQL bytes previously reviewed as forecast V12/V13.
+Reviewed head `195ab04` used forecast V14 against main `b89bf25` (recommendation
+V1–V13). [The original policy remains in Git history](https://github.com/CS203-G3-T4/CS203-G3-T4/blob/195ab04cc6ac99e6d81e9af292b7e610c512b9c9/docs/forecasting/migration-v14.md).
 
-## Before startup
+Main `c8ccfda` now owns **V14 recommendation confidence**. Forecast operations
+use **V15**. Follow [current startup, upgrade and rollback policy](migration-v15.md)
+and [fresh merged-tree verification](main-sync-v15-2026-10-19.md).
 
-Read the actual database schema's `flyway_schema_history` without changing it. Distinguish canonical recommendation V12/V13 from earlier forecasting migrations with the same version numbers.
-
-- A fresh database or canonical main through V13 follows normal migrations through V14.
-- A durable database with `V12__forecast_operations.sql` or `V13__forecast_operations.sql` belongs to a legacy lineage. Do not apply canonical migrations blindly. Validation should fail while existing business data/history remains intact.
-- Never run Flyway repair/clean, change checksums, or delete data to hide the collision. No persistent database is modified by this PR.
-
-The database owner must approve a rehearsed copy-and-cutover plan for any legacy lineage. Preserve the original database and application for rollback, restore a backup to an isolated database, create a separate canonical V14 target, explicitly map and verify all business rows/keys/sequences, and switch the application connection only after acceptance. Do not copy old Flyway history into the canonical target. The detailed non-destructive planning considerations remain in the [historical lineage document](migration-v13.md).
-
-Regression tests cover fresh V14, canonical main V13 to V14 while preserving budget/recommendation/model rows, and refusal of both legacy forecast V12 and V13 without repairs. Earlier V13 verification reports remain historical evidence and are not relabelled as V14 tests.
-
-Build cleanly so an obsolete forecast-V13 copied resource cannot remain in the jar. Retain canonical migration resources when rolling back compatible application code; do not restart the older conflicting V12/V13 forecasting artifact unchanged against a canonical V14 database.
+An applied forecast V14 is a legacy lineage, not an unapplied file that can be
+renamed in database history. Stop canonical startup until its owner approves a
+safe copy/cutover. Never repair checksums or delete data to conceal the collision.

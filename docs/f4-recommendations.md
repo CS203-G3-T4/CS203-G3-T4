@@ -155,11 +155,38 @@ touches no spike, and the cost avoided by using it (usual cost minus that start'
 - Shift suggestions are answered with Accept / Dismiss, warnings with Got it / Remind me later;
   the wrong pair returns 409.
 
+## Explanations, confidence and estimated savings (CSDT4-39)
+
+**Explanations with real numbers** (`RecommendationExplanation`). Each suggestion says what the
+forecast shows and why the time works, e.g. "Prices are forecast to fall from 31¢ to 20¢/kWh by
+10:00 PM. Starting at 10:00 PM still finishes by 11:00 PM, before your 11:30 PM limit. Estimated
+saving: $0.55 on this run ($1.00 vs $1.55)." Spike warnings give the spike time and both average
+prices. Prices are the forecast average over each run in ¢/kWh (cost ÷ energy; 1 SGD/MWh =
+0.1¢/kWh), times are Singapore time, and the limit is the appliance's "must finish by".
+
+**Confidence, option A** (`BacktestConfidence`). On each of the last 28 days, using actual prices
+(F1's saved history as it was known at the time; read only, nothing changed or filled in), was the
+suggested time really cheaper than the usual time for this run? The card shows "How sure: 1:00 PM
+was really cheaper than 7:45 PM on 23 of 26 past days (88%)." A day with any missing price is
+skipped. With fewer than 14 days checked it says "not enough price history yet" and stores no
+number (V14: `confidence_cheaper_days`, `confidence_days_checked`, both NULL). For the demo
+forecast the 28 days are the ones before its replay day (26 Sep), since it replays that day.
+
+**Estimated saving.** Every saving is shown as "Estimated saving" and the API sends
+`savingEstimated: true`: it comes from the forecast. Realised savings from actual prices are
+CSDT4-53, which will set it to false and show "Saved $x".
+
+**Next sprint: confidence option B.** Once F3 has saved a few weeks of forecasts
+(`forecast_run` / `forecast_point`), also measure how often F3's forecast was right: for past
+forecasts that said the suggested time would be cheaper, compare with the actual prices that
+followed. Option A answers "is this time usually cheaper?"; option B answers "can we trust the
+forecast?". Keep the same rules: only real data, a minimum number of cases, otherwise no number.
+
 ## Not done here (later stories)
 
-- Richer explanations (CSDT4-39).
-- Realised savings from actual prices (CSDT4-53), and feeding accepted runs into F2's load
-  profile.
+- Confidence option B (next sprint, see above).
+- Realised savings from actual prices (CSDT4-53; the "estimated" label is ready for it), and
+  feeding accepted runs into F2's load profile.
 - Login: accept/dismiss are open to anyone until CSDT4-23.
 
 ## Try it

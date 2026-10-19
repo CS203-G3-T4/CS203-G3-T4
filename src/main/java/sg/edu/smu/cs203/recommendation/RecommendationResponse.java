@@ -10,6 +10,11 @@ import java.time.Instant;
  * kind AVOID is a spike warning (CSDT4-38): usualStart is the time to avoid, spikeStart the first
  * spike half-hour, suggestedStart the spike-free alternative and estSavingSgd the cost avoided.
  * remindAt is set after "Remind me later".
+ *
+ * CSDT4-39: reason explains the suggestion with the forecast prices (¢/kWh), times and window
+ * limit. confidence* say on how many of the last 28 days (with actual prices) the suggested time
+ * was really cheaper; all null when there wasn't enough history. savingEstimated is true while the
+ * saving comes from the forecast; realised savings from actual prices come with CSDT4-53.
  */
 public record RecommendationResponse(
         long id,
@@ -31,9 +36,15 @@ public record RecommendationResponse(
         Instant createdAt,
         Instant decidedAt,
         Instant spikeStart,
-        Instant remindAt) {
+        Instant remindAt,
+        Integer confidenceCheaperDays,
+        Integer confidenceDaysChecked,
+        Integer confidencePercent,
+        boolean savingEstimated) {
 
     public static RecommendationResponse from(Recommendation r) {
+        Integer percent = r.confidenceDaysChecked() == null ? null
+                : new BacktestConfidence.Confidence(r.confidenceCheaperDays(), r.confidenceDaysChecked()).percent();
         return new RecommendationResponse(
                 r.id(),
                 r.householdId(),
@@ -54,6 +65,10 @@ public record RecommendationResponse(
                 r.createdAt(),
                 r.decidedAt(),
                 r.spikeStart(),
-                r.snoozedUntil());
+                r.snoozedUntil(),
+                r.confidenceCheaperDays(),
+                r.confidenceDaysChecked(),
+                percent,
+                true);
     }
 }

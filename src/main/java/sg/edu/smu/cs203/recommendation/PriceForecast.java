@@ -2,6 +2,7 @@ package sg.edu.smu.cs203.recommendation;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -10,14 +11,21 @@ import java.util.List;
  * @param source DEMO_FORECAST (fixed replay-day curve) or F3_FORECAST (F3's saved forecast)
  * @param model  which model produced it, e.g. "B2" or "AI" for F3, or the replay day for the demo
  * @param points one price per half-hour, in time order, each starting on a :00 or :30 boundary
+ * @param replayDay for the demo forecast, the past day it replays (Singapore date); null for F3.
+ *                  Confidence (CSDT4-39) is then judged on the weeks before that day.
  */
-public record PriceForecast(String source, String model, Instant asOf, List<HalfHourPrice> points) {
+public record PriceForecast(String source, String model, Instant asOf, List<HalfHourPrice> points,
+                            LocalDate replayDay) {
 
     public static final String DEMO = "DEMO_FORECAST";
     public static final String F3 = "F3_FORECAST";
 
     public PriceForecast {
         points = List.copyOf(points);
+    }
+
+    public PriceForecast(String source, String model, Instant asOf, List<HalfHourPrice> points) {
+        this(source, model, asOf, points, null);
     }
 
     public boolean isDemo() {
