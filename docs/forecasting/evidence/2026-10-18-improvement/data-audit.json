@@ -1,0 +1,232 @@
+{
+  "rowCount": 1188,
+  "periodCount": 1150,
+  "missingHalfHours": 1187,
+  "duplicateRows": 0,
+  "revisionRows": 38,
+  "staleObservations": 2,
+  "parsingFailures": [],
+  "from": "2026-08-30T15:30:00+00:00",
+  "to": "2026-10-18T07:30:00+00:00",
+  "mappingVerified": false,
+  "publicationVintages": true,
+  "snapshotAcquiredAt": "2026-10-18T07:34:19.867028+00:00",
+  "days": [
+    {
+      "date": "2026-08-30",
+      "periods": 1,
+      "truthPeriodsAvailableByDayEnd": 0,
+      "completeElapsedDay": false
+    },
+    {
+      "date": "2026-09-04",
+      "periods": 1,
+      "truthPeriodsAvailableByDayEnd": 0,
+      "completeElapsedDay": false
+    },
+    {
+      "date": "2026-09-23",
+      "periods": 15,
+      "truthPeriodsAvailableByDayEnd": 15,
+      "completeElapsedDay": false
+    },
+    {
+      "date": "2026-09-24",
+      "periods": 48,
+      "truthPeriodsAvailableByDayEnd": 48,
+      "completeElapsedDay": true
+    },
+    {
+      "date": "2026-09-25",
+      "periods": 48,
+      "truthPeriodsAvailableByDayEnd": 48,
+      "completeElapsedDay": true
+    },
+    {
+      "date": "2026-09-26",
+      "periods": 48,
+      "truthPeriodsAvailableByDayEnd": 48,
+      "completeElapsedDay": true
+    },
+    {
+      "date": "2026-09-27",
+      "periods": 48,
+      "truthPeriodsAvailableByDayEnd": 48,
+      "completeElapsedDay": true
+    },
+    {
+      "date": "2026-09-28",
+      "periods": 48,
+      "truthPeriodsAvailableByDayEnd": 48,
+      "completeElapsedDay": true
+    },
+    {
+      "date": "2026-09-29",
+      "periods": 48,
+      "truthPeriodsAvailableByDayEnd": 48,
+      "completeElapsedDay": true
+    },
+    {
+      "date": "2026-09-30",
+      "periods": 44,
+      "truthPeriodsAvailableByDayEnd": 44,
+      "completeElapsedDay": false
+    },
+    {
+      "date": "2026-10-01",
+      "periods": 46,
+      "truthPeriodsAvailableByDayEnd": 46,
+      "completeElapsedDay": false
+    },
+    {
+      "date": "2026-10-02",
+      "periods": 48,
+      "truthPeriodsAvailableByDayEnd": 48,
+      "completeElapsedDay": true
+    },
+    {
+      "date": "2026-10-03",
+      "periods": 48,
+      "truthPeriodsAvailableByDayEnd": 48,
+      "completeElapsedDay": true
+    },
+    {
+      "date": "2026-10-04",
+      "periods": 10,
+      "truthPeriodsAvailableByDayEnd": 10,
+      "completeElapsedDay": false
+    },
+    {
+      "date": "2026-10-05",
+      "periods": 48,
+      "truthPeriodsAvailableByDayEnd": 48,
+      "completeElapsedDay": true
+    },
+    {
+      "date": "2026-10-06",
+      "periods": 48,
+      "truthPeriodsAvailableByDayEnd": 48,
+      "completeElapsedDay": true
+    },
+    {
+      "date": "2026-10-07",
+      "periods": 48,
+      "truthPeriodsAvailableByDayEnd": 48,
+      "completeElapsedDay": true
+    },
+    {
+      "date": "2026-10-08",
+      "periods": 48,
+      "truthPeriodsAvailableByDayEnd": 48,
+      "completeElapsedDay": true
+    },
+    {
+      "date": "2026-10-09",
+      "periods": 48,
+      "truthPeriodsAvailableByDayEnd": 48,
+      "completeElapsedDay": true
+    },
+    {
+      "date": "2026-10-10",
+      "periods": 48,
+      "truthPeriodsAvailableByDayEnd": 48,
+      "completeElapsedDay": true
+    },
+    {
+      "date": "2026-10-11",
+      "periods": 48,
+      "truthPeriodsAvailableByDayEnd": 48,
+      "completeElapsedDay": true
+    },
+    {
+      "date": "2026-10-12",
+      "periods": 48,
+      "truthPeriodsAvailableByDayEnd": 48,
+      "completeElapsedDay": true
+    },
+    {
+      "date": "2026-10-13",
+      "periods": 48,
+      "truthPeriodsAvailableByDayEnd": 48,
+      "completeElapsedDay": true
+    },
+    {
+      "date": "2026-10-14",
+      "periods": 41,
+      "truthPeriodsAvailableByDayEnd": 41,
+      "completeElapsedDay": false
+    },
+    {
+      "date": "2026-10-15",
+      "periods": 48,
+      "truthPeriodsAvailableByDayEnd": 48,
+      "completeElapsedDay": true
+    },
+    {
+      "date": "2026-10-16",
+      "periods": 48,
+      "truthPeriodsAvailableByDayEnd": 48,
+      "completeElapsedDay": true
+    },
+    {
+      "date": "2026-10-17",
+      "periods": 48,
+      "truthPeriodsAvailableByDayEnd": 48,
+      "completeElapsedDay": true
+    },
+    {
+      "date": "2026-10-18",
+      "periods": 32,
+      "truthPeriodsAvailableByDayEnd": 32,
+      "completeElapsedDay": false
+    }
+  ],
+  "gaps": [
+    {
+      "after": "2026-08-30T23:30:00+08:00",
+      "before": "2026-09-04T23:30:00+08:00",
+      "missingHalfHours": 239
+    },
+    {
+      "after": "2026-09-04T23:30:00+08:00",
+      "before": "2026-09-23T15:00:00+08:00",
+      "missingHalfHours": 894
+    },
+    {
+      "after": "2026-09-23T17:00:00+08:00",
+      "before": "2026-09-23T19:00:00+08:00",
+      "missingHalfHours": 3
+    },
+    {
+      "after": "2026-09-30T18:00:00+08:00",
+      "before": "2026-09-30T20:30:00+08:00",
+      "missingHalfHours": 4
+    },
+    {
+      "after": "2026-10-01T19:00:00+08:00",
+      "before": "2026-10-01T20:30:00+08:00",
+      "missingHalfHours": 2
+    },
+    {
+      "after": "2026-10-04T04:00:00+08:00",
+      "before": "2026-10-04T23:30:00+08:00",
+      "missingHalfHours": 38
+    },
+    {
+      "after": "2026-10-14T08:00:00+08:00",
+      "before": "2026-10-14T12:00:00+08:00",
+      "missingHalfHours": 7
+    }
+  ],
+  "knownPeriodsAtSnapshot": 1150,
+  "availabilityBeforePublication": 0,
+  "availabilityLagSeconds": {
+    "minimum": 36.0,
+    "maximum": 2651532.0
+  },
+  "trainingStart": "2026-09-24T00:00:00+08:00",
+  "testStart": "2026-10-17T00:00:00+08:00",
+  "testEnd": "2026-10-18T00:00:00+08:00",
+  "laterIncompleteElapsedDays": [],
+  "sqliteQuickCheck": "ok"
+}

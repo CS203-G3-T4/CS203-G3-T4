@@ -1,0 +1,66 @@
+{
+  "createdAt": "2026-10-18T09:51:15.550471+00:00",
+  "purpose": "Additional fixed-setting diagnostic tests; no model/threshold selection or promotion",
+  "historicalTrainingStart": "2025-07-01T00:00:00+08:00",
+  "historicalWindows": [
+    {
+      "start": "2026-06-01T00:00:00+08:00",
+      "end": "2026-06-29T00:00:00+08:00"
+    },
+    {
+      "start": "2026-07-01T00:00:00+08:00",
+      "end": "2026-07-29T00:00:00+08:00"
+    }
+  ],
+  "historicalCandidates": {
+    "LONG_HISTORY": {
+      "window": "LONG",
+      "family": "DEFAULT",
+      "parameters": {
+        "max_iter": 40,
+        "max_leaf_nodes": 15,
+        "l2_regularization": 1,
+        "random_state": 42
+      }
+    },
+    "RECENT_28D": {
+      "window": "RECENT",
+      "family": "DEFAULT",
+      "parameters": {
+        "max_iter": 40,
+        "max_leaf_nodes": 15,
+        "l2_regularization": 1,
+        "random_state": 42
+      }
+    }
+  },
+  "historicalTruth": "RETROSPECTIVE_FINAL_PRICE; original null receipt/publication timestamps preserved",
+  "interpretation": "Chronological fold-strategy diagnostics, not the October18-fitted artifact forecasting its own past; July reproduces the already-used validation window",
+  "protectedOriginalTest": "No new fits or candidate selection use July29\u2013September22; existing saved old-AI test predictions are graded separately without fitting",
+  "recentPanels": {
+    "allMethods": "Existing common coverage, all ten methods",
+    "withoutB3": [
+      "PREVIOUS_AI",
+      "LONG_DEFAULT",
+      "B1",
+      "B2"
+    ],
+    "aiOnly": [
+      "PREVIOUS_AI",
+      "LONG_DEFAULT"
+    ]
+  },
+  "panelPolicy": "Compare identical pairs within each panel; never compare different-panel rates as a fair ranking",
+  "dailyStability": "Descriptive leave-one-origin-day-out recall/false-positive differences; no independence claim or confidence interval",
+  "spikeConfig": {
+    "windowDays": 28,
+    "minimumSamples": 14,
+    "k": 3.0,
+    "spreadFloor": 1.0
+  },
+  "futureConfirmation": "2026-10-19 through2026-11-01; original candidate, selection and plan retained",
+  "frozenFuturePlanSha256": "c953a28d575ba52b087941657842743466edc491ffb531fd43e80b521aab0b32",
+  "frozenCandidateSha256": "b06bcee658d155f20a31c5be8e467dca67d337627e8f5f14535acad2dfd121bd",
+  "genuineSpikeLabelsAvailable": false,
+  "productionEligible": false
+}

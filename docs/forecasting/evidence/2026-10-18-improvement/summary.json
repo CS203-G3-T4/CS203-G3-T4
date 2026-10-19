@@ -1,0 +1,182 @@
+{
+  "status": "COMPLETE",
+  "selectedCandidate": "LONG_DEFAULT",
+  "bestMethod": "PREVIOUS_AI",
+  "baseline": "B3",
+  "folds": [
+    {
+      "start": "2026-10-09T16:00:00+00:00",
+      "end": "2026-10-12T16:00:00+00:00",
+      "commonPairs": 624,
+      "mae": {
+        "B1": 140.15810897435898,
+        "B2": 264.76616987179483,
+        "B3": 157.89077152014653,
+        "LONG_DEFAULT": 156.1053370585166,
+        "LONG_RESIDUAL_B2": 143.8265363950618,
+        "LONG_ROBUST": 198.38851477897234,
+        "PREVIOUS_AI": 150.64156571903854,
+        "RECENT_DEFAULT": 185.25118654279083,
+        "RECENT_RESIDUAL_B2": 249.67063176836322,
+        "RECENT_ROBUST": 182.79977252505805
+      },
+      "training": {
+        "LONG_DEFAULT": {
+          "trainingOriginsPerHorizon": 19392,
+          "excludedMissingBaselineOrigins": 0,
+          "finalPriceOriginsBeforeBaselineFilter": 18840,
+          "provisionalOriginsBeforeBaselineFilter": 552
+        },
+        "LONG_ROBUST": {
+          "trainingOriginsPerHorizon": 19392,
+          "excludedMissingBaselineOrigins": 0,
+          "finalPriceOriginsBeforeBaselineFilter": 18840,
+          "provisionalOriginsBeforeBaselineFilter": 552
+        },
+        "LONG_RESIDUAL_B2": {
+          "trainingOriginsPerHorizon": 19236,
+          "excludedMissingBaselineOrigins": 156,
+          "finalPriceOriginsBeforeBaselineFilter": 18840,
+          "provisionalOriginsBeforeBaselineFilter": 552
+        },
+        "RECENT_DEFAULT": {
+          "trainingOriginsPerHorizon": 552,
+          "excludedMissingBaselineOrigins": 0,
+          "finalPriceOriginsBeforeBaselineFilter": 0,
+          "provisionalOriginsBeforeBaselineFilter": 552
+        },
+        "RECENT_ROBUST": {
+          "trainingOriginsPerHorizon": 552,
+          "excludedMissingBaselineOrigins": 0,
+          "finalPriceOriginsBeforeBaselineFilter": 0,
+          "provisionalOriginsBeforeBaselineFilter": 552
+        },
+        "RECENT_RESIDUAL_B2": {
+          "trainingOriginsPerHorizon": 396,
+          "excludedMissingBaselineOrigins": 156,
+          "finalPriceOriginsBeforeBaselineFilter": 0,
+          "provisionalOriginsBeforeBaselineFilter": 552
+        }
+      }
+    },
+    {
+      "start": "2026-10-12T16:00:00+00:00",
+      "end": "2026-10-14T16:00:00+00:00",
+      "commonPairs": 1431,
+      "mae": {
+        "B1": 273.00292918704866,
+        "B2": 269.00491963661773,
+        "B3": 226.2151891783967,
+        "LONG_DEFAULT": 212.0147374422781,
+        "LONG_RESIDUAL_B2": 228.49387046443985,
+        "LONG_ROBUST": 238.0789116366733,
+        "PREVIOUS_AI": 216.80266445669452,
+        "RECENT_DEFAULT": 222.4106604187493,
+        "RECENT_RESIDUAL_B2": 276.09506048952295,
+        "RECENT_ROBUST": 208.94727452950517
+      },
+      "training": {
+        "LONG_DEFAULT": {
+          "trainingOriginsPerHorizon": 19536,
+          "excludedMissingBaselineOrigins": 0,
+          "finalPriceOriginsBeforeBaselineFilter": 18840,
+          "provisionalOriginsBeforeBaselineFilter": 696
+        },
+        "LONG_ROBUST": {
+          "trainingOriginsPerHorizon": 19536,
+          "excludedMissingBaselineOrigins": 0,
+          "finalPriceOriginsBeforeBaselineFilter": 18840,
+          "provisionalOriginsBeforeBaselineFilter": 696
+        },
+        "LONG_RESIDUAL_B2": {
+          "trainingOriginsPerHorizon": 19380,
+          "excludedMissingBaselineOrigins": 156,
+          "finalPriceOriginsBeforeBaselineFilter": 18840,
+          "provisionalOriginsBeforeBaselineFilter": 696
+        },
+        "RECENT_DEFAULT": {
+          "trainingOriginsPerHorizon": 696,
+          "excludedMissingBaselineOrigins": 0,
+          "finalPriceOriginsBeforeBaselineFilter": 0,
+          "provisionalOriginsBeforeBaselineFilter": 696
+        },
+        "RECENT_ROBUST": {
+          "trainingOriginsPerHorizon": 696,
+          "excludedMissingBaselineOrigins": 0,
+          "finalPriceOriginsBeforeBaselineFilter": 0,
+          "provisionalOriginsBeforeBaselineFilter": 696
+        },
+        "RECENT_RESIDUAL_B2": {
+          "trainingOriginsPerHorizon": 540,
+          "excludedMissingBaselineOrigins": 156,
+          "finalPriceOriginsBeforeBaselineFilter": 0,
+          "provisionalOriginsBeforeBaselineFilter": 696
+        }
+      }
+    },
+    {
+      "start": "2026-10-14T16:00:00+00:00",
+      "end": "2026-10-16T16:00:00+00:00",
+      "commonPairs": 456,
+      "mae": {
+        "B1": 168.28880116959064,
+        "B2": 283.1614912280702,
+        "B3": 168.78690476190476,
+        "LONG_DEFAULT": 92.80387226395361,
+        "LONG_RESIDUAL_B2": 153.99032108499344,
+        "LONG_ROBUST": 61.26855042012788,
+        "PREVIOUS_AI": 67.4418420350179,
+        "RECENT_DEFAULT": 176.57297758890672,
+        "RECENT_RESIDUAL_B2": 116.00765506868807,
+        "RECENT_ROBUST": 107.95226437156592
+      },
+      "training": {
+        "LONG_DEFAULT": {
+          "trainingOriginsPerHorizon": 19601,
+          "excludedMissingBaselineOrigins": 0,
+          "finalPriceOriginsBeforeBaselineFilter": 18840,
+          "provisionalOriginsBeforeBaselineFilter": 761
+        },
+        "LONG_ROBUST": {
+          "trainingOriginsPerHorizon": 19601,
+          "excludedMissingBaselineOrigins": 0,
+          "finalPriceOriginsBeforeBaselineFilter": 18840,
+          "provisionalOriginsBeforeBaselineFilter": 761
+        },
+        "LONG_RESIDUAL_B2": {
+          "trainingOriginsPerHorizon": 19445,
+          "excludedMissingBaselineOrigins": 156,
+          "finalPriceOriginsBeforeBaselineFilter": 18840,
+          "provisionalOriginsBeforeBaselineFilter": 761
+        },
+        "RECENT_DEFAULT": {
+          "trainingOriginsPerHorizon": 761,
+          "excludedMissingBaselineOrigins": 0,
+          "finalPriceOriginsBeforeBaselineFilter": 0,
+          "provisionalOriginsBeforeBaselineFilter": 761
+        },
+        "RECENT_ROBUST": {
+          "trainingOriginsPerHorizon": 761,
+          "excludedMissingBaselineOrigins": 0,
+          "finalPriceOriginsBeforeBaselineFilter": 0,
+          "provisionalOriginsBeforeBaselineFilter": 761
+        },
+        "RECENT_RESIDUAL_B2": {
+          "trainingOriginsPerHorizon": 605,
+          "excludedMissingBaselineOrigins": 156,
+          "finalPriceOriginsBeforeBaselineFilter": 0,
+          "provisionalOriginsBeforeBaselineFilter": 761
+        }
+      }
+    }
+  ],
+  "limitations": [
+    "Repeated development windows are exploratory, not an untouched test.",
+    "Final-price training assumes period-end availability; current evaluation uses genuine provisional vintages.",
+    "No origin-known demand forecasts or independent genuine-spike labels; no savings improvement claim.",
+    "Final fitted weights have not been independently evaluated; future confirmation remains pending."
+  ],
+  "productionEligible": false,
+  "originalModelUnchanged": true,
+  "protectedTestEvaluatedForSelection": false
+}

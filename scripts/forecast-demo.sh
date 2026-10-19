@@ -88,7 +88,7 @@ case ${1:-status} in
     if [[ ! -f "$live_dataset/manifest.json" ]]; then
       "$WATTLY_DEMO_PYTHON" -m wattly_ml.cli prepare "$snapshot_dir" --output "$live_dataset" > "$run/import-manifest.json"
     fi
-    launch spring "$JAVA_HOME/bin/java" -jar "$jar" "${db_args[@]}" --server.address=127.0.0.1 --server.port="$app_port" \
+    launch spring "$JAVA_HOME/bin/java" -jar "$jar" "${db_args[@]}" --server.address=0.0.0.0 --server.port="$app_port" \
       --market.feed.enabled=true --weather.daily.enabled=true --forecast.import-file="$live_dataset/prices.jsonl" \
       --spring.web.resources.static-locations="classpath:/static/,file:$WATTLY_DEMO_EXPERIMENT/public/"
     wait_http spring "http://127.0.0.1:$app_port/actuator/health"

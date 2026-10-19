@@ -7,6 +7,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -91,10 +92,78 @@ class RecommendationControllerTest {
                 .andExpect(status().isNotFound());
     }
 
+    @Test
+    void gotItAndRemindMeLaterAreSeparateEndpoints() throws Exception {
+        when(service.gotIt(7L)).thenReturn(response(RecommendationStatus.ACKNOWLEDGED));
+        when(service.remindLater(8L)).thenReturn(response(RecommendationStatus.ACTIVE));
+
+        mvc.perform(post("/api/v1/recommendations/7/got-it"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("ACKNOWLEDGED"));
+        mvc.perform(post("/api/v1/recommendations/8/remind-later"))
+                .andExpect(status().isOk());
+        verify(service).remindLater(8L);
+    }
+
+    @Test
+    void anActionThatDoesntFitTheSuggestionIsA409() throws Exception {
+        when(service.gotIt(5L)).thenThrow(new RecommendationActionNotAllowedException(
+                "Got it and Remind me later are only for price spike warnings"));
+
+        mvc.perform(post("/api/v1/recommendations/5/got-it"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.title").value("Not available for this suggestion"));
+    }
+
+    @Test
+    void theStatusParameterPicksATabAndAnUnknownOneIsA400() throws Exception {
+        when(service.list(eq(1L), eq(RecommendationTab.ACCEPTED))).thenReturn(
+                new RecommendationsResponse(1L, null, null, false, null, java.util.List.of(), null));
+
+        mvc.perform(get("/api/v1/households/1/recommendations").param("status", "accepted"))
+                .andExpect(status().isOk());
+        verify(service).list(1L, RecommendationTab.ACCEPTED);
+        mvc.perform(get("/api/v1/households/1/recommendations").param("status", "LATER"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.status").value("Use ACTIVE, ACCEPTED, DISMISSED or HISTORY"));
+    }
+
+    @Test
+    void withoutAStatusTheDashboardListIsUsed() throws Exception {
+        when(service.list(1L)).thenReturn(
+                new RecommendationsResponse(1L, null, null, false, null, java.util.List.of(), null));
+
+        mvc.perform(get("/api/v1/households/1/recommendations")).andExpect(status().isOk());
+        verify(service).list(1L);
+    }
+
+    @Test
+    void snoozeTakesTheChosenTimeAndRejectsABadOne() throws Exception {
+        when(service.snooze(eq(5L), any())).thenReturn(response(RecommendationStatus.ACTIVE));
+
+        mvc.perform(post("/api/v1/recommendations/5/snooze")
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"until\": \"15:30\"}"))
+                .andExpect(status().isOk());
+        verify(service).snooze(5L, new SnoozeRequest("15:30"));
+        mvc.perform(post("/api/v1/recommendations/5/snooze")
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"until\": \"later\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.until").value("Use a time like 15:30"));
+    }
+
+    @Test
+    void theDemoForecastIsA404WhileF3IsInUse() throws Exception {
+        when(service.demoForecast()).thenThrow(new DemoForecastNotInUseException());
+
+        mvc.perform(get("/api/v1/recommendations/demo-forecast"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.title").value("Demo forecast not in use"));
+    }
+
     private static RecommendationResponse response(RecommendationStatus status) {
         Instant at = Instant.parse("2026-09-30T05:00:00Z");
         return new RecommendationResponse(5L, 1L, 10L, "Tumble Dryer", "SHIFT_START", at, at, at,
                 BigDecimal.ONE, BigDecimal.TEN, new BigDecimal("9"), "reason", PriceForecast.DEMO, "demo", true,
-                status, at, at);
+                status, at, at, null, null, null, null, null, true, null, at);
     }
 }

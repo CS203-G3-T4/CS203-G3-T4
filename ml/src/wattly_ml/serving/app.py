@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 import os
 import logging
+import threading
 from pathlib import Path
 from typing import Literal
 
@@ -10,6 +11,7 @@ from fastapi.responses import JSONResponse
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
 
 from ..artifacts import current_bundle
+from ..data import KnownPrices
 from ..backtest import predict
 from ..spikes import reference
 from ..timebase import DAY, floor, targets
@@ -32,9 +34,18 @@ class Weather(BaseModel):
     validEnd: AwareDatetime
 
 
+class ExpectedDemand(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    targetPeriod: AwareDatetime
+    publishedAt: AwareDatetime
+    availableAt: AwareDatetime
+    demandMw: float = Field(ge=0,allow_inf_nan=False)
+    source: str = Field(min_length=1,max_length=200)
+
+
 class ForecastRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    schemaVersion: Literal[1]
+    schemaVersion: Literal[1,2]
     requestId: str = Field(min_length=1,max_length=128)
     asOf: AwareDatetime
     intervalMinutes: Literal[30]
@@ -42,6 +53,7 @@ class ForecastRequest(BaseModel):
     mappingVerified: bool
     priceHistory: list[Price] = Field(min_length=1,max_length=1441)
     weather: list[Weather] = Field(default_factory=list,max_length=100)
+    expectedDemand: list[ExpectedDemand] = Field(default_factory=list,max_length=1440)
 
     @model_validator(mode="after")
     def temporal_contract(self):
@@ -55,12 +67,22 @@ class ForecastRequest(BaseModel):
         for row in self.weather:
             if max(row.issuedAt,row.updatedAt,row.availableAt)>self.asOf or row.validStart>=row.validEnd:
                 raise ValueError("Future or invalid weather")
+        seen = {}
+        for row in self.expectedDemand:
+            if row.targetPeriod != floor(row.targetPeriod) or row.publishedAt > row.availableAt or row.availableAt > self.asOf:
+                raise ValueError('Future or invalid expected-demand vintage')
+            key = (row.targetPeriod,row.publishedAt,row.availableAt)
+            if key in seen and seen[key] != row.demandMw:
+                raise ValueError('Conflicting expected-demand vintages')
+            seen[key] = row.demandMw
         return self
 
 
 def create_app(loader=None):
     @asynccontextmanager
     async def lifespan(app):
+        app.state.reload_lock = threading.Lock()
+        app.state.pointer = None
         app.state.bundle = None
         app.state.unavailable = "MODEL_ABSENT"
         try:
@@ -71,12 +93,28 @@ def create_app(loader=None):
                 if not home:
                     raise ValueError("Set WATTLY_ML_HOME to the trusted artifact directory")
                 app.state.bundle = current_bundle(Path(home))
+                app.state.pointer = (Path(home)/'current.json').read_bytes()
             app.state.unavailable = None
         except Exception as exc:
             app.state.unavailable = type(exc).__name__ + ": " + str(exc)
             logging.getLogger("wattly_ml").warning("Model not ready: %s",app.state.unavailable)
         yield
     app = FastAPI(title="Wattly internal inference",lifespan=lifespan)
+
+    def refresh_bundle():
+        if loader:
+            return
+        home = Path(os.environ.get('WATTLY_ML_HOME','/nonexistent-wattly-home'))
+        with app.state.reload_lock:
+            try:
+                pointer = (home/'current.json').read_bytes()
+                if pointer != app.state.pointer:
+                    bundle = current_bundle(home)
+                    app.state.bundle, app.state.pointer, app.state.unavailable = bundle, pointer, None
+            except (OSError, ValueError, KeyError) as exc:
+                app.state.bundle = None
+                app.state.pointer = None
+                app.state.unavailable = 'MODEL_RELOAD_FAILED: '+str(exc)
 
     @app.middleware("http")
     async def bounded_body(request: Request, call_next):
@@ -95,25 +133,31 @@ def create_app(loader=None):
 
     @app.get("/ready")
     def ready():
-        if app.state.bundle is None:
+        refresh_bundle()
+        bundle = app.state.bundle
+        if bundle is None:
             return JSONResponse(status_code=503,content={"ready":False,"reason":app.state.unavailable})
-        return {"ready":True,"modelVersion":app.state.bundle["manifest"]["version"]}
+        return {"ready":True,"modelVersion":bundle["manifest"]["version"]}
 
     @app.post("/forecast")
     def forecast(request: ForecastRequest):
-        if app.state.bundle is None:
+        refresh_bundle()
+        # One immutable bundle per request, even when another request reloads the pointer.
+        bundle = app.state.bundle
+        if bundle is None:
             raise HTTPException(503,detail={"code":"MODEL_UNAVAILABLE","reason":app.state.unavailable})
         if not request.mappingVerified:
             raise HTTPException(503,detail={"code":"PERIOD_MAPPING_UNVERIFIED"})
         from ..timebase import instant
-        manifest = app.state.bundle["manifest"]
+        manifest = bundle["manifest"]
         if max(instant(manifest["usableFrom"]),instant(manifest["trainingDate"]))>request.asOf:
             raise HTTPException(503,detail={"code":"MODEL_FROM_FUTURE"})
         if (request.asOf-max(r.sourceUpdatedAt for r in request.priceHistory)).total_seconds()>2400:
             raise HTTPException(503,detail={"code":"STALE_INPUT"})
-        history = {r.periodStart:r.model_dump() for r in request.priceHistory}
+        history = KnownPrices({r.periodStart:r.model_dump() for r in request.priceHistory},
+                              [r.model_dump() for r in request.expectedDemand])
         try:
-            predictions = predict(app.state.bundle,history,request.asOf)
+            predictions = predict(bundle,history,request.asOf)
         except Exception:
             raise HTTPException(503,detail={"code":"MODEL_INFERENCE_FAILED"})
         import math
@@ -125,11 +169,13 @@ def create_app(loader=None):
             points.append({"horizon":h,"targetPeriod":target,"predictedUsep":value,
                            "spikeThreshold":ref["threshold"], "spikeFlag":value>ref["threshold"] if ref["available"] else None,
                            "assessmentAvailable":ref["available"]})
-        return {"schemaVersion":1,"requestId":request.requestId,"asOf":request.asOf,
+        return {"schemaVersion":request.schemaVersion,"requestId":request.requestId,"asOf":request.asOf,
                 "generatedAt":datetime.now(timezone.utc),"units":"SGD_PER_MWH","modelType":"AI",
                 "modelVersion":manifest["version"],"usableFrom":manifest["usableFrom"],
                 "baselineRanking":manifest["baselineRanking"],"manifest":manifest,
-                "points":points,"qualityFlags":["PRICE_CALENDAR_ONLY"]+(["RETROSPECTIVE_TRAINING"] if manifest["retrospective"] else [])}
+                "points":points,"qualityFlags":(['PRICE_CALENDAR_ONLY'] if manifest.get('featureSchemaVersion',1)==1 else
+                    ['PRICE_CALENDAR_HOLIDAY_DEMAND', 'EXPECTED_DEMAND_PARTIAL_OR_MISSING'] if len({r.targetPeriod for r in request.expectedDemand if r.targetPeriod in targets(request.asOf)})<24 else ['PRICE_CALENDAR_HOLIDAY_DEMAND'])+
+                    (["RETROSPECTIVE_TRAINING"] if manifest["retrospective"] else [])}
     return app
 
 

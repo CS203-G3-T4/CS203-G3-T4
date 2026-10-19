@@ -29,7 +29,9 @@ public class F3PriceForecastSource implements PriceForecastSource {
         List<PriceForecast.HalfHourPrice> points = new ArrayList<>();
         for (ForecastTypes.Point point : run.points()) {
             if (point.predictedUsep() != null) {
-                points.add(new PriceForecast.HalfHourPrice(point.targetPeriod(), point.predictedUsep()));
+                // spikeFlag is null when F3 had too little history to judge; that is not a spike.
+                points.add(new PriceForecast.HalfHourPrice(point.targetPeriod(), point.predictedUsep(),
+                        Boolean.TRUE.equals(point.spikeFlag())));
             }
         }
         if (points.isEmpty()) {

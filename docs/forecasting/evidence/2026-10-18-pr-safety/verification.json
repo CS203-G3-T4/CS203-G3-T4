@@ -1,0 +1,86 @@
+{
+  "date": "2026-10-18",
+  "testedHead": "7415e103d5798db322d3b070044167a9d368a86d",
+  "pendingMergeMain": "941e7445c0546d031ff34699e537395a5ef62c5a",
+  "scope": "Resolved staged merge plus local forecasting changes; no commit or push",
+  "java": {
+    "tests": 140,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "python": {
+    "tests": 40,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "pythonWarning": "One upstream Starlette/AnyIO deprecation warning",
+  "frontend": {
+    "tests": 10,
+    "failures": 0,
+    "skipped": 0
+  },
+  "postgresVersion": "17.11 (native local server)",
+  "stack": {
+    "status": "PASS",
+    "isolatedPostgres": true,
+    "postgresVersion": "17",
+    "realSpringPythonHttp": true,
+    "realBrowserPages": true,
+    "weeklyShortDataAttemptExit": 2,
+    "nativeTimerFired": true,
+    "fullSuitesInThisInvocation": true,
+    "mainDashboardRecommendationsBudgetPages": true,
+    "defaultStartupWithoutPythonOrHistory": true,
+    "mainRecommendationDefaultPreserved": true,
+    "configuredHouseholdScenarios": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "collectorModified": false,
+    "liveDatabaseUsed": false,
+    "archivedCollectorFeed": "Original payload/timestamps preserved; only the isolated app receives this local archived feed"
+  },
+  "defaultStartup": {
+    "healthyWithoutPythonOrHistory": true,
+    "mainDemoDefaultPreserved": true,
+    "fixedRateBudgetPreserved": true,
+    "existingPagesAvailable": true,
+    "freshDatabaseForecastHonestlyUnavailable": true
+  },
+  "forecastBrowser": {
+    "source": "ISOLATED_APP_WITH_ARCHIVED_REAL_COLLECTOR_PRICES",
+    "actualPageRequests": true,
+    "anonymousApiStatus": 403,
+    "anonymousPageStatus": 401,
+    "adminAuthorized": true,
+    "residentAvailable": true,
+    "residentMethod": "B2",
+    "residentForecastRows": 24,
+    "actualPeriods": 15,
+    "adminSeriesPairs": 0,
+    "adminCommonPairs": 0,
+    "horizonSelector": true,
+    "mobileOverflow": false,
+    "browserErrors": []
+  },
+  "mainBrowser": {
+    "source": "ISOLATED_APP_ONLY",
+    "dashboard": true,
+    "recommendations": true,
+    "spendingBudgetSavedAndReloaded": true,
+    "fixedRatePreserved": true,
+    "browserErrors": []
+  },
+  "migrationUpgrade": "V11 to V12, preserving household budget and model history",
+  "compatibilityFix": "Preserved main recommendation default demo; live F3 remains explicit opt-in",
+  "rawLogs": ".local/acceptance-2026-10-18/pr-safety-pg17-v1",
+  "unverified": [
+    "Docker Compose container runtime; native PostgreSQL17 was exercised"
+  ],
+  "limitations": "Checks cover the tested merged source, not future teammate changes or every deployment environment"
+}

@@ -1,0 +1,167 @@
+{
+  "status": "PASS",
+  "reviewedHead": "76c4866284ffb9c92c0369a088ad034c29a9d6f6",
+  "integratedMain": "3c6e3b7eabe00be12d7237f239b2a4c8e628619f",
+  "runtime": {
+    "java": "21.0.12.1 JDK (dedicated compiler and runtime)",
+    "python": "3.12.3",
+    "postgres": "17.11",
+    "playwright": "1.58.2"
+  },
+  "java": {
+    "tests": 173,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "python": {
+    "tests": 57,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 388.51,
+    "warnings": 1
+  },
+  "frontend": {
+    "tests": 12,
+    "failures": 0,
+    "skipped": 0
+  },
+  "finalApplicationOnlyRerun": {
+    "java": {
+      "tests": 173,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "focusedPythonPassed": 8,
+    "fullPythonRerun": false,
+    "frontendRerun": false,
+    "reason": "Final schema-extension regression and proof-harness update; full Python/frontend results are from the preceding final-source run"
+  },
+  "stack": {
+    "status": "PASS",
+    "isolatedPostgres": true,
+    "postgresVersion": "17",
+    "realSpringPythonHttp": true,
+    "realBrowserPages": true,
+    "weeklyShortDataAttemptExit": 2,
+    "nativeTimerFired": true,
+    "fullSuitesInThisInvocation": false,
+    "mainDashboardRecommendationsBudgetPages": true,
+    "defaultStartupWithoutPythonOrHistory": true,
+    "mainRecommendationDefaultPreserved": true,
+    "configuredHouseholdScenarios": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "collectorModified": false,
+    "liveDatabaseUsed": false,
+    "archivedCollectorFeed": "Original payload/timestamps preserved; stale inputs remain unavailable, never made fresh for the proof"
+  },
+  "residentAdminRealDataBrowser": {
+    "source": "ISOLATED_APP_WITH_ARCHIVED_REAL_COLLECTOR_PRICES",
+    "actualPageRequests": true,
+    "anonymousApiStatus": 403,
+    "anonymousPageStatus": 401,
+    "adminAuthorized": true,
+    "residentAvailable": true,
+    "residentMethod": "B2",
+    "residentForecastRows": 24,
+    "actualPeriods": 2,
+    "adminSeriesPairs": 0,
+    "adminCommonPairs": 0,
+    "horizonSelector": true,
+    "mobileOverflow": false,
+    "browserErrors": []
+  },
+  "populatedAdminFixtureBrowser": {
+    "source": "SYNTHETIC_PERSISTENCE_REGRESSION_ONLY",
+    "actualPageRequests": true,
+    "anonymousApiStatus": 403,
+    "anonymousPageStatus": 401,
+    "adminAuthorized": true,
+    "residentAvailable": true,
+    "residentMethod": "B2",
+    "residentForecastRows": 24,
+    "actualPeriods": 0,
+    "adminSeriesPairs": 3,
+    "adminCommonPairs": 1,
+    "horizonSelector": true,
+    "mobileOverflow": false,
+    "browserErrors": []
+  },
+  "mainPagesBrowser": {
+    "source": "ISOLATED_APP_ONLY",
+    "dashboard": true,
+    "recommendations": true,
+    "spendingBudgetSavedAndReloaded": true,
+    "fixedRatePreserved": true,
+    "browserErrors": []
+  },
+  "publicDemoBrowser": {
+    "report": "research-HGB_MAE",
+    "commonPairs": 576,
+    "displayedOfflineRows": 24,
+    "displayedLiveRows": 24,
+    "liveModelType": "BASELINE",
+    "liveAvailable": true,
+    "liveStale": false,
+    "adminStatus": 403,
+    "originSelection": "one saved origin; aggregate scores use 24",
+    "windowHighlight": "12 hours",
+    "maeUnchangedBySelection": true,
+    "insufficientSpikeHistoryLabel": "passed",
+    "diagnosticMae": 224.407932695209,
+    "validationMethods": 11,
+    "experimentSelection": "default bundled saved diagnostic",
+    "mobileOverflow": false,
+    "browserErrors": []
+  },
+  "resources": {
+    "status": "PASS",
+    "allMainMigrationBytesPreserved": true,
+    "forecastV13SqlIdenticalToReviewedV12": true,
+    "migrationSha256": {
+      "V12__recommendation_refresh.sql": "26a5aafe977326e8617c6ce2af242647f8310e29da676bacd13b3f91e3b57142",
+      "V4__households_and_appliances.sql": "847687c0d3cb723a75bd89ee14a32a9dc1a6360de92f99a0ea73699c408ade86",
+      "V13__forecast_operations.sql": "36327f1ae32cf8aad5d439f5c6e016e76988e636121d3c85785a9a99e699703b",
+      "V3__daily_weather.sql": "11f7a6ca66f43f1cd525af62ee251115d407cb52edcd966fa8933ff713429d66",
+      "V10__recommendations.sql": "946acf0234d44d571c9dd72c0e7b980d4cb443a08234d6a00223deed7e8897a1",
+      "V7__seed_edge_case_households.sql": "8a1cc451f6753b26ccd019dffcd3aa9aedac472846296320c0c8389ca582684f",
+      "V5__seed_demo_household.sql": "aa0356310a73b0721e01977a0b6b2add9ebb7f9009a885fbf646df57e387a7f4",
+      "V11__household_budget.sql": "a77fd5a8faf415627f5f51189227df28e53bc6c06cc5a42a42dda4a0612ac131",
+      "V1__create_market_tables.sql": "8a6933cc288e874bd7e548bc6dd3663e8fabe00e749cdd383c0dfcbeee1231f1",
+      "V8__simulated_population.sql": "b5d6370d1964b3a62d34c46ee30928d64f7c5077ae79ecae999d6f3b0758806b",
+      "V9__forecast_history_and_runs.sql": "a6e7b0e69e07b180949c95adc75d4de5e211c595740d788d8471ccda3c312af2",
+      "V6__load_archetypes.sql": "58005e745a8250b5861fc6d0eaeacaac18469c3232212e003dfe028e9f924cbd",
+      "V2__combined_observations.sql": "9028dfa51459198e5b9c1655863d1444bd36517ef6f3f952666e626934448507"
+    },
+    "jarContainsCanonicalMigrationResources": true,
+    "jarPublicDemoMatchesSource": true,
+    "publicReportSourceSha256": "5e2c5e8a8d0130232f0301a05b6b36afa940de2777737d1e262c407a5fa5582a",
+    "archiveSha256": "4d153531160edf9cb77e160cc1107a37e80434b61585c0f9d689af8531c63551",
+    "archiveFiles": 37
+  },
+  "frozenModelAndFuturePlanUnchanged": true,
+  "permanentWeeklyTimerInstalled": false,
+  "persistentMigrationInspection": {
+    "scope": "Read-only migration metadata only; persistent demo cluster never modified",
+    "port": 55440,
+    "connectionSucceeded": false,
+    "histories": [],
+    "reason": "psql: error: connection to server at \"127.0.0.1\", port 55440 failed: Connection refused\n\tIs the server running on that host and accepting TCP/IP connections?"
+  },
+  "checksNotRun": [
+    "Docker Compose container runtime",
+    "merged shared-auth session login (auth branch is not in main)",
+    "legacy persistent database cutover (lineage/owner decision required)",
+    "future October19-November1 confirmation (not yet elapsed)"
+  ],
+  "earlierSetupFailure": "Initial focused compile used system Java21 runtime without its javac, causing release21-not-supported; resolved with dedicated Java21 JDK. Final checks above passed.",
+  "logs": ".local/review-fixes-2026-10-19",
+  "privateRuntimeFilesPublished": false
+}

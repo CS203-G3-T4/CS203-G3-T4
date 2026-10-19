@@ -1,0 +1,70 @@
+TAP version 13
+# Subtest: live chart preserves gaps, negative prices, spikes and Singapore midnight labels
+ok 1 - live chart preserves gaps, negative prices, spikes and Singapore midnight labels
+  ---
+  duration_ms: 67.559421
+  type: 'test'
+  ...
+# Subtest: presentation shows paired metrics, AI losses, 24 points and distinct live states
+ok 2 - presentation shows paired metrics, AI losses, 24 points and distinct live states
+  ---
+  duration_ms: 72.454678
+  type: 'test'
+  ...
+# Subtest: saved endpoint response renders 24 rows, provenance, stale, empty and outage states
+ok 3 - saved endpoint response renders 24 rows, provenance, stale, empty and outage states
+  ---
+  duration_ms: 64.630513
+  type: 'test'
+  ...
+# Subtest: a suggestion shows Singapore times, the saving, and escapes names
+ok 4 - a suggestion shows Singapore times, the saving, and escapes names
+  ---
+  duration_ms: 56.91149
+  type: 'test'
+  ...
+# Subtest: each button sends the request the API expects
+ok 5 - each button sends the request the API expects
+  ---
+  duration_ms: 2.982298
+  type: 'test'
+  ...
+# Subtest: decided text says whose time was used and that nothing runs automatically
+ok 6 - decided text says whose time was used and that nothing runs automatically
+  ---
+  duration_ms: 2.353941
+  type: 'test'
+  ...
+# Subtest: clicking Accept posts the decision and updates the card without reloading
+ok 7 - clicking Accept posts the decision and updates the card without reloading
+  ---
+  duration_ms: 9.202888
+  type: 'test'
+  ...
+# Subtest: a rejected override shows the server message and re-enables the buttons
+ok 8 - a rejected override shows the server message and re-enables the buttons
+  ---
+  duration_ms: 2.1589
+  type: 'test'
+  ...
+# Subtest: names cannot introduce attributes when inserted into quoted labels
+ok 9 - names cannot introduce attributes when inserted into quoted labels
+  ---
+  duration_ms: 1.147906
+  type: 'test'
+  ...
+# Subtest: ordinary text and both quote styles remain readable
+ok 10 - ordinary text and both quote styles remain readable
+  ---
+  duration_ms: 0.226136
+  type: 'test'
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 10
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 155.219362
