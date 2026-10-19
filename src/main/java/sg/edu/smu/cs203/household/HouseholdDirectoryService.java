@@ -16,19 +16,23 @@ import sg.edu.smu.cs203.household.load.LoadProfileService;
 public class HouseholdDirectoryService implements HouseholdDirectory {
 
     private final HouseholdService households;
+    private final HouseholdRepository householdRepository;
     private final ApplianceService appliances;
     private final LoadProfileService loadProfiles;
 
-    public HouseholdDirectoryService(HouseholdService households, ApplianceService appliances,
-                                     LoadProfileService loadProfiles) {
+    public HouseholdDirectoryService(HouseholdService households, HouseholdRepository householdRepository,
+                                     ApplianceService appliances, LoadProfileService loadProfiles) {
         this.households = households;
+        this.householdRepository = householdRepository;
         this.appliances = appliances;
         this.loadProfiles = loadProfiles;
     }
 
     @Override
     public List<HouseholdResponse> households() {
-        return households.list(false);
+        return householdRepository.findAll(false).stream()
+                .map(HouseholdResponse::from)
+                .toList();
     }
 
     @Override

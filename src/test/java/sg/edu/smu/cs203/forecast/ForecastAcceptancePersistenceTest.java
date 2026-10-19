@@ -128,7 +128,18 @@ class ForecastAcceptancePersistenceTest {
     private HttpResponse<String> send(HttpClient http,String method,String path,String body,boolean admin) throws Exception {
         var request=HttpRequest.newBuilder(URI.create("http://127.0.0.1:"+port+path));
         if(admin) request.header("Authorization","Basic "+Base64.getEncoder().encodeToString("fixture-admin:fixture-only-password".getBytes(StandardCharsets.UTF_8)));
-        if(body!=null) request.header("Content-Type","application/json").POST(HttpRequest.BodyPublishers.ofString(body)); else request.GET();
+        if(body!=null) {
+            request.header("Content-Type","application/json");
+            if(admin) {
+                var csrfRequest=HttpRequest.newBuilder(URI.create("http://127.0.0.1:"+port+"/api/v1/csrf")).GET().build();
+                var csrfResponse=http.send(csrfRequest,HttpResponse.BodyHandlers.ofString());
+                assertThat(csrfResponse.statusCode()).isEqualTo(200);
+                var csrf=mapper.readTree(csrfResponse.body());
+                request.header("Cookie",csrfResponse.headers().firstValue("Set-Cookie").orElseThrow().split(";",2)[0])
+                        .header(csrf.path("headerName").asText(),csrf.path("token").asText());
+            }
+            request.POST(HttpRequest.BodyPublishers.ofString(body));
+        } else request.GET();
         return http.send(request.build(),HttpResponse.BodyHandlers.ofString());
     }
 }

@@ -9,7 +9,11 @@ const vm = require('node:vm');
 const staticDir = path.join(__dirname, '../../main/resources/static/js');
 
 function load() {
-  const context = vm.createContext({ document: { createElement() { return {}; }, getElementById() { return null; } },
+  const context = vm.createContext({ document: {
+    querySelector() { return null; },
+    createElement() { return {}; },
+    getElementById() { return null; }
+  },
     Intl, Date, window: { location: { search: '?household=1' } }, URLSearchParams });
   vm.runInContext(fs.readFileSync(path.join(staticDir, 'wattly.js'), 'utf8'), context);
   vm.runInContext(fs.readFileSync(path.join(staticDir, 'budget-status.js'), 'utf8'), context);

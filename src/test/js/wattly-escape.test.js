@@ -7,6 +7,7 @@ const vm = require('node:vm');
 
 const source = fs.readFileSync(path.join(__dirname, '../../main/resources/static/js/wattly.js'), 'utf8');
 const document = {
+  querySelector() { return null; },
   createElement() {
     let text = '';
     return {

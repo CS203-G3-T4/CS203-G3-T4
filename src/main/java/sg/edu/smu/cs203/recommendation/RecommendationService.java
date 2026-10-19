@@ -443,6 +443,7 @@ public class RecommendationService {
     private Recommendation openRecommendation(long recommendationId) {
         Recommendation recommendation = recommendations.findById(recommendationId)
                 .orElseThrow(() -> new RecommendationNotFoundException(recommendationId));
+        households.household(recommendation.householdId());
         if (recommendation.status() != RecommendationStatus.ACTIVE) {
             throw new RecommendationNotActiveException("This suggestion is already "
                     + recommendation.status().name().toLowerCase());
