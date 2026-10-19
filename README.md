@@ -22,6 +22,29 @@ The default PostgreSQL connection is `jdbc:postgresql://localhost:55432/energy_m
 
 The application applies the Flyway migration automatically. The source URL can be overridden with `USEP_FEED_URL`. Set `USEP_POLLING_ENABLED=false` to disable the startup and scheduled polls, such as when running against a prepared test database.
 
+For local frontend testing, start with the opt-in demo profile:
+
+```sh
+docker compose up -d postgres
+SPRING_PROFILES_ACTIVE=demo ./mvnw spring-boot:run
+```
+
+Open `http://localhost:8080/` to sign in. The root URL serves the static
+`index.html` login page; its form submits credentials to the `/login` processing
+endpoint.
+
+It creates a resident account (`resident` / `resident-demo`) linked to Home and
+an admin account (`admin` / `admin-demo`). Passwords are stored as
+BCrypt hashes. The demo accounts are created only when missing, and the demo
+profile should not be enabled for production deployments.
+
+Sign in as the resident to view only Home. Sign in as the admin to manage the
+seeded property portfolio: Home, Office 1, Office 2, Office 3, and Rented Condo.
+The labels are defined directly in the V5 and V7 seed migrations. Flyway only
+runs those seeds on a fresh database; an existing database that already applied
+V5/V7 retains its old seed names, and editing applied migrations changes their
+checksums. Use a fresh disposable local database to try the renamed seed data.
+
 ## Run an already restored team dataset
 
 Copy `.env.team-demo.example` to `.env.team-demo`, set `DB_URL` to the restored

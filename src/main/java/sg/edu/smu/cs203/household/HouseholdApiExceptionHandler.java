@@ -28,6 +28,14 @@ public class HouseholdApiExceptionHandler {
         return problem;
     }
 
+    @ExceptionHandler(HouseholdAccessDeniedException.class)
+    public ProblemDetail householdAccessDenied(HouseholdAccessDeniedException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN,
+                exception.getMessage());
+        problem.setTitle("Access denied");
+        return problem;
+    }
+
     @ExceptionHandler(HouseholdNotDeletableException.class)
     public ProblemDetail householdNotDeletable(HouseholdNotDeletableException exception) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT,
