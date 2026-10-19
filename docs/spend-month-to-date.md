@@ -74,7 +74,7 @@ both the Dashboard and the Spending page so they always show the same figures:
   10th of a 31-day month).
 - **Alert** is shown when the projection is over the monthly budget and alerts are on.
 
-`PUT /api/v1/households/{id}/budget` saves `monthlyBudgetSgd` and `alertsEnabled` (V17
+`PUT /api/v1/households/{id}/budget` saves `monthlyBudgetSgd` and `alertsEnabled` (V18
 `household_budget.alerts_enabled`, on by default; leaving it out keeps the saved choice). The
 planning rate is still accepted but the pages no longer use it, so its box was removed.
 
