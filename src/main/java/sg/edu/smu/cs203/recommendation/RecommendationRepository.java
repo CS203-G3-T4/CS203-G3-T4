@@ -4,6 +4,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -67,6 +68,24 @@ public class RecommendationRepository {
 
     public Optional<Recommendation> findById(long id) {
         return jdbc.query(SELECT + " WHERE r.id = ?", ROW_MAPPER, id).stream().findFirst();
+    }
+
+    /**
+     * A household's suggestions in the given statuses created since the given time, most recent
+     * decision (or creation) first, for the Recommendations page tabs (CSDT4-40).
+     */
+    public List<Recommendation> findByStatuses(long householdId, List<RecommendationStatus> statuses,
+                                               Instant since, int limit) {
+        String placeholders = String.join(", ", statuses.stream().map(s -> "?").toList());
+        List<Object> args = new ArrayList<>();
+        args.add(householdId);
+        statuses.forEach(s -> args.add(s.name()));
+        args.add(Timestamp.from(since));
+        args.add(limit);
+        return jdbc.query(SELECT + " WHERE r.household_id = ? AND r.status IN (" + placeholders + ")"
+                        + " AND r.created_at >= ?"
+                        + " ORDER BY COALESCE(r.decided_at, r.created_at) DESC, r.id DESC LIMIT ?",
+                ROW_MAPPER, args.toArray());
     }
 
     /** Open suggestions for a household, ranked: biggest expected saving first (CSDT4-37). */
@@ -176,13 +195,13 @@ public class RecommendationRepository {
     }
 
     /**
-     * Hides an open spike warning until the given time ("Remind me later"). Returns false if it was
-     * no longer open.
+     * Hides an open suggestion until the given time ("Remind me later", CSDT4-38/40). Returns false
+     * if it was no longer open.
      */
     public boolean snooze(long id, Instant until) {
         return jdbc.update("""
                 UPDATE recommendation SET snoozed_until = ?
-                WHERE id = ? AND status = 'ACTIVE' AND kind = 'AVOID'
+                WHERE id = ? AND status = 'ACTIVE'
                 """, Timestamp.from(until), id) == 1;
     }
 

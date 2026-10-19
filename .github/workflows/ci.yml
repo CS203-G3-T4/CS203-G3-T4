@@ -35,7 +35,7 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U wattly_test"
+          --health-cmd "pg_isready -U wattly_test -d postgres"
           --health-interval 5s
           --health-timeout 3s
           --health-retries 10
@@ -83,17 +83,39 @@ jobs:
       - name: Run Python tests
         run: python -m pytest -q ml/tests
 
+  evidence:
+    name: Frozen research archive
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Rebuild and verify frozen evidence
+        run: |
+          mkdir -p forecast-artifacts
+          python3 scripts/forecast-artifacts.py build forecast-artifacts/wattly-forecast-evidence-76c4866.tar.gz
+          python3 scripts/forecast-artifacts.py verify forecast-artifacts/wattly-forecast-evidence-76c4866.tar.gz
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wattly-forecast-evidence-76c4866
+          path: |
+            forecast-artifacts/wattly-forecast-evidence-76c4866.tar.gz
+            docs/forecasting/artifacts.json
+          retention-days: 30
+
   # One stable check name for the branch ruleset to require, so job names can
   # change later without editing the ruleset.
   ci-passed:
     name: CI passed
     if: always()
-    needs: [java, frontend, python]
+    needs: [java, frontend, python, evidence]
     runs-on: ubuntu-latest
     steps:
       - name: Require every job to succeed
         run: |
           echo "java=${{ needs.java.result }} frontend=${{ needs.frontend.result }} python=${{ needs.python.result }}"
+          test "${{ needs.evidence.result }}" = "success"
           test "${{ needs.java.result }}" = "success"
           test "${{ needs.frontend.result }}" = "success"
           test "${{ needs.python.result }}" = "success"

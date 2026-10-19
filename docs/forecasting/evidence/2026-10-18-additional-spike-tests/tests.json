@@ -1,0 +1,42 @@
+{
+  "status": "PASS",
+  "python": {
+    "command": "PYTHONPATH=ml/src PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 timeout --signal=TERM --kill-after=15s 1200s /home/bryan/CS203_T4/wattly-f3-demo/tools/venv/bin/python -m pytest ml/tests -q -p no:cacheprovider --junitxml=.local/additional-spike-tests-2026-10-18-v1/python-tests.xml",
+    "exitCode": 0,
+    "tests": 51,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "passed": 51,
+    "reportedSeconds": 412.39,
+    "warnings": [
+      "Upstream Starlette TestClient uses deprecated AnyIO BlockingPortal alias"
+    ],
+    "junitSha256": "08d3d446b888c1cb889bb9c4ad03f9b8ca31762ce8a4b5325816e42c2d9783da",
+    "logSha256": "804030df50639cebfb424281163171b0c27543940938da1e9676fbcb8c34e411"
+  },
+  "wheel": {
+    "built": true,
+    "sha256": "f0df09d3ce88b455bf13e30738005d1332bc6b7fe2baa3f2e097c2f5c27f9f54"
+  },
+  "independentVerification": "PASS; see verification.json",
+  "earlyFutureConfirmation": {
+    "exitCode": 2,
+    "outputCreated": false,
+    "message": "F3 unavailable: Future confirmation pending: need a snapshot acquired on/after 2026-11-01T16:00:00+00:00"
+  },
+  "evidenceScriptsParsed": {
+    "run_history.py": "1b28245fcf84a6ff204be6a04c53e3ea160eace7a0412ec0d98c0f4ca877d9fd",
+    "run_saved.py": "3971abaae55e3efed53da4ac6636dd284f55576494619e268808f87105405725",
+    "verify.py": "260f07757e4b4d84b7358f66d56490d3428a771e1988b3f09e0514f42f3bd26d"
+  },
+  "notRerun": [
+    "Java",
+    "frontend",
+    "PostgreSQL persistence",
+    "Spring/Python integration",
+    "browser"
+  ],
+  "reasonNotRerun": "Offline Python evaluation and evidence changes only; no Java, frontend, schema, serving or runtime configuration changes",
+  "productionApprovalChanged": false
+}

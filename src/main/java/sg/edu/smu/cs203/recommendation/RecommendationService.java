@@ -7,6 +7,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -53,6 +54,10 @@ import sg.edu.smu.cs203.household.appliance.ApplianceResponse;
  * CSDT4-39: each suggestion explains itself with the forecast prices, times and window limit
  * (RecommendationExplanation), carries a confidence from actual past prices (BacktestConfidence,
  * option A), and its saving is labelled estimated.
+ *
+ * CSDT4-40: the Recommendations page lists suggestions by tab (RecommendationTab), any open
+ * suggestion can be snoozed until a time the resident picks, and the page can chart the demo
+ * forecast the same way it charts F3's.
  */
 @Service
 public class RecommendationService {
@@ -117,6 +122,34 @@ public class RecommendationService {
                 .map(status -> response(householdId, status))
                 .orElseGet(() -> response(householdId,
                         new RecommendationRepository.RefreshStatus(null, null, null, NOT_YET_MESSAGE)));
+    }
+
+    /**
+     * One tab of the Recommendations page (CSDT4-40). ACTIVE includes snoozed suggestions (each with
+     * its remindAt); the other tabs cover the last 30 days, most recent first. Like list(), never
+     * looks at the forecast.
+     */
+    @Transactional
+    public RecommendationsResponse list(long householdId, RecommendationTab tab) {
+        households.household(householdId);
+        Instant now = clock.instant();
+        expirePassed(householdId, now);
+        RecommendationRepository.RefreshStatus status = recommendations.findRefresh(householdId)
+                .orElseGet(() -> new RecommendationRepository.RefreshStatus(null, null, null, NOT_YET_MESSAGE));
+        List<Recommendation> rows = tab == RecommendationTab.ACTIVE
+                ? recommendations.findActive(householdId)
+                : recommendations.findByStatuses(householdId, tab.statuses(),
+                        now.minus(Duration.ofDays(RecommendationTab.HISTORY_DAYS)), RecommendationTab.MAX_ROWS);
+        return response(householdId, status, rows);
+    }
+
+    /** The demo forecast behind demo suggestions, for the page's mini charts (CSDT4-40). */
+    public DemoForecastResponse demoForecast() {
+        PriceForecastSource.Lookup lookup = forecasts.forecast();
+        if (!lookup.available() || !lookup.forecast().isDemo()) {
+            throw new DemoForecastNotInUseException();
+        }
+        return DemoForecastResponse.from(lookup.forecast());
     }
 
     /**
@@ -250,9 +283,11 @@ public class RecommendationService {
                     && Objects.equals(open.spikeStart(), result.spikeStart())) {
                 return; // same advice as before: keep it, so the resident's view doesn't jump around
             }
-            // A newer warning about the same run keeps "Remind me later".
-            if (open.isWarning() && Recommendation.AVOID.equals(kind) && open.usualStart().equals(result.usualStart())
-                    && open.snoozedAt(now)) {
+            // Newer advice about the same run keeps "Remind me later", if it still comes back in time.
+            Instant newDeadline = Recommendation.deadline(Recommendation.AVOID.equals(kind), result.bestStart(),
+                    result.usualStart());
+            if (open.snoozedAt(now) && open.usualStart().equals(result.usualStart())
+                    && open.snoozedUntil().isBefore(newDeadline)) {
                 snoozedUntil = open.snoozedUntil();
             }
             supersede(open, now);
@@ -338,31 +373,57 @@ public class RecommendationService {
     }
 
     /**
-     * "Remind me later" on a spike warning (CSDT4-38): hides it for an hour, or until an hour before
-     * the usual start if that is sooner. Not possible once the usual start is under an hour away.
+     * "Remind me later" until the time the resident picks (CSDT4-40): hides any open suggestion until
+     * the next time the Singapore clock shows request.until(), which must be before it runs out
+     * (Recommendation.deadline). It then comes back by itself.
+     */
+    @Transactional
+    public RecommendationResponse snooze(long recommendationId, SnoozeRequest request) {
+        Recommendation recommendation = openRecommendation(recommendationId);
+        Instant now = clock.instant();
+        Instant until = nextAt(LocalTime.parse(request.until()), now);
+        if (!until.isBefore(recommendation.deadline())) {
+            throw new ValidationFailedException(Map.of("until", "Pick a time before "
+                    + RecommendationExplanation.time(recommendation.deadline()) + ", when this suggestion runs out"));
+        }
+        return snoozeUntil(recommendation, until, now);
+    }
+
+    /**
+     * The one-tap shortcut (CSDT4-38): snooze for an hour, or until an hour before the suggestion
+     * runs out if that is sooner. Not possible once that is under an hour away.
      */
     @Transactional
     public RecommendationResponse remindLater(long recommendationId) {
-        Recommendation warning = openRecommendation(recommendationId);
-        requireWarning(warning);
+        Recommendation recommendation = openRecommendation(recommendationId);
         Instant now = clock.instant();
-        Instant remindAt = remindAt(warning.usualStart(), now);
+        Instant remindAt = remindAt(recommendation.deadline(), now);
         if (remindAt == null) {
             throw new RecommendationActionNotAllowedException(
-                    "Your usual start is less than an hour away, so there's no time to remind you later");
+                    "It's less than an hour away, so there's no time to remind you later");
         }
-        if (!recommendations.snooze(recommendationId, remindAt)) {
-            throw new RecommendationNotActiveException("This warning was already answered");
-        }
-        recommendations.logEvent(recommendationId, "SNOOZED", now, remindAt, false);
-        return RecommendationResponse.from(recommendations.findById(recommendationId).orElseThrow());
+        return snoozeUntil(recommendation, remindAt, now);
     }
 
-    /** When "Remind me later" brings a warning back, or null if the usual start is too close. */
-    static Instant remindAt(Instant usualStart, Instant now) {
+    private RecommendationResponse snoozeUntil(Recommendation recommendation, Instant until, Instant now) {
+        if (!recommendations.snooze(recommendation.id(), until)) {
+            throw new RecommendationNotActiveException("This suggestion was already answered");
+        }
+        recommendations.logEvent(recommendation.id(), "SNOOZED", now, until, false);
+        return RecommendationResponse.from(recommendations.findById(recommendation.id()).orElseThrow());
+    }
+
+    /** The next instant after now when the Singapore clock shows this time (today or tomorrow). */
+    static Instant nextAt(LocalTime time, Instant now) {
+        ZonedDateTime today = now.atZone(SINGAPORE).toLocalDate().atTime(time).atZone(SINGAPORE);
+        return today.toInstant().isAfter(now) ? today.toInstant() : today.plusDays(1).toInstant();
+    }
+
+    /** When the shortcut brings a suggestion back, or null if its deadline is too close. */
+    static Instant remindAt(Instant deadline, Instant now) {
         Instant inAnHour = now.plus(REMIND_LATER);
-        Instant beforeStart = usualStart.minus(REMIND_LATER);
-        Instant remindAt = inAnHour.isBefore(beforeStart) ? inAnHour : beforeStart;
+        Instant beforeDeadline = deadline.minus(REMIND_LATER);
+        Instant remindAt = inAnHour.isBefore(beforeDeadline) ? inAnHour : beforeDeadline;
         return remindAt.isAfter(now) ? remindAt : null;
     }
 
@@ -375,14 +436,14 @@ public class RecommendationService {
 
     private static void requireWarning(Recommendation recommendation) {
         if (!recommendation.isWarning()) {
-            throw new RecommendationActionNotAllowedException(
-                    "Got it and Remind me later are only for price spike warnings");
+            throw new RecommendationActionNotAllowedException("Got it is only for price spike warnings");
         }
     }
 
     private Recommendation openRecommendation(long recommendationId) {
         Recommendation recommendation = recommendations.findById(recommendationId)
                 .orElseThrow(() -> new RecommendationNotFoundException(recommendationId));
+        households.household(recommendation.householdId());
         if (recommendation.status() != RecommendationStatus.ACTIVE) {
             throw new RecommendationNotActiveException("This suggestion is already "
                     + recommendation.status().name().toLowerCase());
@@ -414,14 +475,27 @@ public class RecommendationService {
         }
     }
 
+    /** The dashboard view: open suggestions, without snoozed ones ("Remind me later"). */
     private RecommendationsResponse response(long householdId, RecommendationRepository.RefreshStatus status) {
         Instant now = clock.instant();
-        List<RecommendationResponse> open = recommendations.findActive(householdId).stream()
-                .filter(r -> !r.snoozedAt(now)) // "Remind me later": back once the time comes
-                .map(RecommendationResponse::from)
+        return response(householdId, status, recommendations.findActive(householdId).stream()
+                .filter(r -> !r.snoozedAt(now)) // back once the time comes
+                .toList());
+    }
+
+    private RecommendationsResponse response(long householdId, RecommendationRepository.RefreshStatus status,
+                                             List<Recommendation> rows) {
+        Map<Long, Integer> runMinutes = new HashMap<>();
+        if (!rows.isEmpty()) {
+            for (ApplianceResponse appliance : households.flexibleAppliances(householdId)) {
+                runMinutes.put(appliance.id(), appliance.runMinutes());
+            }
+        }
+        List<RecommendationResponse> shown = rows.stream()
+                .map(r -> RecommendationResponse.from(r, runMinutes.get(r.applianceId())))
                 .toList();
         return new RecommendationsResponse(householdId, status.forecastSource(), status.forecastModel(),
-                PriceForecast.DEMO.equals(status.forecastSource()), status.message(), open, status.refreshedAt());
+                PriceForecast.DEMO.equals(status.forecastSource()), status.message(), shown, status.refreshedAt());
     }
 
     static CheapestStartCalculator.ShiftableRun runOf(ApplianceResponse appliance) {

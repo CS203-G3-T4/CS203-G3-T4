@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 1,
+  "version": "schema2-collector-latest-20261018",
+  "featureOrder": [
+    "latest",
+    "lag1",
+    "lag2",
+    "lag3",
+    "lag6",
+    "lag12",
+    "lag48",
+    "yesterday_target",
+    "last_week_target",
+    "mean6",
+    "std6",
+    "mean48",
+    "std48",
+    "target_half_hour",
+    "target_weekday",
+    "target_weekend",
+    "target_public_holiday",
+    "expected_demand_mw",
+    "expected_demand_available"
+  ],
+  "trainingSeed": 42,
+  "featureSchemaVersion": 2,
+  "holidayCalendarVersion": "MOM_SG_2025_2027_20261018_V1",
+  "holidayCalendarSha256": "ddc5a7e23dc3e32c8decd22652cfc478ebea18c697912cde7c90962fae60759d",
+  "expectedDemandCoverage": 0.0,
+  "holidayCoverage": 1.0,
+  "trainingDate": "2026-10-18T07:17:45.387519+00:00",
+  "trainingStart": "2026-09-23T16:00:00+00:00",
+  "trainingCutoff": "2026-10-18T07:00:00+00:00",
+  "usableFrom": "2026-10-18T07:00:00+00:00",
+  "datasetDigest": "a927b8ab8ff6237c29c9b779049e5d443037a434ec3e905f7e7b4354621a429e",
+  "datasetQuality": {
+    "rowCount": 1187,
+    "periodCount": 1149,
+    "missingHalfHours": 1187,
+    "duplicateRows": 0,
+    "revisionRows": 38,
+    "staleObservations": 2,
+    "parsingFailures": [],
+    "from": "2026-08-30T15:30:00+00:00",
+    "to": "2026-10-18T07:00:00+00:00",
+    "mappingVerified": false,
+    "publicationVintages": true
+  },
+  "truthPolicy": "PROVISIONAL",
+  "retrospective": false,
+  "exploratory": true,
+  "productionEligible": false,
+  "trainingOrigins": 861,
+  "excludedTrainingOrigins": 321,
+  "parameters": {
+    "max_iter": 40,
+    "max_leaf_nodes": 15,
+    "l2_regularization": 1
+  },
+  "spikeConfig": {
+    "minimumSamples": 14,
+    "k": 3.0,
+    "spreadFloor": 1.0
+  },
+  "validationStart": "2026-10-09T16:00:00+00:00",
+  "validationEnd": "2026-10-16T16:00:00+00:00",
+  "validation": {
+    "table": {
+      "AI": {
+        "mae": null
+      }
+    },
+    "commonPairs": 0,
+    "skill": null,
+    "reason": "This latest fit has not been independently evaluated"
+  },
+  "baselineRanking": [
+    "B3",
+    "B1",
+    "B2"
+  ],
+  "researchOnly": true,
+  "protectedIntervals": [
+    {
+      "purpose": "original-protected-test",
+      "start": "2026-07-28T16:00:00+00:00",
+      "end": "2026-09-22T16:00:00+00:00"
+    },
+    {
+      "purpose": "presentation-demo",
+      "start": "2026-09-27T16:00:00+00:00",
+      "end": "2026-09-28T16:00:00+00:00"
+    },
+    {
+      "purpose": "new-holdout",
+      "start": "2026-10-16T16:00:00+00:00",
+      "end": "2026-10-17T16:00:00+00:00"
+    }
+  ],
+  "protocolSha256": "b8bc5c66059b95edcc8ee18e627060f6e402ea7a25118886361e80bbe8a712ae",
+  "dependencies": {
+    "python": "3.12.3",
+    "numpy": "2.2.5",
+    "scipy": "1.18.1",
+    "scikit-learn": "1.6.1",
+    "joblib": "1.6.0"
+  },
+  "modelSha256": "18dd89069218323ada9ff8df4d01c6fa6a59e10fe8f6f16638f064c347c57ce8",
+  "earlierEvaluationVersion": "schema2-collector-evaluation-20261018",
+  "baselineValidationSha256": "e5f9a8b6b1b5678051d863ca18a172c89366881e4fae527df92aef3b98ebaa19"
+}

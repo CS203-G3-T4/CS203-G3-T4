@@ -51,12 +51,15 @@ made-up numbers, and the label keeps it from being presented as an AI prediction
 
 | Endpoint | What it does |
 | --- | --- |
-| `GET /api/v1/households/{id}/recommendations` | Open (`ACTIVE`) suggestions, best saving first, plus the latest background recompute's outcome. What the pages call. |
+| `GET /api/v1/households/{id}/recommendations` | Open (`ACTIVE`) suggestions not snoozed, best saving first, plus the latest background recompute's outcome. What the dashboard calls. |
+| `GET /api/v1/households/{id}/recommendations?status=ACTIVE\|ACCEPTED\|DISMISSED\|HISTORY` | One tab of the Recommendations page (CSDT4-40). `ACTIVE` includes snoozed ones (with `remindAt`); the others cover the last 30 days, newest first. |
+| `GET /api/v1/recommendations/demo-forecast` | The demo forecast behind demo suggestions, for the page's mini charts. 404 while suggestions use F3. |
+| `POST /api/v1/recommendations/{recId}/snooze` | "Remind me later" until a chosen time: body `{"until": "15:30"}` (Singapore time, the next time the clock shows it). Must be before the suggestion runs out (`deadline`); 400 otherwise. |
 | `POST /api/v1/households/{id}/recommendations/generate` | Recomputes one household now. Normally done in the background (CSDT4-37). Safe to repeat. |
 | `POST /api/v1/recommendations/{recId}/accept` | Accepts. Optional body `{"startTime": "15:10"}` is the resident's own start (Singapore `HH:mm`) inside the same window. |
 | `POST /api/v1/recommendations/{recId}/dismiss` | Dismisses. The same run is not suggested again. |
 | `POST /api/v1/recommendations/{recId}/got-it` | "Got it" on a spike warning (CSDT4-38). That run is not warned about again. |
-| `POST /api/v1/recommendations/{recId}/remind-later` | "Remind me later" on a spike warning: hidden for an hour, or until an hour before the usual start if sooner. 409 when the usual start is under an hour away. |
+| `POST /api/v1/recommendations/{recId}/remind-later` | One-tap "Remind me later" on any open suggestion: hidden for an hour, or until an hour before it runs out if sooner. 409 when that is under an hour away. |
 
 Errors: 404 for an unknown household or suggestion, 409 if the suggestion was already decided or
 expired, 400 with `errors.startTime` for an override outside the window.
@@ -149,7 +152,8 @@ touches no spike, and the cost avoided by using it (usual cost minus that start'
 - **Got it** closes the warning (`ACKNOWLEDGED`); the same run is not warned about or suggested
   again. A run whose shift suggestion was only dismissed can still get a warning, since the
   resident will run at the usual time.
-- **Remind me later** keeps the warning open but hidden until `min(now + 1 h, usual start - 1 h)`.
+- **Remind me later** keeps the warning open but hidden (CSDT4-40 extends this to every suggestion
+  and a chosen time; see below). The one-tap version hides it until `min(now + 1 h, deadline - 1 h)`.
   The button isn't shown once the usual start is under an hour away. A newer warning for the same
   run (e.g. after a forecast update) keeps the reminder time.
 - Shift suggestions are answered with Accept / Dismiss, warnings with Got it / Remind me later;
@@ -181,6 +185,37 @@ CSDT4-53, which will set it to false and show "Saved $x".
 forecasts that said the suggested time would be cheaper, compare with the actual prices that
 followed. Option A answers "is this time usually cheaper?"; option B answers "can we trust the
 forecast?". Keep the same rules: only real data, a minimum number of cases, otherwise no number.
+
+## Recommendations page: tabs, Remind me later and mini charts (CSDT4-40)
+
+**Tabs.** `recommendations.html` has Active, Accepted, Dismissed and History tabs, each loaded from
+`GET …/recommendations?status=…` (`#accepted` etc. in the URL opens a tab directly):
+
+| Tab | Shows |
+| --- | --- |
+| Active | Open suggestions with their buttons and chart, then a "Snoozed" section with the ones "Remind me later" is hiding and when each comes back |
+| Accepted | `ACCEPTED`, last 30 days |
+| Dismissed | `DISMISSED` and spike warnings answered with "Got it" (`ACKNOWLEDGED`), last 30 days |
+| History | Everything, including `SUPERSEDED` (replaced by newer advice) and `EXPIRED`, last 30 days |
+
+Decided cards are read-only and say what happened and when. The header figures always describe the
+open suggestions. Every figure on the page comes from the API.
+
+**Remind me later until a chosen time.** Every open card (shift suggestions and spike warnings, on
+the dashboard and the page) has "Remind me later" with a time picker that starts at an hour from
+now. `POST …/snooze` hides the card until then; it comes back by itself (both the dashboard and
+the Active tab hide snoozed cards until `snoozed_until`). The time must be before the suggestion
+runs out (`deadline`: its start, or for a warning the earlier of the alternative and the usual
+start), otherwise it would only come back once it's useless. If the background recompute replaces
+a snoozed suggestion for the same run, the reminder carries over while it still comes back in time.
+V16 lets any suggestion be snoozed (V13 allowed warnings only).
+
+**Mini forecast chart.** Each open card on the page draws the forecast it was built from, one bar
+per half-hour in ¢/kWh, with the usual run in blue and the suggested run in teal. The page picks
+the source by the card's `forecastSource`: `F3_FORECAST` → `GET /api/v1/forecast/latest`,
+`DEMO_FORECAST` → `GET /api/v1/recommendations/demo-forecast`, so the chart always shows the same
+prices as the explanation. A spike that would flatten the other bars is drawn full height and
+marked off the scale (the exact price is in its tooltip).
 
 ## Not done here (later stories)
 

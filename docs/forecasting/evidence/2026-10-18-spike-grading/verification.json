@@ -1,0 +1,11 @@
+{
+  "status": "PASS",
+  "rawPredictionConfusionCounts": true,
+  "originalScoreCrosscheck": true,
+  "pastOnlySameSlotThresholdsRecomputed": true,
+  "canonicalActualsAndSplitBounds": true,
+  "uniqueFixedLeadEventsIndependentlyRecomputed": true,
+  "commonPairs": 2511,
+  "methods": 10,
+  "frozenArtifactsAndFuturePlanUnchanged": true
+}

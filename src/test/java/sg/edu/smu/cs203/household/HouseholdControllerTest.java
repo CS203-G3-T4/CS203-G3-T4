@@ -73,6 +73,15 @@ class HouseholdControllerTest {
     }
 
     @Test
+    void accessingAnotherResidentsHouseholdIsA403() throws Exception {
+        doThrow(new HouseholdAccessDeniedException()).when(service).delete(2L);
+
+        mvc.perform(delete("/api/v1/households/2"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.title").value("Access denied"));
+    }
+
+    @Test
     void deletingASimulatedHouseholdIsA409() throws Exception {
         doThrow(new HouseholdNotDeletableException(42L)).when(service).delete(42L);
 

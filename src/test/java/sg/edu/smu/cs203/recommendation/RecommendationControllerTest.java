@@ -7,6 +7,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -19,6 +20,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import sg.edu.smu.cs203.household.HouseholdAccessDeniedException;
 import sg.edu.smu.cs203.household.HouseholdNotFoundException;
 
 class RecommendationControllerTest {
@@ -66,6 +68,15 @@ class RecommendationControllerTest {
     }
 
     @Test
+    void decidingAnotherResidentsSuggestionIsA403() throws Exception {
+        when(service.dismiss(5L)).thenThrow(new HouseholdAccessDeniedException());
+
+        mvc.perform(post("/api/v1/recommendations/5/dismiss"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.title").value("Access denied"));
+    }
+
+    @Test
     void unknownSuggestionIsA404() throws Exception {
         when(service.dismiss(99L)).thenThrow(new RecommendationNotFoundException(99L));
 
@@ -104,10 +115,55 @@ class RecommendationControllerTest {
                 .andExpect(jsonPath("$.title").value("Not available for this suggestion"));
     }
 
+    @Test
+    void theStatusParameterPicksATabAndAnUnknownOneIsA400() throws Exception {
+        when(service.list(eq(1L), eq(RecommendationTab.ACCEPTED))).thenReturn(
+                new RecommendationsResponse(1L, null, null, false, null, java.util.List.of(), null));
+
+        mvc.perform(get("/api/v1/households/1/recommendations").param("status", "accepted"))
+                .andExpect(status().isOk());
+        verify(service).list(1L, RecommendationTab.ACCEPTED);
+        mvc.perform(get("/api/v1/households/1/recommendations").param("status", "LATER"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.status").value("Use ACTIVE, ACCEPTED, DISMISSED or HISTORY"));
+    }
+
+    @Test
+    void withoutAStatusTheDashboardListIsUsed() throws Exception {
+        when(service.list(1L)).thenReturn(
+                new RecommendationsResponse(1L, null, null, false, null, java.util.List.of(), null));
+
+        mvc.perform(get("/api/v1/households/1/recommendations")).andExpect(status().isOk());
+        verify(service).list(1L);
+    }
+
+    @Test
+    void snoozeTakesTheChosenTimeAndRejectsABadOne() throws Exception {
+        when(service.snooze(eq(5L), any())).thenReturn(response(RecommendationStatus.ACTIVE));
+
+        mvc.perform(post("/api/v1/recommendations/5/snooze")
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"until\": \"15:30\"}"))
+                .andExpect(status().isOk());
+        verify(service).snooze(5L, new SnoozeRequest("15:30"));
+        mvc.perform(post("/api/v1/recommendations/5/snooze")
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"until\": \"later\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.until").value("Use a time like 15:30"));
+    }
+
+    @Test
+    void theDemoForecastIsA404WhileF3IsInUse() throws Exception {
+        when(service.demoForecast()).thenThrow(new DemoForecastNotInUseException());
+
+        mvc.perform(get("/api/v1/recommendations/demo-forecast"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.title").value("Demo forecast not in use"));
+    }
+
     private static RecommendationResponse response(RecommendationStatus status) {
         Instant at = Instant.parse("2026-09-30T05:00:00Z");
         return new RecommendationResponse(5L, 1L, 10L, "Tumble Dryer", "SHIFT_START", at, at, at,
                 BigDecimal.ONE, BigDecimal.TEN, new BigDecimal("9"), "reason", PriceForecast.DEMO, "demo", true,
-                status, at, at, null, null, null, null, null, true);
+                status, at, at, null, null, null, null, null, true, null, at);
     }
 }

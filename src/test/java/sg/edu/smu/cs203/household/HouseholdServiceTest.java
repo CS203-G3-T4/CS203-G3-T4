@@ -12,6 +12,7 @@ import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
@@ -19,14 +20,18 @@ import org.mockito.ArgumentCaptor;
 
 import sg.edu.smu.cs203.household.load.LoadArchetype;
 import sg.edu.smu.cs203.household.load.LoadArchetypeRepository;
+import sg.edu.smu.cs203.security.AccountRole;
+import sg.edu.smu.cs203.security.UserAccount;
 
 class HouseholdServiceTest {
 
     private final Instant now = Instant.parse("2026-09-26T06:00:00Z");
     private final HouseholdRepository households = mock(HouseholdRepository.class);
     private final LoadArchetypeRepository archetypes = mock(LoadArchetypeRepository.class);
+    private final HouseholdOwnershipService ownership = mock(HouseholdOwnershipService.class);
     private final HouseholdService service =
-            new HouseholdService(households, archetypes, Clock.fixed(now, ZoneOffset.UTC));
+            new HouseholdService(households, archetypes, ownership,
+                    Clock.fixed(now, ZoneOffset.UTC));
 
     @Test
     void priceLinkedHouseholdIsExposedToWholesalePrices() {
@@ -54,6 +59,42 @@ class HouseholdServiceTest {
         when(households.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.get(99L)).isInstanceOf(HouseholdNotFoundException.class);
+    }
+
+    @Test
+    void anotherResidentsHouseholdIsDeniedBeforeReturningItsProfile() {
+        when(households.findById(2L)).thenReturn(Optional.of(household(PlanType.PRICE_LINKED, null)));
+        org.mockito.Mockito.doThrow(new HouseholdAccessDeniedException())
+                .when(ownership).requireAccess(2L);
+
+        assertThatThrownBy(() -> service.get(2L)).isInstanceOf(HouseholdAccessDeniedException.class);
+    }
+
+    @Test
+    void residentsSeeOnlyTheirOwnHouseholdEvenWhenAskingForSimulatedHomes() {
+        when(ownership.currentAccount()).thenReturn(
+                new UserAccount("resident", "hash", AccountRole.RESIDENT, 1L, false));
+        when(households.findById(1L)).thenReturn(
+                Optional.of(household(PlanType.PRICE_LINKED, null)));
+
+        List<HouseholdResponse> visible = service.list(true);
+
+        assertThat(visible).extracting(HouseholdResponse::id).containsExactly(1L);
+        verify(households, never()).findAll(true);
+    }
+
+    @Test
+    void adminsCanListTheConfiguredPopulation() {
+        when(ownership.currentAccount()).thenReturn(
+                new UserAccount("admin", "hash", AccountRole.ADMIN, null, false));
+        when(households.findAll(true)).thenReturn(List.of(
+                household(PlanType.PRICE_LINKED, null),
+                new Household(42L, "Simulated", DwellingType.HDB_3_ROOM, 3,
+                        PlanType.PRICE_LINKED, null, 2L, true, now, now)));
+
+        List<HouseholdResponse> visible = service.list(true);
+
+        assertThat(visible).extracting(HouseholdResponse::id).containsExactly(1L, 42L);
     }
 
     @Test

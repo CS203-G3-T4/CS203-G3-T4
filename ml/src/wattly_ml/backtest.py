@@ -3,7 +3,7 @@ from collections import defaultdict
 from statistics import mean
 
 from .baselines import baselines
-from .data import as_of, truth
+from .data import as_of, truth, DatasetRows
 from .features import features
 from .spikes import DEFAULT_CONFIG, reference, validate_config
 from .timebase import DAY, SGT, STEP, floor, instant, targets
@@ -14,11 +14,12 @@ class History:
         self.rows = sorted(rows, key=lambda r: instant(r["periodStart"]))
         self.periods = [instant(r["periodStart"]) for r in self.rows]
         self.retrospective = retrospective
+        self.demand_forecasts = getattr(rows, 'demand_forecasts', ())
 
     def at(self, origin):
         lo = bisect.bisect_left(self.periods, origin-29*DAY)
         hi = bisect.bisect_right(self.periods, origin)
-        return as_of(self.rows[lo:hi], origin, self.retrospective)
+        return as_of(DatasetRows(self.rows[lo:hi], self.demand_forecasts), origin, self.retrospective)
 
 
 def origins(start, end):
@@ -38,7 +39,7 @@ def fresh(history, origin):
 def predict(bundle, history, origin):
     from threadpoolctl import threadpool_limits
     with threadpool_limits(limits=1):
-        return [float(model.predict([features(history, origin, target)])[0])
+        return [float(model.predict([features(history, origin, target, schema_version=bundle['manifest'].get('featureSchemaVersion',1))])[0])
                 for model, target in zip(bundle["models"], targets(origin))]
 
 
@@ -87,6 +88,11 @@ def scores(records, selected_baseline="B1"):
         def mae(items):
             return mean(abs(r["predictedUsep"]-r["actual"]) for r in items) if items else None
         labeled = [r for r in valid if r["actualSpike"] is not None]
+        positive_targets = {r['targetPeriod'] for r in labeled if r['actualSpike']}
+        negative_targets = {r['targetPeriod'] for r in labeled if not r['actualSpike']}
+        enough_events = len(positive_targets)>=20 and len(negative_targets)>=20
+        positive_times = sorted(instant(t) for t in positive_targets)
+        events = sum(i==0 or t-positive_times[i-1]>STEP for i,t in enumerate(positive_times))
         tp = sum(r["spikeFlag"] and r["actualSpike"] for r in labeled)
         fp = sum(r["spikeFlag"] and not r["actualSpike"] for r in labeled)
         fn = sum(not r["spikeFlag"] and r["actualSpike"] for r in labeled)
@@ -100,9 +106,14 @@ def scores(records, selected_baseline="B1"):
                          "groups": {name: mae([r for r in valid if a<=r["horizon"]<=b])
                                     for name,a,b in (("1-6",1,6),("7-12",7,12),("13-24",13,24))},
                          "spikes": {"tp":tp,"fp":fp,"fn":fn,"support":tp+fn,"falseAlarms":fp,
-                                    "precision":tp/(tp+fp) if tp+fp else None,
-                                    "recall":tp/(tp+fn) if tp+fn else None,
-                                    "assessedPairs":len(labeled), "undefinedReason":"No predicted/actual events or insufficient reference history"}}
+                                    "precision":tp/(tp+fp) if enough_events and tp+fp else None,
+                                    "recall":tp/(tp+fn) if enough_events and tp+fn else None,
+                                    "assessedPairs":len(labeled), "distinctTargetPeriods":len({r['targetPeriod'] for r in labeled}),
+                                    "distinctPositiveTargets":len(positive_targets),"distinctNegativeTargets":len(negative_targets),
+                                    "distinctPositiveEvents":events,
+                                    "falseAlarmTargets":len({r['targetPeriod'] for r in labeled if r['spikeFlag'] and not r['actualSpike']}),
+                                    "minimumDistinctPositiveAndNegativeTargets":20,
+                                    "undefinedReason":None if enough_events and tp+fp and tp+fn else "Insufficient distinct labelled targets or no predicted events; pairs overlap"}}
     ai, baseline = table.get("AI",{}).get("mae"), table.get(selected_baseline,{}).get("mae")
     skill = 1-ai/baseline if ai is not None and baseline not in (None,0) else None
     return {"table": table, "selectedBaseline": selected_baseline, "skill": skill,

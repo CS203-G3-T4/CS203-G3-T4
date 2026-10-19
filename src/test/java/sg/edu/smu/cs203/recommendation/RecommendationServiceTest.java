@@ -27,6 +27,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 import sg.edu.smu.cs203.household.DwellingType;
+import sg.edu.smu.cs203.household.HouseholdAccessDeniedException;
 import sg.edu.smu.cs203.household.HouseholdDirectory;
 import sg.edu.smu.cs203.household.HouseholdResponse;
 import sg.edu.smu.cs203.household.PlanType;
@@ -141,6 +142,16 @@ class RecommendationServiceTest {
 
         verify(repository).closeActive(5L, RecommendationStatus.ACCEPTED, now, sg("2026-09-30T13:00"));
         verify(repository).logEvent(5L, "ACCEPTED", now, sg("2026-09-30T13:00"), false);
+    }
+
+    @Test
+    void anotherResidentsSuggestionCannotBeAccepted() {
+        when(repository.findById(5L)).thenReturn(Optional.of(active(5L, sg("2026-09-30T13:00"))));
+        when(households.household(1L)).thenThrow(new HouseholdAccessDeniedException());
+
+        assertThatThrownBy(() -> service.accept(5L, null))
+                .isInstanceOf(HouseholdAccessDeniedException.class);
+        verify(repository, never()).closeActive(anyLong(), any(), any(), any());
     }
 
     @Test

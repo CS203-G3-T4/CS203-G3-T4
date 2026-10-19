@@ -18,6 +18,23 @@ Wattly.householdId = function () {
 // so each page can decide how to show errors.
 Wattly.api = async function (method, url, body) {
   const options = { method: method, headers: { Accept: 'application/json' } };
+  if (!['GET', 'HEAD', 'OPTIONS', 'TRACE'].includes(method.toUpperCase())) {
+    let csrfResponse;
+    try {
+      csrfResponse = await fetch('/api/v1/csrf', { headers: { Accept: 'application/json' } });
+    } catch (networkError) {
+      return { ok: false, status: 0, data: { detail: 'Cannot reach the Wattly server. Is it running?' } };
+    }
+    if (!csrfResponse.ok) {
+      return {
+        ok: false,
+        status: csrfResponse.status,
+        data: { detail: 'Could not obtain a security token. Please sign in again.' }
+      };
+    }
+    const csrf = await csrfResponse.json();
+    options.headers[csrf.headerName] = csrf.token;
+  }
   if (body !== undefined) {
     options.headers['Content-Type'] = 'application/json';
     options.body = JSON.stringify(body);
@@ -79,6 +96,63 @@ Wattly.toast = function (message) {
   setTimeout(function () { toast.remove(); }, 2200);
 };
 
+Wattly.addLogoutControl = function () {
+  const sidebar = document.querySelector('.sidebar');
+  if (!sidebar) {
+    return;
+  }
+
+  const form = document.createElement('form');
+  form.className = 'logout-form';
+  form.action = '/logout';
+  form.method = 'post';
+
+  const button = document.createElement('button');
+  button.className = 'btn-ghost logout-button';
+  button.type = 'submit';
+  button.textContent = 'Sign out';
+  form.appendChild(button);
+
+  const status = document.createElement('p');
+  status.className = 'logout-status';
+  status.setAttribute('role', 'status');
+  status.setAttribute('aria-live', 'polite');
+  status.hidden = true;
+
+  form.addEventListener('submit', async function (event) {
+    event.preventDefault();
+    button.disabled = true;
+    status.hidden = true;
+    try {
+      const response = await fetch('/api/v1/csrf', {
+        headers: { Accept: 'application/json' },
+        cache: 'no-store'
+      });
+      if (!response.ok) {
+        throw new Error('CSRF token request failed with status ' + response.status);
+      }
+      const csrf = await response.json();
+      if (!csrf.token) {
+        throw new Error('CSRF token response did not contain a token');
+      }
+      const token = document.createElement('input');
+      token.type = 'hidden';
+      token.name = '_csrf';
+      token.value = csrf.token;
+      form.appendChild(token);
+      form.submit();
+    } catch (error) {
+      button.disabled = false;
+      status.textContent = 'Could not sign out. Refresh the page and try again.';
+      status.hidden = false;
+      console.error('Could not prepare sign out:', error);
+    }
+  });
+
+  sidebar.appendChild(form);
+  sidebar.appendChild(status);
+};
+
 Wattly.initials = function (name) {
   const words = String(name || '').replace(/^the\s+/i, '').split(/\s+/).filter(Boolean);
   if (words.length === 0) {
@@ -89,6 +163,8 @@ Wattly.initials = function (name) {
   }
   return (words[0][0] + words[1][0]).toUpperCase();
 };
+
+Wattly.addLogoutControl();
 
 // Fills the household card at the bottom of the sidebar.
 Wattly.renderHouseholdCard = function (household) {
