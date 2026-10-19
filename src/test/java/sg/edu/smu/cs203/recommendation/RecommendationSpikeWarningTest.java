@@ -183,7 +183,6 @@ class RecommendationSpikeWarningTest {
         when(repository.findById(7L)).thenReturn(Optional.of(warning(7L, sg("2026-09-30T19:45"), null)));
 
         assertThatThrownBy(() -> service.gotIt(5L)).isInstanceOf(RecommendationActionNotAllowedException.class);
-        assertThatThrownBy(() -> service.remindLater(5L)).isInstanceOf(RecommendationActionNotAllowedException.class);
         assertThatThrownBy(() -> service.accept(7L, null)).isInstanceOf(RecommendationActionNotAllowedException.class);
         assertThatThrownBy(() -> service.dismiss(7L)).isInstanceOf(RecommendationActionNotAllowedException.class);
         verify(repository, never()).closeActive(anyLong(), any(), any(), any());
@@ -228,6 +227,7 @@ class RecommendationSpikeWarningTest {
         when(households.household(1L)).thenReturn(household(true));
         when(repository.findActive(1L)).thenReturn(
                 List.of(warning(7L, sg("2026-09-30T19:45"), sg("2026-09-30T09:10")), shift(5L)));
+        when(households.flexibleAppliances(1L)).thenReturn(List.of());
 
         assertThat(service.list(1L).recommendations()).extracting(RecommendationResponse::id).containsExactly(5L);
         assertThat(serviceAt(sg("2026-09-30T09:10")).list(1L).recommendations())
@@ -237,18 +237,35 @@ class RecommendationSpikeWarningTest {
     @Test
     void anUpdatedWarningForTheSameRunKeepsRemindMeLater() {
         priceLinked(dryer());
-        forecast(PriceForecast.DEMO, Map.of("20:00", 3000.0), Set.of("20:00"));
-        // The open warning suggested 15:00; the new forecast makes 08:30 the best spike-free start.
-        Recommendation snoozed = new Recommendation(7L, 1L, 10L, "Tumble Dryer", Recommendation.AVOID,
-                sg("2026-09-30T15:00"), sg("2026-09-30T19:45"), new BigDecimal("0.75"), new BigDecimal("4.125"),
-                new BigDecimal("3.375"), "reason", PriceForecast.DEMO, "demo", RecommendationStatus.ACTIVE, null,
-                now, null, sg("2026-09-30T20:00"), sg("2026-09-30T09:10"));
+        forecast(PriceForecast.DEMO, Map.of("15:00", 50.0, "15:30", 50.0, "20:00", 3000.0), Set.of("20:00"));
+        // The open warning suggested 16:00; the new forecast makes 15:00 the best spike-free start.
+        Recommendation snoozed = snoozedWarning(sg("2026-09-30T16:00"));
         when(repository.findActive(1L)).thenReturn(List.of(snoozed));
         when(repository.closeActive(7L, RecommendationStatus.SUPERSEDED, now, null)).thenReturn(true);
 
         service.generate(1L);
 
         assertThat(onlyInsert().snoozedUntil()).isEqualTo(sg("2026-09-30T09:10"));
+    }
+
+    @Test
+    void aReminderIsNotCarriedOverIfItWouldComeBackTooLate() {
+        // The new alternative is 08:30, so a 09:10 reminder would only return once it's useless.
+        priceLinked(dryer());
+        forecast(PriceForecast.DEMO, Map.of("20:00", 3000.0), Set.of("20:00"));
+        when(repository.findActive(1L)).thenReturn(List.of(snoozedWarning(sg("2026-09-30T16:00"))));
+        when(repository.closeActive(7L, RecommendationStatus.SUPERSEDED, now, null)).thenReturn(true);
+
+        service.generate(1L);
+
+        assertThat(onlyInsert().snoozedUntil()).isNull();
+    }
+
+    private Recommendation snoozedWarning(Instant suggestedStart) {
+        return new Recommendation(7L, 1L, 10L, "Tumble Dryer", Recommendation.AVOID,
+                suggestedStart, sg("2026-09-30T19:45"), new BigDecimal("0.75"), new BigDecimal("4.125"),
+                new BigDecimal("3.375"), "reason", PriceForecast.DEMO, "demo", RecommendationStatus.ACTIVE, null,
+                now, null, sg("2026-09-30T20:00"), sg("2026-09-30T09:10"));
     }
 
     // ------------------------------------------------------------ helpers
@@ -288,7 +305,7 @@ class RecommendationSpikeWarningTest {
     }
 
     private Recommendation warning(long id, Instant usualStart, Instant snoozedUntil) {
-        return new Recommendation(id, 1L, 11L, "Washer", Recommendation.AVOID, sg("2026-09-30T08:30"),
+        return new Recommendation(id, 1L, 11L, "Washer", Recommendation.AVOID, usualStart.plusSeconds(3 * 3600),
                 usualStart, new BigDecimal("0.75"), new BigDecimal("4.125"), new BigDecimal("3.375"),
                 "reason", PriceForecast.DEMO, "demo", RecommendationStatus.ACTIVE, null, now, null,
                 usualStart.plusSeconds(900), snoozedUntil);
