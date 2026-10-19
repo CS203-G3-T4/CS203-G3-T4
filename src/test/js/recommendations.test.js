@@ -12,6 +12,7 @@ const staticDir = path.join(__dirname, '../../main/resources/static/js');
 // Just enough DOM for Wattly.escape, which uses a div's textContent -> innerHTML.
 function escapingDocument() {
   return {
+    querySelector() { return null; },
     createElement() {
       let text = '';
       return {

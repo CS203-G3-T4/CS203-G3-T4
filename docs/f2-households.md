@@ -13,20 +13,22 @@ Code: `src/main/java/sg/edu/smu/cs203/household` (households), `.../household/ap
 | [CSDT4-16](https://csd-t4.atlassian.net/browse/CSDT4-16) Appliances page | `static/appliances.html`: list, add, edit, delete, on/off switch, "Power (kW)" and "Run time" labels, API messages shown next to fields |
 | [CSDT4-29](https://csd-t4.atlassian.net/browse/CSDT4-29) Archetypes calibrated to EMA | `load_archetype` table (V6) with EMA 2024 averages; `LoadProfileCalculator` (method below); unit tests prove the month adds up to EMA's figure |
 | [CSDT4-30](https://csd-t4.atlassian.net/browse/CSDT4-30) Load profile endpoint | `GET /api/v1/households/{id}/load-profile?date=YYYY-MM-DD` (48 half-hour kWh values; date defaults to today in Singapore); `HouseholdDirectory` interface for F4 |
-| [CSDT4-31](https://csd-t4.atlassian.net/browse/CSDT4-31) Demo households | The Tans (V5) plus Lim, Ong, Nair and the fixed-rate Rahman Residence (V7) |
+| [CSDT4-31](https://csd-t4.atlassian.net/browse/CSDT4-31) Demo households | Five seeded portfolio properties in V5/V7, labeled Home, Office 1–3, and Rental; the varied household types, plans, and appliances remain for demo coverage |
 | [CSDT4-32](https://csd-t4.atlassian.net/browse/CSDT4-32) Settings page | `static/settings.html`: edit name, home type, occupants, plan and fixed rate; shows the modelled day as a chart |
 | [CSDT4-49](https://csd-t4.atlassian.net/browse/CSDT4-49) Simulated population | 100 deterministic households (V8) with `simulated = true`, hidden from `GET /api/v1/households` unless `?includeSimulated=true` |
 | [CSDT4-50](https://csd-t4.atlassian.net/browse/CSDT4-50) "About our data" page | `static/about-data.html` |
 | [CSDT4-62](https://csd-t4.atlassian.net/browse/CSDT4-62) Add and delete households | `DELETE /api/v1/households/{id}` (204; its appliances go too; simulated → 409; unknown → 404); `static/households.html` lists households with their appliance count, adds one through `POST /api/v1/households` and deletes one after an in-page confirmation. Pages whose household was deleted move to the first remaining household, or to the Households page if none are left |
+| [CSDT4-66](https://csd-t4.atlassian.net/browse/CSDT4-66) Protect household administration with CSRF and role checks | Household creation and deletion require an ADMIN account; `GET /api/v1/csrf` supplies the token used by the shared `Wattly.api` helper for unsafe requests; the Households page hides add/delete controls for residents |
 
 Still open because they depend on other features:
 
 - "Switching to fixed rate stops new shifting suggestions": F4 must read `exposedToWholesalePrice`.
 - "Load profile includes accepted runs": needs F4's accepted recommendations. Today each run is
   placed at the appliance's usual start.
-- "Simulated households can't log in": needs login (CSDT4-23).
-- Adding and deleting households is open to anyone until login exists. After CSDT4-23, adding
-  becomes part of sign-up and deleting should be admin-only (CSDT4-62).
+- Simulated households cannot log in; account authentication rejects accounts attached to them.
+- Household-specific reads and writes now check the signed-in account's household in the service
+  layer. Residents see only their own household in listings and receive 403 for another household;
+  admins may access any household.
 
 ## Try it
 
@@ -40,6 +42,9 @@ docker compose up -d postgres
 - http://localhost:8080/households.html (add or delete a household)
 - http://localhost:8080/about-data.html
 - http://localhost:8080/swagger-ui.html → the "F2" sections
+
+With the demo profile, the resident account is linked to Home and sees only that
+property. The admin account can manage all five seeded properties.
 
 ## Units and rules
 

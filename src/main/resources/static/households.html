@@ -147,6 +147,7 @@
   let applianceCounts = {};   // household id -> number of appliances
   let archetypes = [];
   let planType = 'PRICE_LINKED';
+  let isAdmin = false;
   let confirmingId = null;    // the household whose delete is waiting for "Yes, delete"
   let newestId = null;        // highlighted briefly after adding
 
@@ -206,11 +207,11 @@
             '<div class="household-actions">' +
               '<a class="btn-ghost btn-sm" href="/appliances.html?household=' + id + '">Appliances</a>' +
               '<a class="btn-ghost btn-sm" href="/settings.html?household=' + id + '">Settings</a>' +
-              '<button class="icon-btn danger" type="button" data-action="ask-delete" ' +
+              (isAdmin ? '<button class="icon-btn danger" type="button" data-action="ask-delete" ' +
                 'aria-label="Delete ' + name + '" title="Delete">' +
                 '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" ' +
                 'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>' +
-              '</button>' +
+              '</button>' : '') +
             '</div>' +
           '</div>' +
           (id === confirmingId ? confirmBox(household) : '') +
@@ -253,6 +254,16 @@
       }
     });
     renderList();
+  }
+
+  async function loadCurrentRole() {
+    const result = await Wattly.api('GET', '/api/v1/session');
+    isAdmin = result.ok && result.data.role === 'ADMIN';
+    document.querySelector('.form-card').hidden = !isAdmin;
+    if (!isAdmin) {
+      document.querySelector('.page-head p').textContent =
+        'Your account can view its household. Only administrators can add or delete households.';
+    }
   }
 
   // Sidebar: show the viewed household, or the first one if it no longer exists.
@@ -437,7 +448,8 @@
   }
 
   setPlan('PRICE_LINKED');
-  loadArchetypes()
+  loadCurrentRole()
+    .then(loadArchetypes)
     .then(loadHouseholds)
     .then(refreshSidebar)
     .then(renderList);

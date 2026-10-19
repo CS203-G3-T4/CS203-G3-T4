@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign in · Wattly</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="/css/wattly.css">
+  <style>
+    body { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+    .login-shell { width: min(100%, 420px); }
+    .login-brand { justify-content: center; margin-bottom: 20px; }
+    .login-card { padding: 28px; }
+    .login-card h1 { font-size: 24px; }
+    .login-card > p { margin: 6px 0 22px; color: var(--muted); }
+    .login-form { display: grid; gap: 16px; }
+    .login-error { margin-bottom: 16px; }
+    .login-submit { width: 100%; }
+    .login-status { min-height: 20px; margin: 12px 0 0; color: var(--critical); font-size: 13px; }
+    @media (max-width: 480px) { .login-card { padding: 22px; } }
+  </style>
+</head>
+<body>
+  <main class="login-shell">
+    <div class="brand login-brand">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M13 2L4 14H11L10 22L20 9H13L13 2Z" stroke="#2a78d6" stroke-width="1.7"
+              stroke-linejoin="round" fill="#eaf2fc"/>
+      </svg>
+      <span>Wattly</span>
+    </div>
+    <section class="card login-card" aria-labelledby="login-title">
+      <h1 id="login-title">Sign in to Wattly</h1>
+      <p>Use your account to continue.</p>
+      <div id="login-error" class="banner error login-error" role="alert" hidden>
+        Username or password is incorrect. Please try again.
+      </div>
+      <form class="login-form" method="post" action="/login">
+        <input id="csrf-token" type="hidden" name="_csrf">
+        <div class="field">
+          <label class="field-label" for="username">Username</label>
+          <input class="field-input" id="username" name="username" type="text"
+                 autocomplete="username" required autofocus>
+        </div>
+        <div class="field">
+          <label class="field-label" for="password">Password</label>
+          <input class="field-input" id="password" name="password" type="password"
+                 autocomplete="current-password" required>
+        </div>
+        <button class="btn-primary login-submit" id="login-submit" type="submit" disabled>Sign in</button>
+      </form>
+      <p id="login-status" class="login-status" role="status" aria-live="polite"></p>
+    </section>
+  </main>
+  <script>
+    const loginError = document.getElementById('login-error');
+    const loginStatus = document.getElementById('login-status');
+    const submitButton = document.getElementById('login-submit');
+    loginError.hidden = !new URLSearchParams(window.location.search).has('error');
+    if (new URLSearchParams(window.location.search).has('logout')) {
+      loginStatus.textContent = 'You have been signed out.';
+      loginStatus.style.color = 'var(--teal)';
+    }
+
+    fetch('/api/v1/csrf', { headers: { Accept: 'application/json' } })
+      .then(function (response) {
+        if (!response.ok) {
+          throw new Error('CSRF token request failed with status ' + response.status);
+        }
+        return response.json();
+      })
+      .then(function (csrf) {
+        if (!csrf.token) {
+          throw new Error('CSRF token response did not contain a token');
+        }
+        document.getElementById('csrf-token').value = csrf.token;
+        submitButton.disabled = false;
+      })
+      .catch(function (error) {
+        loginStatus.textContent = 'Sign-in is temporarily unavailable. Refresh the page and try again.';
+        console.error('Could not prepare the sign-in form:', error);
+      });
+  </script>
+</body>
+</html>

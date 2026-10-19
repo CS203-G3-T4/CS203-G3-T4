@@ -1,10 +1,10 @@
 -- One demo household so the Appliances page has something to show on a fresh database.
--- It mirrors the mockup's "Tan Household" with the units fixed (kW + minutes, not kWh).
+-- It seeds the admin's Home property with the units fixed (kW + minutes, not kWh).
 -- The fuller edge-case seed set belongs to CSDT4-31; replace or extend this there.
 
 INSERT INTO household (name, dwelling_type, occupants, plan_type, fixed_rate_cents_per_kwh,
                        created_at, updated_at)
-VALUES ('The Tan Household', 'HDB_4_ROOM', 4, 'PRICE_LINKED', NULL, now(), now());
+VALUES ('Home', 'HDB_4_ROOM', 4, 'PRICE_LINKED', NULL, now(), now());
 
 INSERT INTO appliance (household_id, name, type, power_kw, run_minutes, flexibility,
                        earliest_start, must_finish_by, usual_start, runs_per_week, enabled,
@@ -28,4 +28,4 @@ CROSS JOIN (VALUES
         NULL, NULL, NULL, 7, TRUE, 'Runs all day')
 ) AS a (name, type, power_kw, run_minutes, flexibility, earliest_start, must_finish_by,
         usual_start, runs_per_week, enabled, notes)
-WHERE h.name = 'The Tan Household';
+WHERE h.name = 'Home';

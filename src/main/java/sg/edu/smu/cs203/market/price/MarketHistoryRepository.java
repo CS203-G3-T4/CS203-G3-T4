@@ -42,6 +42,14 @@ public class MarketHistoryRepository {
     }
 
     public List<MarketRevision> asOf(Instant asOf) {
+        return asOf(asOf, asOf.minus(Duration.ofDays(29)));
+    }
+
+    /**
+     * As asOf(asOf), for half-hours from a chosen start (e.g. the 1st of the month for CSDT4-41's
+     * month-to-date spend, which can need more than 29 days).
+     */
+    public List<MarketRevision> asOf(Instant asOf, Instant from) {
         List<MarketRevision> rows = jdbc.query("""
                 SELECT * FROM market_price_revision
                 WHERE period_start>=? AND period_start<=? AND published_at<=? AND available_at<=?
@@ -50,7 +58,7 @@ public class MarketHistoryRepository {
                 rs.getTimestamp("period_start").toInstant(),rs.getTimestamp("published_at").toInstant(),
                 rs.getTimestamp("available_at").toInstant(),rs.getBigDecimal("usep"),rs.getBigDecimal("demand"),
                 rs.getBigDecimal("vcp"),rs.getString("price_status"),rs.getString("time_mapping")),
-                ts(asOf.minus(Duration.ofDays(29))),ts(asOf),ts(asOf),ts(asOf));
+                ts(from),ts(asOf),ts(asOf),ts(asOf));
         var selected = new java.util.LinkedHashMap<Instant,MarketRevision>();
         for (MarketRevision row : rows) {
             MarketRevision prior = selected.putIfAbsent(row.periodStart(),row);

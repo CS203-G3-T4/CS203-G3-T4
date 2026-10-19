@@ -7,6 +7,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.AuthorityUtils;
+import org.springframework.security.core.context.SecurityContextHolder;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class ForecastAdminAuthenticationTest {
@@ -41,10 +45,26 @@ class ForecastAdminAuthenticationTest {
         assertThat(filter(true,malformed,"test-password").getStatus()).isEqualTo(401);
         assertThat(filter(true,request("/api/v1/admin/forecast-accuracy","test-admin:"),"").getStatus()).isEqualTo(403);
     }
+    @Test void anonymousSecurityContextDoesNotMaskTheLocalAdminChallenge() throws Exception {
+        SecurityContextHolder.getContext().setAuthentication(new AnonymousAuthenticationToken(
+                "test-key", "anonymousUser", AuthorityUtils.createAuthorityList("ROLE_ANONYMOUS")));
+        try {
+            var response=filter(true,request("/admin-forecast.html",null),"test-password");
+            assertThat(response.getStatus()).isEqualTo(401);
+            assertThat(response.getHeader("WWW-Authenticate")).contains("Wattly local forecast admin");
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
+    }
     @Test void explicitLocalCredentialsAuthorizeOnlyForecasting() throws Exception {
-        assertThat(filter(true,request("/api/v1/admin/forecast-accuracy","test-admin:test-password"),"test-password").getStatus()).isEqualTo(200);
-        assertThat(downstream.get().isUserInRole("ADMIN")).isTrue();
-        assertThat(downstream.get().getUserPrincipal().getName()).isEqualTo("test-admin");
+        try {
+            assertThat(filter(true,request("/api/v1/admin/forecast-accuracy","test-admin:test-password"),"test-password").getStatus()).isEqualTo(200);
+            assertThat(SecurityContextHolder.getContext().getAuthentication().getName()).isEqualTo("test-admin");
+            assertThat(SecurityContextHolder.getContext().getAuthentication().getAuthorities())
+                    .extracting("authority").containsExactly("ROLE_ADMIN");
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
     }
     @Test void unrelatedAdminRoutesPassThroughWithoutAnInjectedPrincipal() throws Exception {
         for (String path:new String[]{"/api/v1/admin/users","/api/v1/admin/forecast-unknown","/admin.html"}) {
@@ -56,14 +76,28 @@ class ForecastAdminAuthenticationTest {
     @Test void sharedAdminWorksWithLocalAuthenticationDisabled() throws Exception {
         var request=request("/admin-forecast.html",null);
         request.setUserPrincipal(()->"shared-admin"); request.addUserRole("ADMIN");
-        assertThat(filter(false,request,"").getStatus()).isEqualTo(200);
-        assertThat(downstream.get().getUserPrincipal().getName()).isEqualTo("shared-admin");
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(
+                        "shared-admin", "n/a", AuthorityUtils.createAuthorityList("ROLE_ADMIN")));
+        try {
+            assertThat(filter(false,request,"").getStatus()).isEqualTo(200);
+            assertThat(downstream.get().getUserPrincipal().getName()).isEqualTo("shared-admin");
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
     }
     @Test void sharedResidentCannotBeElevatedEvenWithValidLocalCredentials() throws Exception {
         var request=request("/admin-forecast.html","test-admin:test-password");
         request.setUserPrincipal(()->"resident"); request.addUserRole("RESIDENT");
-        assertThat(filter(true,request,"test-password").getStatus()).isEqualTo(403);
-        assertThat(downstream.get()).isNull();
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(
+                        "resident", "n/a", AuthorityUtils.createAuthorityList("ROLE_RESIDENT")));
+        try {
+            assertThat(filter(true,request,"test-password").getStatus()).isEqualTo(403);
+            assertThat(downstream.get()).isNull();
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
     }
     @Test void crossOriginWritesRemainDenied() throws Exception {
         var request=request("/api/v1/admin/forecast-demand","test-admin:test-password");
