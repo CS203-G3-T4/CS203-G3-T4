@@ -73,11 +73,12 @@ the existing schema and initialize new databases.
 - `GET /api/v1/market-prices?from=2026-09-23T00:00:00Z&to=2026-09-24T00:00:00Z` returns historical intervals. The range is at most 31 days.
 - `GET /api/v1/market-prices/feed-status` reports the most recent poll result (`SUCCESS`, `STALE_SOURCE`, `FAILURE`, or `NEVER_POLLED`).
 - `GET /api/v1/admin/feed-status` (admin) reports NEMS feed health: last poll, last successful sync, consecutive failed polls, uptime % and fallback count for the current month, the open incident and the 10 most recent incidents.
-- `/admin-feed.html` (admin only; CSDT4-48) is the "USEP price feed" panel. It shows the same figures from `GET /api/v1/admin/feed-status` and refreshes every minute, with no placeholder values: before the first poll it shows dashes and "No polls yet".
 - `GET /actuator/health` reports application and database health.
 - `/swagger-ui.html` displays the API documentation; `/v3/api-docs` returns the OpenAPI document.
 
 `/latest` returns HTTP 503 with `freshness: UNAVAILABLE` if no price has ever been stored. Once a price has been stored, a feed outage does not erase it; the endpoint returns that value with `freshness: STALE`. A successful poll can still be classified as `STALE_SOURCE` if the upstream API responds with an old timestamp. The freshness limit defaults to 40 minutes.
+
+The admin **USEP price feed** panel (CSDT4-48) is `/admin-feed.html` (admin only). It shows the same figures as `GET /api/v1/admin/feed-status` and refreshes every minute, with no placeholder values: before the first poll it shows dashes and "No polls yet".
 
 Feed health (CSDT4-25) definitions:
 
