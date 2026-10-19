@@ -10,7 +10,7 @@ import shutil
 import tempfile
 
 from .data import digest, write_json
-from .features import FEATURES
+from .features import feature_names, holiday_calendar, holiday_digest
 from .spikes import validate_config
 
 
@@ -44,7 +44,10 @@ def load_bundle(path: Path):
     import joblib
     manifest = json.loads((path/"manifest.json").read_text())
     validate_config(manifest["spikeConfig"])
-    if (manifest["schemaVersion"]!=1 or manifest["featureOrder"]!=FEATURES or
+    schema = manifest.get('featureSchemaVersion',1)
+    if schema == 2 and (manifest.get('holidayCalendarVersion') != holiday_calendar()['version'] or manifest.get('holidayCalendarSha256') != holiday_digest()):
+        raise ValueError('Incompatible holiday calendar')
+    if (manifest["schemaVersion"]!=1 or manifest["featureOrder"]!=feature_names(schema) or
         manifest["dependencies"]!=versions() or digest(path/"models.joblib")!=manifest["modelSha256"]):
         raise ValueError("Corrupt or incompatible model bundle")
     models = joblib.load(path/"models.joblib")

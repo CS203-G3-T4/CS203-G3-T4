@@ -71,25 +71,30 @@ WattlyDemo.render = function (report) {
   const selected = report.protocol.validationSelectedBaseline;
   const ai = report.test.table.AI.mae, baseline = report.test.table[selected].mae;
   const delta = ai - baseline;
+  const model = report.displayModel || 'Original AI';
+  WattlyDemo.text('demo-model', model + ' · ' + report.modelVersion + ' · saved experimental predictions');
+  WattlyDemo.text('demo-ai-label', model + ' diagnostic MAE');
+  WattlyDemo.text('demo-ai-legend', model + ' experiment');
   WattlyDemo.text('demo-status', report.label);
-  WattlyDemo.text('demo-verdict', 'On this test day, AI has ' + WattlyDemo.number(Math.abs(delta)) +
-    ' SGD/MWh ' + (delta > 0 ? 'more' : delta < 0 ? 'less' : 'difference in') + ' error than ' + selected + '. One day does not establish general accuracy.');
+  WattlyDemo.text('demo-verdict', 'On this diagnostic day, AI has ' + WattlyDemo.number(Math.abs(delta)) +
+    ' SGD/MWh ' + (delta > 0 ? 'more' : delta < 0 ? 'less' : 'difference in') + ' error than ' + selected + '. This already-seen day does not confirm general accuracy.');
   WattlyDemo.text('demo-ai-mae', WattlyDemo.number(ai));
   WattlyDemo.text('demo-baseline-label', selected + ' baseline MAE');
   WattlyDemo.text('demo-baseline-mae', WattlyDemo.number(baseline));
   WattlyDemo.text('demo-pairs', report.test.commonPairs);
-  WattlyDemo.text('demo-origins', report.origins.length + ' origins · 12 hours each · one day');
+  const aggregateOrigins = report.test.eligibleOrigins ?? report.origins.length;
+  WattlyDemo.text('demo-origins', aggregateOrigins + ' scored origins · ' + report.origins.length + ' chart origins · 12 hours each');
   const purged = report.exclusions.AI.PURGED_SPLIT_BOUNDARY || 0;
-  WattlyDemo.text('demo-pair-explanation', report.origins.length + ' eligible origins × 24 predictions = ' +
-    report.test.commonPairs + ' included pairs per compared method. ' + purged / 24 + ' later origins × 24 = ' + purged +
+  WattlyDemo.text('demo-pair-explanation', aggregateOrigins + ' eligible origins × 24 predictions = ' +
+    report.test.commonPairs + ' included pairs per compared method. The bundled chart shows ' + report.origins.length + ' saved origin(s). ' + purged / 24 + ' later origins × 24 = ' + purged +
     ' excluded pairs per method because their full forecast crosses the test-day boundary.');
   const assessed = report.test.table.AI.spikes?.assessedPairs || 0;
   WattlyDemo.text('demo-spikes', assessed ? 'Spike assessments have sufficient reference history for ' + assessed +
     ' evaluated AI pairs; see the downloaded report.' : 'Spike assessment: Insufficient history. No spike flags or spike-accuracy claim are available for this experiment.');
   const p = report.protocol, date = value => WattlyDemo.format.format(new Date(value));
-  WattlyDemo.text('demo-dates', 'Train: ' + date(p.trainingStart) + ' → ' + date(p.trainingCutoff) +
-    '. Validate: ' + date(p.validationStart) + ' → ' + date(p.validationEnd) +
-    '. Test: ' + date(p.testStart) + ' → ' + date(p.testEnd) + ' SGT. End times are exclusive.');
+  WattlyDemo.text('demo-dates', 'Final model fit: ' + date(p.trainingStart) + ' → ' + date(p.trainingCutoff) +
+    (report.study ? '. Final-fold validation: ' : '. Validation: ') + date(p.validationStart) + ' → ' + date(p.validationEnd) +
+    '. Already-seen diagnostic: ' + date(p.testStart) + ' → ' + date(p.testEnd) + ' SGT. End times are exclusive.');
   const select = document.getElementById('demo-origin'); select.replaceChildren();
   report.origins.forEach((origin, index) => {
     const option = document.createElement('option'); option.value = index; option.textContent = date(origin.asOf); select.appendChild(option);
@@ -111,6 +116,18 @@ WattlyDemo.render = function (report) {
     '. All-method common pairs (including B3): ' + report.allMethods.commonPairs + '.');
   const limits = document.getElementById('demo-limitations'); limits.replaceChildren();
   report.limitations.forEach(text => { const li = document.createElement('li'); li.textContent = text; limits.appendChild(li); });
+  const study = report.study;
+  document.getElementById('demo-study').hidden = !study;
+  if (study) {
+    const scores = document.getElementById('demo-study-scores'); scores.replaceChildren();
+    study.methods.forEach(m => WattlyDemo.row(scores, [m.method, WattlyDemo.number(m.validationMae), WattlyDemo.number(m.diagnosticMae)]));
+    WattlyDemo.text('demo-study-verdict', study.overallWinner + ' wins validation overall; ' + study.selectedModel +
+      ' is the best feature-based candidate. Selection did not use September 28 scores.');
+    WattlyDemo.text('demo-study-coverage', 'Validation: ' + date(study.folds[0].validationStart) + ' → ' +
+      date(study.folds.at(-1).validationEnd) + ' SGT. ' + study.validationPairs + ' identical pairs across two chronological folds; ' +
+      study.trainingSamplesPerHorizon.join(' / ') + ' training examples per horizon. The chart above uses ' + study.diagnosticPairs +
+      ' diagnostic pairs. Validation and diagnostic MAEs cover different dates.');
+  }
   document.getElementById('demo-results').hidden = false;
   WattlyDemo.selectOrigin();
 };
@@ -126,10 +143,15 @@ WattlyDemo.live = async function () {
     ' · published: ' + WattlyDemo.format.format(new Date(p.sourceUpdatedAt)) + ' SGT');
 };
 WattlyDemo.load = async function () {
-  const result = await Wattly.api('GET', '/forecast-demo.json');
+  const url = document.getElementById('demo-experiment').value || '/forecast-demo-latest.json';
+  document.getElementById('demo-results').hidden = true;
+  const result = await Wattly.api('GET', url);
+  if (url !== (document.getElementById('demo-experiment').value || '/forecast-demo-latest.json')) return;
   try { if (!result.ok) throw new Error('Missing report'); WattlyDemo.render(result.data); }
   catch (_) { WattlyDemo.text('demo-status', 'Offline experiment unavailable. Start the presentation demo with its saved report.'); }
+  document.getElementById('demo-report-download').setAttribute('href', url);
 };
+document.getElementById('demo-experiment').addEventListener('change', WattlyDemo.load);
 document.getElementById('demo-origin').addEventListener('change', WattlyDemo.selectOrigin);
 document.getElementById('demo-refresh').addEventListener('click', () => { WattlyDemo.live(); WattlyForecast.refresh(); });
 WattlyDemo.load(); WattlyDemo.live();

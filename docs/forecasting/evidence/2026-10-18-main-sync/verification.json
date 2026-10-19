@@ -1,0 +1,86 @@
+{
+  "main": "941e7445c0546d031ff34699e537395a5ef62c5a",
+  "originalHead": "7415e103d5798db322d3b070044167a9d368a86d",
+  "backup": "/home/bryan/CS203_T4/CS203-G3-T4/.local/main-sync-20261017T214107Z",
+  "originalFilesPreserved": 141,
+  "byteUnchanged": 133,
+  "intentionallyChangedOriginals": [
+    "README.md",
+    "docs/f4-recommendations.md",
+    "docs/forecasting/acceptance-2026-10-18.md",
+    "docs/forecasting/contracts.md",
+    "docs/forecasting/runbook.md",
+    "scripts/verify-forecast-stack.py",
+    "src/main/resources/application.yml",
+    "src/main/resources/static/forecast.html"
+  ],
+  "incomingFiles": 55,
+  "intentionalDifferencesFromMain": [
+    "README.md",
+    "docs/f4-recommendations.md",
+    "src/main/resources/application.yml",
+    "src/main/resources/static/forecast.html"
+  ],
+  "java": {
+    "tests": 140,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "pythonFocused": "8 passed, one upstream AnyIO deprecation warning; ML package source byte-unchanged",
+  "frontend": "10 passed,0 failures/skips",
+  "stack": {
+    "status": "PASS",
+    "isolatedPostgres": true,
+    "postgresVersion": "16",
+    "realSpringPythonHttp": true,
+    "realBrowserPages": true,
+    "weeklyShortDataAttemptExit": 2,
+    "nativeTimerFired": true,
+    "fullSuitesInThisInvocation": false,
+    "mainDashboardRecommendationsBudgetPages": true,
+    "configuredHouseholdScenarios": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "collectorModified": false,
+    "liveDatabaseUsed": false,
+    "archivedCollectorFeed": "Original payload/timestamps preserved; only the isolated app receives this local archived feed"
+  },
+  "mainBrowser": {
+    "source": "ISOLATED_APP_ONLY",
+    "dashboard": true,
+    "recommendations": true,
+    "spendingBudgetSavedAndReloaded": true,
+    "fixedRatePreserved": true,
+    "browserErrors": []
+  },
+  "forecastBrowser": {
+    "source": "ISOLATED_APP_WITH_ARCHIVED_REAL_COLLECTOR_PRICES",
+    "actualPageRequests": true,
+    "anonymousApiStatus": 403,
+    "anonymousPageStatus": 401,
+    "adminAuthorized": true,
+    "residentAvailable": true,
+    "residentMethod": "B2",
+    "residentForecastRows": 24,
+    "actualPeriods": 12,
+    "adminSeriesPairs": 0,
+    "adminCommonPairs": 0,
+    "horizonSelector": true,
+    "mobileOverflow": false,
+    "browserErrors": []
+  },
+  "migrationUpgrade": "Main V11 household budget -> V12 forecasting operations, preserving budget and model rows",
+  "allMainMigrationsByteUnchanged": true,
+  "forecastMigrationRenamedWithIdenticalSql": true,
+  "mergeCommitted": false,
+  "pushed": false,
+  "fullPythonSuiteRepeated": false,
+  "collectorModified": false,
+  "liveDatabaseUsed": false,
+  "whitespaceCheck": "Pass with core.whitespace=cr-at-eol; original historical CSV uses preserved CRLF endings"
+}

@@ -1,0 +1,21 @@
+{
+  "status": "PASS",
+  "isolatedPostgres": true,
+  "postgresVersion": "16",
+  "realSpringPythonHttp": true,
+  "realBrowserPages": true,
+  "weeklyShortDataAttemptExit": 2,
+  "nativeTimerFired": true,
+  "fullSuitesInThisInvocation": false,
+  "mainDashboardRecommendationsBudgetPages": true,
+  "configuredHouseholdScenarios": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "collectorModified": false,
+  "liveDatabaseUsed": false,
+  "archivedCollectorFeed": "Original payload/timestamps preserved; only the isolated app receives this local archived feed"
+}

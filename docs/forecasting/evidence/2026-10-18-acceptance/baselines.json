@@ -1,0 +1,210 @@
+{
+  "table": {
+    "B1": {
+      "mae": 36.38450791001637,
+      "eligiblePairs": 104256,
+      "commonPairs": 104256,
+      "ownEligibleMae": 36.38450791001637,
+      "eligibleOrigins": 4344,
+      "excludedOrigins": 24,
+      "coverage": 0.9945054945054945,
+      "perHorizon": {
+        "1": 26.27717963474524,
+        "2": 29.003703575813383,
+        "3": 31.029486264579496,
+        "4": 32.62840431246163,
+        "5": 34.01110228667894,
+        "6": 35.218835558624924,
+        "7": 36.15805977593616,
+        "8": 37.03033954880295,
+        "9": 37.713308394720684,
+        "10": 38.27426603744629,
+        "11": 38.69592656537753,
+        "12": 39.00798918047882,
+        "13": 39.26541167894414,
+        "14": 39.25940876304481,
+        "15": 39.07616137200736,
+        "16": 38.68975943830571,
+        "17": 38.174756368938,
+        "18": 37.678444214241864,
+        "19": 37.28969728360958,
+        "20": 37.07015999079189,
+        "21": 37.174654312461634,
+        "22": 37.616139119091464,
+        "23": 38.160243631062,
+        "24": 38.72475253222836
+      },
+      "groups": {
+        "1-6": 31.36145193881727,
+        "7-12": 37.81331491712707,
+        "13-24": 38.18163239206057
+      },
+      "spikes": {
+        "tp": 5754,
+        "fp": 12246,
+        "fn": 9797,
+        "support": 15551,
+        "falseAlarms": 12246,
+        "precision": 0.31966666666666665,
+        "recall": 0.3700083595910231,
+        "assessedPairs": 104256,
+        "distinctTargetPeriods": 4367,
+        "distinctPositiveTargets": 658,
+        "distinctNegativeTargets": 3709,
+        "distinctPositiveEvents": 176,
+        "falseAlarmTargets": 1431,
+        "minimumDistinctPositiveAndNegativeTargets": 20,
+        "undefinedReason": null
+      }
+    },
+    "B2": {
+      "mae": 30.306989238029466,
+      "eligiblePairs": 104256,
+      "commonPairs": 104256,
+      "ownEligibleMae": 30.306989238029466,
+      "eligibleOrigins": 4344,
+      "excludedOrigins": 24,
+      "coverage": 0.9945054945054945,
+      "perHorizon": {
+        "1": 30.287665745856355,
+        "2": 30.286777163904237,
+        "3": 30.28736418047882,
+        "4": 30.291915285451196,
+        "5": 30.29501841620626,
+        "6": 30.292762430939227,
+        "7": 30.288112338858195,
+        "8": 30.284313996316758,
+        "9": 30.284857274401475,
+        "10": 30.29949585635359,
+        "11": 30.297677255985267,
+        "12": 30.290234806629833,
+        "13": 30.284010128913444,
+        "14": 30.279848066298342,
+        "15": 30.29062615101289,
+        "16": 30.30392034990792,
+        "17": 30.315481123388583,
+        "18": 30.318022559852672,
+        "19": 30.329728360957642,
+        "20": 30.338657918968693,
+        "21": 30.347978821362798,
+        "22": 30.35337246777164,
+        "23": 30.357575966850828,
+        "24": 30.362325046040514
+      },
+      "groups": {
+        "1-6": 30.29025053713935,
+        "7-12": 30.290781921424188,
+        "13-24": 30.323462246777165
+      },
+      "spikes": {
+        "tp": 6488,
+        "fp": 8262,
+        "fn": 9063,
+        "support": 15551,
+        "falseAlarms": 8262,
+        "precision": 0.43986440677966104,
+        "recall": 0.4172078965982895,
+        "assessedPairs": 104256,
+        "distinctTargetPeriods": 4367,
+        "distinctPositiveTargets": 658,
+        "distinctNegativeTargets": 3709,
+        "distinctPositiveEvents": 176,
+        "falseAlarmTargets": 347,
+        "minimumDistinctPositiveAndNegativeTargets": 20,
+        "undefinedReason": null
+      }
+    },
+    "B3": {
+      "mae": 30.227200777755854,
+      "eligiblePairs": 104256,
+      "commonPairs": 104256,
+      "ownEligibleMae": 30.227200777755854,
+      "eligibleOrigins": 4344,
+      "excludedOrigins": 24,
+      "coverage": 0.9945054945054945,
+      "perHorizon": {
+        "1": 30.2427545382794,
+        "2": 30.238141607471718,
+        "3": 30.237020849776375,
+        "4": 30.239115364377795,
+        "5": 30.23947480926072,
+        "6": 30.235493620099973,
+        "7": 30.236956721915284,
+        "8": 30.231169429097605,
+        "9": 30.231346685082872,
+        "10": 30.240439358063668,
+        "11": 30.22944192317811,
+        "12": 30.218544790844515,
+        "13": 30.211021770586687,
+        "14": 30.207954814522495,
+        "15": 30.215309786898185,
+        "16": 30.21957182320442,
+        "17": 30.21240463036043,
+        "18": 30.20948237305972,
+        "19": 30.213921665351222,
+        "20": 30.218641475927388,
+        "21": 30.22264765851092,
+        "22": 30.22582774269929,
+        "23": 30.232473362273087,
+        "24": 30.243661865298606
+      },
+      "groups": {
+        "1-6": 30.238666798210996,
+        "7-12": 30.23131648469701,
+        "13-24": 30.219409914057703
+      },
+      "spikes": {
+        "tp": 4608,
+        "fp": 8070,
+        "fn": 10943,
+        "support": 15551,
+        "falseAlarms": 8070,
+        "precision": 0.36346426881211547,
+        "recall": 0.2963153494952093,
+        "assessedPairs": 104256,
+        "distinctTargetPeriods": 4367,
+        "distinctPositiveTargets": 658,
+        "distinctNegativeTargets": 3709,
+        "distinctPositiveEvents": 176,
+        "falseAlarmTargets": 338,
+        "minimumDistinctPositiveAndNegativeTargets": 20,
+        "undefinedReason": null
+      }
+    }
+  },
+  "selectedBaseline": "B3",
+  "skill": null,
+  "skillUndefinedReason": "Missing common pairs or zero baseline MAE",
+  "commonPairs": 104256,
+  "task": "forecast-spike prediction (origin-frozen thresholds)",
+  "commonOriginDays": 91,
+  "observedAnomalyTask": "operational classification; no independent physical-cause labels",
+  "weeklyBlockDifference95": {
+    "interval": null,
+    "reason": "Fewer than eight weeks of paired errors"
+  },
+  "baselineRanking": [
+    "B3",
+    "B2",
+    "B1"
+  ],
+  "baselineSelection": "COMMON_PAIR_SCOREBOARD",
+  "start": "2026-03-31T16:00:00+00:00",
+  "end": "2026-06-30T16:00:00+00:00",
+  "datasetDigest": "94c1b473cf1963976330e3cbf2abdd5f894c45fc5a4e338eb7ddd0ce5b37cd3b",
+  "evaluationKind": "RETROSPECTIVE_FINAL_PRICE",
+  "exclusions": {
+    "B1": {
+      "PURGED_SPLIT_BOUNDARY": 576
+    },
+    "B2": {
+      "PURGED_SPLIT_BOUNDARY": 576
+    },
+    "B3": {
+      "PURGED_SPLIT_BOUNDARY": 576
+    }
+  },
+  "expectedPairs": 104832,
+  "threeMonthAcceptance": true,
+  "comparison": "Only B1/B2/B3 identical eligible origin/target pairs are ranked. Revisions are not observations."
+}
