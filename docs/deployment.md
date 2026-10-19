@@ -44,6 +44,8 @@ Secrets live only in Railway's variables. Never commit them or put them in this 
    The `${{...}}` references are resolved by Railway over its private network, so
    the database password is never copied by hand. Spring Boot needs a `jdbc:` URL,
    which is why `DB_URL` is built from parts instead of using `DATABASE_URL`.
+   To be able to sign in, also set the login variables in [Logins](#logins)
+   (this changes `SPRING_PROFILES_ACTIVE` to `prod,demo`) before the first deploy.
 4. In the app service's **Settings**:
    - **Networking → Generate Domain** to get a public `*.up.railway.app` URL.
    - **Deploy → Healthcheck Path**: `/actuator/health`.
@@ -51,6 +53,36 @@ Secrets live only in Railway's variables. Never commit them or put them in this 
    - **Replicas**: 1. More replicas would each run the scheduled polls.
 5. Deploy. Railway builds with the Maven wrapper and runs the jar from `target/`.
    Flyway applies all migrations on first start.
+
+## Logins
+
+Accounts are created only when the `demo` profile is active: `DemoAccountSeeder`
+creates `resident` (linked to the Home household) and `admin`. Without `demo`,
+nobody can sign in. The admin role can use `/api/v1/admin/**` and create or delete
+households.
+
+The default passwords (`resident-demo`, `admin-demo`) are in `application-demo.yml`
+and the README, and this repository is public. Use them for local development
+only. On Railway, activate `demo` and replace both passwords:
+
+```text
+SPRING_PROFILES_ACTIVE=prod,demo
+WATTLY_DEMO_ACCOUNTS_ADMIN_PASSWORD=<long random value>
+WATTLY_DEMO_ACCOUNTS_RESIDENT_PASSWORD=<long random value>
+```
+
+- Set these **before the first start**. The seeder only inserts accounts that are
+  missing (`ON CONFLICT DO NOTHING`), so changing a variable later does not change
+  an account that already exists. To rotate a password, run
+  `DELETE FROM user_account WHERE username IN ('admin', 'resident');` and redeploy.
+- The usernames stay `admin` and `resident`. Share the passwords with the team
+  privately, never in Git, chat logs, or screenshots.
+- Startup fails if the Home household is missing, so run it on a database that has
+  applied the seed migrations (the first Flyway run does).
+- Checked locally on 19 October 2026 with a temporary PostgreSQL database: with
+  `WATTLY_DEMO_ACCOUNTS_ADMIN_PASSWORD` set, `admin-demo` was rejected and the new
+  password signed in. An account whose variable is not set keeps its public default.
+  This was not run on Railway.
 
 ## Check a deployment
 
