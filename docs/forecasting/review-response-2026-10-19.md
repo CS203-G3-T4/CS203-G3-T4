@@ -1,4 +1,4 @@
-> Historical verification at `2c7fbb4`. The replacement PR incorporates later main and uses forecast V14; see [current integration and verification](replacement-pr-2026-10-19.md). Original results below are preserved.
+> Historical verification at `2c7fbb4`. The replacement PR incorporates later main and uses forecast V15; see [current merged verification](main-sync-v15-2026-10-19.md). Original results below are preserved.
 
 # PR #11 review response — 19 October 2026
 

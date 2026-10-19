@@ -93,7 +93,7 @@ permanent operational timer. Final-price historical studies remain retrospective
 
 ## Scope decision
 
-Keep the Java/Python contract, V14, UI, persistence and their tests together: the
+Keep the Java/Python contract, V15, UI, persistence and their tests together: the
 working forecasting path crosses those components. Weekly operation depends on
 the protected audit endpoints, schema2 artifacts and controlled inference reload.
 Splitting it now would leave that lifecycle only partly tested in each PR.

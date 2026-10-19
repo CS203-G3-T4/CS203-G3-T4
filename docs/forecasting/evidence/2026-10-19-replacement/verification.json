@@ -113,5 +113,10 @@
     "No permanent weekly deployment",
     "New PR GitHub CI has not yet run"
   ],
-  "rawLocalEvidence": ".local/new-pr-validation-v2/"
+  "rawLocalEvidence": ".local/new-pr-validation-v2/",
+  "historicalCheckpoint": {
+    "reviewedHead": "195ab04cc6ac99e6d81e9af292b7e610c512b9c9",
+    "scope": "Historical validation before PR20/main c8ccfda. These counts do not cover the merged V15 tree.",
+    "supersededBy": "docs/forecasting/evidence/2026-10-19-v15/verification.json"
+  }
 }

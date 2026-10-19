@@ -9,7 +9,7 @@ the Java baseline. Production AI still requires a separately approved model.
 The snapshot was exported with PostgreSQL 16 from the separate demo instance.
 The repository's PostgreSQL 17 Compose service can restore it. Use the F3 branch
 `feature/CSDT4-AIForecaster&BaselineEvaluator`. Current integrated code retains the
-original migration checksums and adds V10–V14 on startup. Verify the original
+original migration checksums and adds V10–V15 on startup. Verify the original
 restore fingerprints before starting that code; additional tables afterward are
 expected. See [the current runbook](runbook.md) for migration
 compatibility, setup and the unapproved-model limits.
