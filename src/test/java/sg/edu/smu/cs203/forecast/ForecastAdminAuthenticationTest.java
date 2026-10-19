@@ -7,6 +7,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.authority.AuthorityUtils;
+import org.springframework.security.core.context.SecurityContextHolder;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class ForecastAdminAuthenticationTest {
@@ -40,6 +43,17 @@ class ForecastAdminAuthenticationTest {
         malformed.addHeader("Authorization","Basic !!!");
         assertThat(filter(true,malformed,"test-password").getStatus()).isEqualTo(401);
         assertThat(filter(true,request("/api/v1/admin/forecast-accuracy","test-admin:"),"").getStatus()).isEqualTo(403);
+    }
+    @Test void anonymousSecurityContextDoesNotMaskTheLocalAdminChallenge() throws Exception {
+        SecurityContextHolder.getContext().setAuthentication(new AnonymousAuthenticationToken(
+                "test-key", "anonymousUser", AuthorityUtils.createAuthorityList("ROLE_ANONYMOUS")));
+        try {
+            var response=filter(true,request("/admin-forecast.html",null),"test-password");
+            assertThat(response.getStatus()).isEqualTo(401);
+            assertThat(response.getHeader("WWW-Authenticate")).contains("Wattly local forecast admin");
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
     }
     @Test void explicitLocalCredentialsAuthorizeOnlyForecasting() throws Exception {
         assertThat(filter(true,request("/api/v1/admin/forecast-accuracy","test-admin:test-password"),"test-password").getStatus()).isEqualTo(200);

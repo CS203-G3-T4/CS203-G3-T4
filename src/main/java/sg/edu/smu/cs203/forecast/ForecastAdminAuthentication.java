@@ -15,6 +15,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /** Forecasting guard; optional Basic credentials are for explicitly enabled local demos only. */
@@ -45,7 +48,10 @@ public class ForecastAdminAuthentication extends OncePerRequestFilter {
             if (origin!=null && !origin.equals(own)) { response.sendError(403); return; }
         }
         response.setHeader("Cache-Control","no-store");
-        if (request.getUserPrincipal()!=null) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        boolean anonymous = authentication instanceof AnonymousAuthenticationToken;
+        boolean authenticated = authentication != null && authentication.isAuthenticated() && !anonymous;
+        if (authenticated || request.getUserPrincipal() != null && !anonymous) {
             if (request.isUserInRole("ADMIN")) chain.doFilter(request,response);
             else response.sendError(403);
             return;
