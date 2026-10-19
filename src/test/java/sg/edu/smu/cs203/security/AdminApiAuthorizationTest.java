@@ -48,6 +48,12 @@ class AdminApiAuthorizationTest {
     }
 
     @Test
+    void forecastPageIsPublicButAdminForecastPageRequiresForecastAuthentication() throws Exception {
+        mvc.perform(get("/forecast.html")).andExpect(status().isOk());
+        mvc.perform(get("/admin-forecast.html")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void residentRequestsToAdminAndDemoApisReceiveForbidden() throws Exception {
         mvc.perform(get("/api/v1/admin").with(user("resident").roles("RESIDENT")))
                 .andExpect(status().isForbidden());
@@ -128,6 +134,11 @@ class AdminApiAuthorizationTest {
         @GetMapping({"/api/v1/admin", "/api/v1/admin/test", "/api/v1/demo", "/api/v1/demo/test"})
         String adminEndpoint() {
             return "admin";
+        }
+
+        @GetMapping("/api/v1/forecast/latest")
+        String publicForecast() {
+            return "forecast";
         }
 
         @PostMapping("/api/v1/households")

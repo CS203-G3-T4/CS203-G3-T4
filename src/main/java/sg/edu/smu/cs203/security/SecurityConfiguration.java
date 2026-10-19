@@ -1,5 +1,6 @@
 package sg.edu.smu.cs203.security;
 
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -9,14 +10,18 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.util.matcher.RequestMatcher;
+import sg.edu.smu.cs203.forecast.ForecastAdminAuthentication;
 
 @Configuration
 public class SecurityConfiguration {
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    SecurityFilterChain securityFilterChain(HttpSecurity http,
+                                            ForecastAdminAuthentication forecastAdminAuthentication)
+            throws Exception {
         http.authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/", "/login", "/api/v1/csrf",
                                 "/css/**", "/js/**", "/images/**", "/favicon.ico")
@@ -24,7 +29,7 @@ public class SecurityConfiguration {
                         .requestMatchers("/actuator/health", "/actuator/health/**",
                                 "/swagger-ui/**", "/v3/api-docs/**")
                         .permitAll()
-                        .requestMatchers("/api/v1/forecast/**")
+                        .requestMatchers("/forecast.html", "/api/v1/forecast/**")
                         .permitAll()
                         .requestMatchers("/admin-forecast.html",
                                 "/api/v1/admin/forecast-accuracy",
@@ -52,7 +57,17 @@ public class SecurityConfiguration {
                         .successHandler(new AccountLoginSuccessHandler())
                         .permitAll())
                 .logout(logout -> logout.logoutSuccessUrl("/?logout"));
+        http.addFilterBefore(forecastAdminAuthentication, UsernamePasswordAuthenticationFilter.class);
         return http.build();
+    }
+
+    @Bean
+    FilterRegistrationBean<ForecastAdminAuthentication> disableForecastAdminServletRegistration(
+            ForecastAdminAuthentication forecastAdminAuthentication) {
+        FilterRegistrationBean<ForecastAdminAuthentication> registration =
+                new FilterRegistrationBean<>(forecastAdminAuthentication);
+        registration.setEnabled(false);
+        return registration;
     }
 
     private static RequestMatcher adminApiMatcher() {
