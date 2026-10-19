@@ -1,8 +1,10 @@
-# Jira alignment — 23 September 2026
+# Jira alignment — 19 October 2026
 
-This maps the backend to the descriptions and acceptance criteria read from the
-CSDT4 backlog. It is an implementation audit, not a change to Jira status or an
-agreement on behalf of other feature leads. Keep partial stories open.
+This maps the backend to descriptions and acceptance criteria previously read
+from the CSDT4 backlog. Current Jira assignment, status, and remaining acceptance
+criteria were not independently verified for this update. This is an implementation
+audit, not a change to Jira status or an agreement on behalf of other feature leads.
+Keep partial stories open.
 
 | Jira item | Sprint | Delivered in this repository | Remaining acceptance work |
 | --- | --- | --- | --- |
@@ -12,9 +14,9 @@ agreement on behalf of other feature leads. Keep partial stories open.
 | [CSDT4-11 — Spike: confirm NEMS feed timing and which half-hour each price belongs to](https://csd-t4.atlassian.net/browse/CSDT4-11) | 1 | Existing interval rule and its uncertainty documented below | Repeated observations across a boundary and comparison against EMC's published table; not completed by these commits |
 | [CSDT4-13 — Show today's live price on the dashboard with a stale banner](https://csd-t4.atlassian.net/browse/CSDT4-13) | 1 | `/api/v1/prices/current` and `/dashboard.html`: one-decimal cents/kWh, source update time, stale banner, one-minute refresh, unavailable dash and no hard-coded price | None identified in this repository |
 | [CSDT4-21 — Adopt the shared Clock rule across the codebase](https://csd-t4.atlassian.net/browse/CSDT4-21) | 1 | `common/TimeConfig`, Asia/Singapore Clock, business-time injection, fixed-clock tests, PR checklist | Each feature lead must confirm the rule; DemoClock itself belongs to CSDT4-43 |
-| [CSDT4-25 — Feed health status for the admin view](https://csd-t4.atlassian.net/browse/CSDT4-25) | 2 | Existing last-poll status is a prerequisite only | FeedHealth, consecutive failures, feed_incident lifecycle, monthly uptime/fallback metrics and `/api/v1/admin/feed-status` are not implemented |
-| [CSDT4-26 — Outage switch for demos and tests](https://csd-t4.atlassian.net/browse/CSDT4-26) | 2 | Configurable `USEP_FEED_URL` and outage tests are prerequisites only | Named `wattly.nems.base-url` contract, authorized runtime toggle, recommendation guard and recovery without restart |
-| [CSDT4-28 — Weather hint on the dashboard](https://csd-t4.atlassian.net/browse/CSDT4-28) | 2 | Separate NEA 24-hour client, stored daily high/low and text, 3-hour refresh, `/api/v1/weather/today`, configurable heat threshold, resilient fallback and dashboard forecast/hint with stale and unavailable states | Team agreement on threshold (33°C is a configurable default, not an agreed decision) |
+| [CSDT4-25 — Feed health status for the admin view](https://csd-t4.atlassian.net/browse/CSDT4-25) | 2 | Durable `FeedHealth` incident tracking, consecutive failures, monthly uptime/fallback metrics and admin-only `/api/v1/admin/feed-status`; `feed_incident` migration and service/repository tests | Admin feed panel was moved to CSDT4-48; verify remaining Jira acceptance and status there |
+| [CSDT4-26 — Outage switch for demos and tests](https://csd-t4.atlassian.net/browse/CSDT4-26) | 2 | `wattly.nems.base-url` (retaining `WATTLY_NEMS_BASE_URL` and legacy `USEP_FEED_URL` configuration), admin/CSRF-protected runtime outage toggle, immediate stale/live recovery, and tests; ingestion polls are serialized to avoid concurrent scheduled/admin polls | Verify remaining Jira acceptance and status |
+| [CSDT4-28 — Weather hint on the dashboard](https://csd-t4.atlassian.net/browse/CSDT4-28) | 2 | Separate NEA 24-hour client, stored daily high/low and text, 3-hour refresh, `/api/v1/weather/today`, configurable threshold, resilient fallback and dashboard forecast/hint with stale and unavailable states; 33°C threshold confirmed for this task on 19 October 2026 | Verify remaining Jira acceptance and status |
 
 ## Shared Clock adoption (CSDT4-21)
 

@@ -12,6 +12,12 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -69,6 +75,57 @@ class MarketIngestionServiceTest {
         assertThat(captured.getValue().status()).isEqualTo(IngestionStatus.FAILURE);
         assertThat(captured.getValue().errorMessage()).contains("feed is down");
         verifyNoInteractions(prices);
+    }
+
+    @Test
+    void concurrentScheduledAndManualPollsDoNotOverlap() throws Exception {
+        UsepClient client = mock(UsepClient.class);
+        IngestionRunRepository runs = mock(IngestionRunRepository.class);
+        when(runs.findLatest()).thenReturn(Optional.empty());
+        CountDownLatch firstFetchStarted = new CountDownLatch(1);
+        CountDownLatch releaseFirstFetch = new CountDownLatch(1);
+        CountDownLatch secondPollStarted = new CountDownLatch(1);
+        CountDownLatch secondPollFinished = new CountDownLatch(1);
+        AtomicInteger activeFetches = new AtomicInteger();
+        AtomicInteger maximumConcurrentFetches = new AtomicInteger();
+        when(client.fetch()).thenAnswer(invocation -> {
+            int active = activeFetches.incrementAndGet();
+            maximumConcurrentFetches.accumulateAndGet(active, Math::max);
+            try {
+                if (active == 1) {
+                    firstFetchStarted.countDown();
+                    if (!releaseFirstFetch.await(5, TimeUnit.SECONDS)) {
+                        throw new IllegalStateException("Timed out waiting to release the first test fetch");
+                    }
+                }
+                return feedAt(NOW.minusSeconds(240));
+            } finally {
+                activeFetches.decrementAndGet();
+            }
+        });
+
+        MarketIngestionService service = service(client, mock(MarketPriceRepository.class), runs);
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        try {
+            var firstPoll = executor.submit(service::poll);
+            assertThat(firstFetchStarted.await(5, TimeUnit.SECONDS)).isTrue();
+            var secondPoll = executor.submit(() -> {
+                secondPollStarted.countDown();
+                service.poll();
+                secondPollFinished.countDown();
+            });
+
+            assertThat(secondPollStarted.await(5, TimeUnit.SECONDS)).isTrue();
+            assertThat(secondPollFinished.await(100, TimeUnit.MILLISECONDS)).isFalse();
+
+            releaseFirstFetch.countDown();
+            firstPoll.get(5, TimeUnit.SECONDS);
+            secondPoll.get(5, TimeUnit.SECONDS);
+            assertThat(maximumConcurrentFetches).hasValue(1);
+        } finally {
+            releaseFirstFetch.countDown();
+            executor.shutdownNow();
+        }
     }
 
     @Test
