@@ -134,6 +134,35 @@ class RecommendationServiceTest {
     }
 
     @Test
+    void aSimulatedOutageStopsSuggestionsEvenForTheDemoForecast() {
+        // CSDT4-26: "no new suggestions are made while the feed is down".
+        when(households.household(1L)).thenReturn(household(true));
+        when(households.flexibleAppliances(1L)).thenReturn(List.of(dryer()));
+        when(forecasts.forecast()).thenReturn(PriceForecastSource.Lookup.of(demoForecast()));
+        when(feed.stale()).thenReturn(true);
+        when(feed.simulatedOutage()).thenReturn(true);
+
+        RecommendationsResponse response = service.generate(1L);
+
+        assertThat(response.message()).isEqualTo(RecommendationService.STALE_FEED_MESSAGE);
+        verify(repository, never()).insert(any());
+    }
+
+    @Test
+    void aRealStaleFeedStillDoesNotStopTheLabelledDemoForecast() {
+        // The demo forecast is replay data, so only the simulated outage blocks it (unless configured).
+        when(households.household(1L)).thenReturn(household(true));
+        when(households.flexibleAppliances(1L)).thenReturn(List.of(dryer()));
+        when(forecasts.forecast()).thenReturn(PriceForecastSource.Lookup.of(demoForecast()));
+        when(feed.stale()).thenReturn(true);
+        when(repository.insert(any())).thenReturn(7L);
+
+        service.generate(1L);
+
+        verify(repository).insert(any());
+    }
+
+    @Test
     void acceptSavesStatusDecidedAtAndLogsTheDecision() {
         when(repository.findById(5L)).thenReturn(Optional.of(active(5L, sg("2026-09-30T13:00"))));
         when(repository.closeActive(5L, RecommendationStatus.ACCEPTED, now, sg("2026-09-30T13:00"))).thenReturn(true);
