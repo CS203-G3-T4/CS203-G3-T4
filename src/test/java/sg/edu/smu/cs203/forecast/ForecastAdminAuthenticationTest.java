@@ -57,9 +57,14 @@ class ForecastAdminAuthenticationTest {
         }
     }
     @Test void explicitLocalCredentialsAuthorizeOnlyForecasting() throws Exception {
-        assertThat(filter(true,request("/api/v1/admin/forecast-accuracy","test-admin:test-password"),"test-password").getStatus()).isEqualTo(200);
-        assertThat(downstream.get().isUserInRole("ADMIN")).isTrue();
-        assertThat(downstream.get().getUserPrincipal().getName()).isEqualTo("test-admin");
+        try {
+            assertThat(filter(true,request("/api/v1/admin/forecast-accuracy","test-admin:test-password"),"test-password").getStatus()).isEqualTo(200);
+            assertThat(SecurityContextHolder.getContext().getAuthentication().getName()).isEqualTo("test-admin");
+            assertThat(SecurityContextHolder.getContext().getAuthentication().getAuthorities())
+                    .extracting("authority").containsExactly("ROLE_ADMIN");
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
     }
     @Test void unrelatedAdminRoutesPassThroughWithoutAnInjectedPrincipal() throws Exception {
         for (String path:new String[]{"/api/v1/admin/users","/api/v1/admin/forecast-unknown","/admin.html"}) {
