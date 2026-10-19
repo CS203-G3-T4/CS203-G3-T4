@@ -84,10 +84,24 @@
     }
   }
 
+  // CSDT4-42: the same projection and over-budget banner as the Spending page.
+  async function loadBudget() {
+    const status = await WattlyBudget.load();
+    const summary = document.getElementById('budget-summary');
+    if (!status) {
+      summary.hidden = true;
+      WattlyBudget.showBanner(document.getElementById('budget-banner'), null);
+      return;
+    }
+    WattlyBudget.showBanner(document.getElementById('budget-banner'), status);
+    document.getElementById('budget-summary-text').textContent = WattlyBudget.summaryText(status) + '.';
+    summary.hidden = false;
+  }
+
   async function refresh() {
     const button = document.getElementById('refresh-button');
     button.disabled = true;
-    await Promise.all([loadPrice(), loadWeather(), WattlyRecommendations.load()]);
+    await Promise.all([loadPrice(), loadWeather(), WattlyRecommendations.load(), loadBudget()]);
     document.getElementById('last-refreshed').textContent = 'Checked ' + dateTime.format(new Date());
     button.disabled = false;
   }
