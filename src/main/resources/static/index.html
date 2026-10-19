@@ -58,6 +58,10 @@
     const loginStatus = document.getElementById('login-status');
     const submitButton = document.getElementById('login-submit');
     loginError.hidden = !new URLSearchParams(window.location.search).has('error');
+    if (new URLSearchParams(window.location.search).has('logout')) {
+      loginStatus.textContent = 'You have been signed out.';
+      loginStatus.style.color = 'var(--teal)';
+    }
 
     fetch('/api/v1/csrf', { headers: { Accept: 'application/json' } })
       .then(function (response) {

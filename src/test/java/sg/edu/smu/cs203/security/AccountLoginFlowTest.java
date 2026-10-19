@@ -1,6 +1,7 @@
 package sg.edu.smu.cs203.security;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -21,8 +22,10 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -54,17 +57,36 @@ class AccountLoginFlowTest {
 
     @Test
     void loginPageHasAccessibleAccountFieldsAndGenericRetryFeedback() throws Exception {
-        String html = new ClassPathResource("static/login.html")
+        String html = new ClassPathResource("static/index.html")
                 .getContentAsString(StandardCharsets.UTF_8);
 
-        mvc.perform(get("/login.html")).andExpect(status().isOk());
+        mvc.perform(get("/"))
+                .andExpect(status().isOk());
         assertTrue(html.contains("id=\"username\" name=\"username\" type=\"text\""));
         assertTrue(html.contains("id=\"password\" name=\"password\" type=\"password\""));
         assertTrue(html.contains(
                 "Username or password is incorrect. Please try again."));
         assertTrue(html.contains(
                 "loginError.hidden = !new URLSearchParams(window.location.search).has('error')"));
+        assertTrue(html.contains("You have been signed out."));
         assertFalse(html.contains("name=\"role\""));
+    }
+
+    @Test
+    void logoutEndsTheSessionAndReturnsToLoginPage() throws Exception {
+        MvcResult login = mvc.perform(post("/login")
+                        .param("username", "resident")
+                        .param("password", "secret")
+                        .with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andReturn();
+        MockHttpSession session = (MockHttpSession) login.getRequest().getSession(false);
+        assertNotNull(session);
+
+        mvc.perform(post("/logout").session(session).with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/?logout"));
+        assertTrue(session.isInvalid());
     }
 
     @Test
@@ -83,7 +105,7 @@ class AccountLoginFlowTest {
                             .param("password", "incorrect")
                             .with(csrf()))
                     .andExpect(status().is3xxRedirection())
-                    .andExpect(redirectedUrl("/login.html?error"));
+                    .andExpect(redirectedUrl("/?error"));
         }
     }
 
