@@ -1,0 +1,149 @@
+{
+  "status": "PASS",
+  "datasetDigest": "a927b8ab8ff6237c29c9b779049e5d443037a434ec3e905f7e7b4354621a429e",
+  "scores": {
+    "validation": {
+      "commonPairs": 3351,
+      "distinctOrigins": 146,
+      "distinctTargets": 220,
+      "mae": {
+        "AI": 201.64139911713033,
+        "B1": 246.01064806525414,
+        "B2": 260.8046821844226,
+        "B3": 192.25864304898326,
+        "PREVIOUS_AI": 178.9868506674979
+      },
+      "eligiblePairs": {
+        "AI": 7167,
+        "B1": 7047,
+        "B2": 6447,
+        "B3": 3471,
+        "PREVIOUS_AI": 7167
+      },
+      "exclusions": {
+        "AI": {
+          "MISSING_TRUTH": 153,
+          "STALE_OR_MISSING_INPUT": 168,
+          "PURGED_SPLIT_BOUNDARY": 576
+        },
+        "B1": {
+          "MISSING_TRUTH": 153,
+          "STALE_OR_MISSING_INPUT": 168,
+          "INSUFFICIENT_HISTORY": 120,
+          "PURGED_SPLIT_BOUNDARY": 576
+        },
+        "B2": {
+          "MISSING_TRUTH": 153,
+          "STALE_OR_MISSING_INPUT": 168,
+          "INSUFFICIENT_HISTORY": 720,
+          "PURGED_SPLIT_BOUNDARY": 576
+        },
+        "B3": {
+          "INSUFFICIENT_HISTORY": 3696,
+          "MISSING_TRUTH": 153,
+          "STALE_OR_MISSING_INPUT": 168,
+          "PURGED_SPLIT_BOUNDARY": 576
+        },
+        "PREVIOUS_AI": {
+          "MISSING_TRUTH": 153,
+          "STALE_OR_MISSING_INPUT": 168,
+          "PURGED_SPLIT_BOUNDARY": 576
+        }
+      },
+      "broaderComparisonWithoutB3": {
+        "methods": [
+          "AI",
+          "PREVIOUS_AI",
+          "B1",
+          "B2"
+        ],
+        "commonPairs": 6327,
+        "distinctOrigins": 270,
+        "distinctTargets": 321,
+        "mae": {
+          "AI": 209.626424029656,
+          "PREVIOUS_AI": 175.32724269152402,
+          "B1": 255.25186844739477,
+          "B2": 242.38464675201516
+        },
+        "limitation": "Different coverage; cannot compare these errors with the all-method B3 scoreboard"
+      }
+    },
+    "held-out-test": {
+      "commonPairs": 24,
+      "distinctOrigins": 1,
+      "distinctTargets": 24,
+      "mae": {
+        "AI": 141.22318270771603,
+        "B1": 170.20541666666668,
+        "B2": 177.4075,
+        "B3": 231.13333333333333,
+        "PREVIOUS_AI": 131.24262738335577
+      },
+      "eligiblePairs": {
+        "AI": 576,
+        "B1": 576,
+        "B2": 576,
+        "B3": 24,
+        "PREVIOUS_AI": 576
+      },
+      "exclusions": {
+        "AI": {
+          "PURGED_SPLIT_BOUNDARY": 576
+        },
+        "B1": {
+          "PURGED_SPLIT_BOUNDARY": 576
+        },
+        "B2": {
+          "PURGED_SPLIT_BOUNDARY": 576
+        },
+        "B3": {
+          "INSUFFICIENT_HISTORY": 552,
+          "PURGED_SPLIT_BOUNDARY": 576
+        },
+        "PREVIOUS_AI": {
+          "PURGED_SPLIT_BOUNDARY": 576
+        }
+      },
+      "broaderComparisonWithoutB3": {
+        "methods": [
+          "AI",
+          "PREVIOUS_AI",
+          "B1",
+          "B2"
+        ],
+        "commonPairs": 576,
+        "distinctOrigins": 24,
+        "distinctTargets": 47,
+        "mae": {
+          "AI": 125.74886885295629,
+          "PREVIOUS_AI": 90.222924776058,
+          "B1": 118.09495370370371,
+          "B2": 91.12506944444443
+        },
+        "limitation": "Different coverage; cannot compare these errors with the all-method B3 scoreboard"
+      }
+    }
+  },
+  "models": {
+    "evaluationManifest": {
+      "version": "schema2-collector-evaluation-20261018",
+      "modelSha256": "ca2ea656e5c904b0a22a0418336b049687555e05d437104ab5cdb2134c6ad616",
+      "trainingOrigins": 552,
+      "finiteForecasts": 24
+    },
+    "latestFitManifest": {
+      "version": "schema2-collector-latest-20261018",
+      "modelSha256": "18dd89069218323ada9ff8df4d01c6fa6a59e10fe8f6f16638f064c347c57ce8",
+      "trainingOrigins": 861,
+      "finiteForecasts": 24
+    }
+  },
+  "independentSavedPredictionChecks": true,
+  "canonicalTruthMatches": true,
+  "targetAlignmentAndSplitPurging": true,
+  "referenceUnchanged": true,
+  "trainingAttemptRecorded": true,
+  "productionPromotionAttempted": false,
+  "latestFitHasIndependentAccuracyScore": false
+}

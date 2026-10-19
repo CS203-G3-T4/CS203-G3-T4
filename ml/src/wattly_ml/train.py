@@ -1,14 +1,17 @@
 from datetime import datetime, timezone
 
 from .backtest import History, origins, backtest, scores, fresh
+from .baselines import baselines
 from .data import truth
-from .features import FEATURES, features
+from .features import FEATURE_SCHEMA_VERSION, feature_names, holiday_calendar, holiday_digest, features
 from .spikes import DEFAULT_CONFIG
 from .timebase import DAY, STEP, instant, targets
 
 
-def training_examples(rows, start, cutoff, *, policy="FINAL", retrospective=False):
+def training_examples(rows, start, cutoff, *, policy="FINAL", retrospective=False, baseline=None, feature_schema=1):
     """Shared purged, as-of examples for the production trainer and offline studies."""
+    if baseline not in (None, 'B1', 'B2'):
+        raise ValueError('Residual training requires B1 or B2')
     history, actuals = History(rows, retrospective), truth(rows,policy,cutoff,retrospective)
     xs, ys = [[] for _ in range(24)], [[] for _ in range(24)]
     excluded = 0
@@ -21,13 +24,17 @@ def training_examples(rows, start, cutoff, *, policy="FINAL", retrospective=Fals
         if len(past)<6 or not fresh(past,origin):
             excluded += 1
             continue
+        anchor = baselines(past, origin).get(baseline) if baseline else [0]*24
+        if anchor is None:
+            excluded += 1
+            continue
         for h,t in enumerate(ts):
-            xs[h].append(features(past,origin,t)); ys[h].append(actuals[t])
+            xs[h].append(features(past,origin,t,schema_version=feature_schema)); ys[h].append(actuals[t]-anchor[h])
     return xs, ys, excluded
 
 
 def train(rows, dataset_manifest, start, cutoff, validation_end, *, retrospective=False,
-          policy="FINAL", exploratory=False, iterations=40):
+          policy="FINAL", exploratory=False, iterations=40, feature_schema=FEATURE_SCHEMA_VERSION):
     import numpy as np
     from sklearn.ensemble import HistGradientBoostingRegressor
     from sklearn.impute import SimpleImputer
@@ -43,7 +50,7 @@ def train(rows, dataset_manifest, start, cutoff, validation_end, *, retrospectiv
               and not quality["missingHalfHours"])
     if not exploratory and not enough:
         raise ValueError("Insufficient verified history; use --exploratory only for non-promotable experiments")
-    xs, ys, excluded = training_examples(rows,start,cutoff,policy=policy,retrospective=retrospective)
+    xs, ys, excluded = training_examples(rows,start,cutoff,policy=policy,retrospective=retrospective,feature_schema=feature_schema)
     if len(ys[0])<48:
         raise ValueError("At least 48 complete eligible training origins required")
     models = []
@@ -53,12 +60,18 @@ def train(rows, dataset_manifest, start, cutoff, validation_end, *, retrospectiv
                                   HistGradientBoostingRegressor(max_iter=iterations,max_leaf_nodes=15,
                                                                 l2_regularization=1,random_state=42))
             models.append(model.fit(np.asarray(x),y))
-    manifest = {"schemaVersion":1,"version":"candidate", "featureOrder":FEATURES, "trainingSeed":42,
+    demand_coverage = float(np.mean([x[-1] for x in xs[0]])) if feature_schema==2 else 0
+    holiday_coverage = float(np.mean([np.isfinite(x[-3]) for x in xs[0]])) if feature_schema==2 else 0
+    manifest = {"schemaVersion":1,"version":"candidate", "featureOrder":feature_names(feature_schema), "trainingSeed":42,
+                "featureSchemaVersion":feature_schema,"holidayCalendarVersion":holiday_calendar()['version'],
+                "holidayCalendarSha256":holiday_digest(),
+                "expectedDemandCoverage":demand_coverage,"holidayCoverage":holiday_coverage,
                 "trainingDate":datetime.now(timezone.utc).isoformat(), "trainingStart":start.isoformat(),
                 "trainingCutoff":cutoff.isoformat(), "usableFrom":cutoff.isoformat(),
-                "datasetDigest":dataset_manifest["sha256"],"datasetQuality":quality,
+                "datasetDigest":dataset_manifest.get('featureInputsDigest',dataset_manifest["sha256"]),"datasetQuality":quality,
                 "truthPolicy":policy,"retrospective":retrospective,"exploratory":exploratory,
-                "productionEligible":enough and not exploratory,
+                "productionEligible":enough and not exploratory and not retrospective and quality['publicationVintages']
+                    and feature_schema==2 and demand_coverage>0 and holiday_coverage==1,
                 "trainingOrigins":len(ys[0]),"excludedTrainingOrigins":excluded,
                 "parameters":{"max_iter":iterations,"max_leaf_nodes":15,"l2_regularization":1},
                 "spikeConfig":DEFAULT_CONFIG.copy(),
