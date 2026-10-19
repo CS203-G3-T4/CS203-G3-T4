@@ -24,6 +24,8 @@ public class SecurityConfiguration {
                         .requestMatchers("/actuator/health", "/actuator/health/**",
                                 "/swagger-ui/**", "/v3/api-docs/**")
                         .permitAll()
+                        .requestMatchers("/api/v1/forecast/**")
+                        .permitAll()
                         .requestMatchers("/admin-forecast.html",
                                 "/api/v1/admin/forecast-accuracy",
                                 "/api/v1/admin/forecast-baseline-validation",
