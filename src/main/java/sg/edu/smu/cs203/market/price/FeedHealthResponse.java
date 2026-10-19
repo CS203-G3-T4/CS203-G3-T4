@@ -20,7 +20,17 @@ public record FeedHealthResponse(
         int fallbackCount,
         Incident openIncident,
         List<Incident> recentIncidents,
+        PriceGaps priceGaps,
         Instant generatedAt) {
+
+    /** Latest missing half-hour check (CSDT4-78); null until the first check has run. */
+    public record PriceGaps(
+            Instant checkedAt,
+            Instant windowStart,
+            Instant windowEnd,
+            int missingHalfHours,
+            List<PriceGapCheck.Range> ranges) {
+    }
 
     public record Incident(
             Instant startedAt,

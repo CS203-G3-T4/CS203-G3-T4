@@ -84,6 +84,7 @@ Feed health (CSDT4-25) definitions:
 - **Consecutive failed polls** and **last successful sync** are read from `ingestion_run`, so a restart does not reset them.
 - **Uptime this month** is 100 × (1 − incident time ÷ measured time). Time is measured from the later of the month start (Asia/Singapore) and the first recorded poll. Time while the app was stopped during an open incident counts as down.
 - **Fallbacks this month** counts polls that did not return a fresh price, so residents were shown the last stored price marked stale.
+- **Price gaps** (CSDT4-27) are half-hours with no row in `market_price`. A check runs at startup and daily at 00:15 Singapore time (`PRICE_GAP_CRON`). It covers the last 7 days (`PRICE_GAP_DAYS`) up to the start of the current half-hour, but never starts before the first recorded poll. Each result is stored in `price_gap_check`, and the latest appears under `priceGaps` in `/api/v1/admin/feed-status`, with consecutive missing half-hours merged into ranges. NEMS only serves the current half-hour, so a gap stays missing until history is imported.
 
 ## Tests
 
