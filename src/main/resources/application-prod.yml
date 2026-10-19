@@ -1,0 +1,30 @@
+# Production profile (CSDT4-69). Activate with SPRING_PROFILES_ACTIVE=prod.
+# Values here override application.yml. Credentials have no defaults on purpose:
+# startup fails if DB_URL, DB_USER or DB_PASSWORD is missing, instead of silently
+# using the local development database. Set them as host environment variables
+# (see docs/deployment.md); never commit them.
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:5}
+
+server:
+  # Railway (and most PaaS hosts) assign the port through PORT.
+  port: ${PORT:8080}
+  # Trust X-Forwarded-* from the host's proxy so redirects and links use https.
+  forward-headers-strategy: framework
+  shutdown: graceful
+  error:
+    include-message: never
+    include-stacktrace: never
+
+management:
+  endpoint:
+    health:
+      # Only "UP"/"DOWN" publicly; no database or disk details.
+      show-details: never
+      probes:
+        enabled: true
