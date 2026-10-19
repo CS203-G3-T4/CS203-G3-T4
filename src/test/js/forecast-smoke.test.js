@@ -69,6 +69,14 @@ test('saved endpoint response renders 24 rows, provenance, stale, empty and outa
   view.run.points[0].spikeFlag = false;
   await vm.runInContext('WattlyForecast.refresh()', context);
   assert.equal(nodes['forecast-points'].children[0].children[3].textContent, 'Below spike threshold');
+  assessment = { available:true,actualPrice:83,typical:100,deviation:-17,deviationPercent:-17,
+    classification:'CHEAP',sampleCount:28,stale:false };
+  await vm.runInContext('WattlyForecast.refresh()', context);
+  assert.match(nodes['current-assessment'].textContent, /17% below typical/);
+  assessment = { ...assessment,actualPrice:5,typical:0,deviation:5,deviationPercent:null,classification:'EXPENSIVE',stale:true };
+  await vm.runInContext('WattlyForecast.refresh()', context);
+  assert.match(nodes['current-assessment'].textContent, /5.00 SGD\/MWh above typical/);
+  assert.match(nodes['current-assessment'].textContent, /percentage unavailable.*Price data is stale/);
   view = { ...view, stale: true };
   await vm.runInContext('WattlyForecast.refresh()', context);
   assert.match(nodes['forecast-status'].textContent, /Stale forecast/);

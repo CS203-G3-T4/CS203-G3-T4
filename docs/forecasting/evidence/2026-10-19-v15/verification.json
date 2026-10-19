@@ -1,0 +1,137 @@
+{
+  "reviewedHead": "195ab04cc6ac99e6d81e9af292b7e610c512b9c9",
+  "mergedMain": "c8ccfda8879d193c79ee539bc1b61029cec873f1",
+  "scope": "Fresh full merged-tree verification after PR20; prior 204-test evidence is historical only",
+  "runtime": {
+    "java": "21.0.12.1 JDK",
+    "python": "3.12.3",
+    "postgres": "17.11"
+  },
+  "command": "python scripts/verify-forecast-stack.py (with the documented dedicated runtime paths)",
+  "java": {
+    "tests": 219,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "python": {
+    "tests": 58,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 392.85,
+    "warnings": [
+      "Upstream Starlette/AnyIO BlockingPortal alias deprecation"
+    ]
+  },
+  "javascript": {
+    "tests": 17,
+    "failures": 0,
+    "skipped": 0
+  },
+  "migration": {
+    "forecastVersion": 15,
+    "mainV1ThroughV14ByteIdentical": true,
+    "forecastSqlIdenticalToReviewedV14": true,
+    "sourceAndPackagedVersionsUnique": true,
+    "freshDatabase": true,
+    "canonicalMainV14ToV15": true,
+    "legacyForecastVersionsRejectedWithoutRepair": [
+      12,
+      13,
+      14
+    ],
+    "confidenceAnd550CharacterExplanationPreserved": true,
+    "sqlSha256": {
+      "V12__recommendation_refresh.sql": "26a5aafe977326e8617c6ce2af242647f8310e29da676bacd13b3f91e3b57142",
+      "V4__households_and_appliances.sql": "847687c0d3cb723a75bd89ee14a32a9dc1a6360de92f99a0ea73699c408ade86",
+      "V3__daily_weather.sql": "11f7a6ca66f43f1cd525af62ee251115d407cb52edcd966fa8933ff713429d66",
+      "V15__forecast_operations.sql": "36327f1ae32cf8aad5d439f5c6e016e76988e636121d3c85785a9a99e699703b",
+      "V10__recommendations.sql": "946acf0234d44d571c9dd72c0e7b980d4cb443a08234d6a00223deed7e8897a1",
+      "V7__seed_edge_case_households.sql": "8a1cc451f6753b26ccd019dffcd3aa9aedac472846296320c0c8389ca582684f",
+      "V5__seed_demo_household.sql": "aa0356310a73b0721e01977a0b6b2add9ebb7f9009a885fbf646df57e387a7f4",
+      "V11__household_budget.sql": "a77fd5a8faf415627f5f51189227df28e53bc6c06cc5a42a42dda4a0612ac131",
+      "V14__recommendation_confidence.sql": "19a087882e40f7bf13fb5bd6097ada5aefa324572f18d2734b074bf57d7ce607",
+      "V1__create_market_tables.sql": "8a6933cc288e874bd7e548bc6dd3663e8fabe00e749cdd383c0dfcbeee1231f1",
+      "V8__simulated_population.sql": "b5d6370d1964b3a62d34c46ee30928d64f7c5077ae79ecae999d6f3b0758806b",
+      "V9__forecast_history_and_runs.sql": "a6e7b0e69e07b180949c95adc75d4de5e211c595740d788d8471ccda3c312af2",
+      "V6__load_archetypes.sql": "58005e745a8250b5861fc6d0eaeacaac18469c3232212e003dfe028e9f924cbd",
+      "V13__recommendation_spike_warnings.sql": "072e03f70ae278d9c6d7c18c1c38d531fc6c0b4ede309a3a122a211887f0a2ca",
+      "V2__combined_observations.sql": "9028dfa51459198e5b9c1655863d1444bd36517ef6f3f952666e626934448507"
+    }
+  },
+  "stack": {
+    "status": "PASS",
+    "isolatedPostgres": true,
+    "postgresVersion": "17",
+    "realSpringPythonHttp": true,
+    "realBrowserPages": true,
+    "weeklyShortDataAttemptExit": 2,
+    "nativeTimerFired": true,
+    "fullSuitesInThisInvocation": true,
+    "mainDashboardRecommendationsBudgetPages": true,
+    "defaultStartupWithoutPythonOrHistory": true,
+    "mainRecommendationDefaultPreserved": true,
+    "configuredHouseholdScenarios": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "collectorModified": false,
+    "liveDatabaseUsed": false,
+    "archivedCollectorFeed": "Original payload/timestamps preserved; stale inputs remain unavailable, never made fresh for the proof"
+  },
+  "browser": {
+    "source": "ISOLATED_APP_WITH_ARCHIVED_REAL_COLLECTOR_PRICES",
+    "actualPageRequests": true,
+    "anonymousApiStatus": 403,
+    "anonymousPageStatus": 401,
+    "adminAuthorized": true,
+    "residentAvailable": true,
+    "residentMethod": "B1",
+    "residentForecastRows": 24,
+    "actualPeriods": 30,
+    "adminSeriesPairs": 0,
+    "adminCommonPairs": 0,
+    "horizonSelector": true,
+    "mobileOverflow": false,
+    "browserErrors": []
+  },
+  "mainBrowser": {
+    "source": "ISOLATED_APP_ONLY",
+    "dashboard": true,
+    "recommendations": true,
+    "spendingBudgetSavedAndReloaded": true,
+    "fixedRatePreserved": true,
+    "browserErrors": []
+  },
+  "archive": {
+    "files": 37,
+    "sha256": "4d153531160edf9cb77e160cc1107a37e80434b61585c0f9d689af8531c63551",
+    "buildAndVerify": "PASS"
+  },
+  "remainingBeforeMerge": [
+    "Auth-owner decision on the temporary local admin boundary",
+    "F1-owner acknowledgement of recovery-event semantics",
+    "Independent human approval of the final push"
+  ],
+  "checksNotRun": [
+    "Docker Compose container runtime",
+    "Merged shared-auth sessions",
+    "Persistent legacy-database cutover",
+    "Not-yet-elapsed protected future model confirmation"
+  ],
+  "rawLocalEvidence": ".local/v15-main-sync-20261019",
+  "githubCI": "Must run on the final pushed commit; earlier CI is not reused",
+  "savings": {
+    "modelled": true,
+    "simulatedSavings": true,
+    "aiSavingsSgd": "168.9872190359428571428571428",
+    "baselineSavingsSgd": "176.4233564647428571428571432",
+    "aiMinusBaselineSgd": "-7.4361374288000000000000004",
+    "baselineMethod": "B3",
+    "uniqueApplianceRuns": 497
+  }
+}

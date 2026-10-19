@@ -19,7 +19,7 @@ Every **finished** half-hour from the 1st of the month (Singapore time) up to no
 - **"This month" and "now" come from the injected `Clock`**, so when F5 supplies a demo clock the
   figure follows it.
 
-## The other charges (`tariff_component`, V16)
+## The other charges (`tariff_component`, V17)
 
 Rates exclude GST and record their source. For a low-tension household buying at the wholesale
 electricity price through SP Group:

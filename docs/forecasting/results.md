@@ -1,3 +1,8 @@
+> **18 October 2026 update:** this file retains the earlier exploratory checkpoint.
+> Current implementation, official-history studies, honest savings loss and outstanding
+> acceptance dependencies are in [acceptance-2026-10-18.md](acceptance-2026-10-18.md).
+> Earlier missing-history/auth/reload blockers below are superseded where stated there.
+
 # F3 implementation results — 29 September 2026
 
 > Update 29 September 2026: the live NEMS floor mapping is now independently verified
