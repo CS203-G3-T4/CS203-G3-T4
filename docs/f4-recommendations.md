@@ -208,7 +208,7 @@ the Active tab hide snoozed cards until `snoozed_until`). The time must be befor
 runs out (`deadline`: its start, or for a warning the earlier of the alternative and the usual
 start), otherwise it would only come back once it's useless. If the background recompute replaces
 a snoozed suggestion for the same run, the reminder carries over while it still comes back in time.
-V15 lets any suggestion be snoozed (V13 allowed warnings only).
+V16 lets any suggestion be snoozed (V13 allowed warnings only).
 
 **Mini forecast chart.** Each open card on the page draws the forecast it was built from, one bar
 per half-hour in ¢/kWh, with the usual run in blue and the suggested run in teal. The page picks
