@@ -24,7 +24,8 @@ class FeedHealthServiceTest {
 
     private final IngestionRunRepository runs = mock(IngestionRunRepository.class);
     private final FeedIncidentRepository incidents = mock(FeedIncidentRepository.class);
-    private final FeedHealthService service = new FeedHealthService(runs, incidents, Clock.fixed(NOW, ZoneOffset.UTC));
+    private final PriceGapRepository gaps = mock(PriceGapRepository.class);
+    private final FeedHealthService service = new FeedHealthService(runs, incidents, gaps, Clock.fixed(NOW, ZoneOffset.UTC));
 
     @Test
     void firstFailedPollOpensIncidentWithTheErrorAsReason() {
@@ -115,6 +116,21 @@ class FeedHealthServiceTest {
         assertThat(status.measuredFrom()).isEqualTo(firstPoll);
         assertThat(status.uptimePercent()).isEqualTo(75.0); // 5 of 20 minutes down
         assertThat(status.openIncident()).isNull();
+    }
+
+    @Test
+    void statusIncludesTheLatestMissingHalfHourCheck() {
+        when(runs.findLatest()).thenReturn(Optional.empty());
+        Instant gap = Instant.parse("2026-10-15T00:00:00Z");
+        when(gaps.findLatest()).thenReturn(Optional.of(new PriceGapCheck(NOW.minusSeconds(600),
+                Instant.parse("2026-10-12T08:00:00Z"), Instant.parse("2026-10-19T07:30:00Z"),
+                List.of(gap, gap.plusSeconds(1800)))));
+
+        FeedHealthResponse.PriceGaps priceGaps = service.status().priceGaps();
+
+        assertThat(priceGaps.checkedAt()).isEqualTo(NOW.minusSeconds(600));
+        assertThat(priceGaps.missingHalfHours()).isEqualTo(2);
+        assertThat(priceGaps.ranges()).containsExactly(new PriceGapCheck.Range(gap, gap.plusSeconds(3600), 2));
     }
 
     @Test

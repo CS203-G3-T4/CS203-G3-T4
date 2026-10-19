@@ -17,6 +17,10 @@ market:
     connect-timeout: 3s
     read-timeout: 5s
     stale-after: 40m
+  # CSDT4-27: daily check for half-hours missing from market_price (also runs at startup).
+  gaps:
+    cron: ${PRICE_GAP_CRON:0 15 0 * * *}
+    days: ${PRICE_GAP_DAYS:7}
 
 management:
   endpoints:
