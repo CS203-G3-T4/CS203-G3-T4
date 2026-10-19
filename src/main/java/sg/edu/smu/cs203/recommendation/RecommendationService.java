@@ -179,7 +179,8 @@ public class RecommendationService {
         PriceForecast forecast = lookup.forecast();
         // Guard: a stale live feed means F3's forecast is built on old prices. The demo forecast
         // is a labelled replay that doesn't use the live feed, so it is only blocked when configured.
-        if ((!forecast.isDemo() || staleFeedBlocksDemo) && feed.stale()) {
+        // A simulated outage (CSDT4-26) blocks both, so a demo shows suggestions stopping.
+        if (feed.simulatedOutage() || ((!forecast.isDemo() || staleFeedBlocksDemo) && feed.stale())) {
             return finish(householdId, now, null, STALE_FEED_MESSAGE);
         }
 

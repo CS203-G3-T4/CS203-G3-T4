@@ -56,6 +56,19 @@ class AdminApiAuthorizationTest {
     }
 
     @Test
+    void feedPanelPageIsAdminOnly() throws Exception {
+        // CSDT4-48: the panel page needs the ADMIN role, not just a signed-in account.
+        // A browser (Accept: text/html) that is not signed in is sent to the login page.
+        mvc.perform(get("/admin-feed.html").accept(org.springframework.http.MediaType.TEXT_HTML))
+                .andExpect(status().is3xxRedirection());
+        mvc.perform(get("/admin-feed.html")).andExpect(status().isForbidden());
+        mvc.perform(get("/admin-feed.html").with(user("resident").roles("RESIDENT")))
+                .andExpect(status().isForbidden());
+        mvc.perform(get("/admin-feed.html").with(user("admin").roles("ADMIN")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void residentRequestsToAdminAndDemoApisReceiveForbidden() throws Exception {
         mvc.perform(get("/api/v1/admin").with(user("resident").roles("RESIDENT")))
                 .andExpect(status().isForbidden());
