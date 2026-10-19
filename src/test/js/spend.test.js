@@ -10,6 +10,7 @@ const staticDir = path.join(__dirname, '../../main/resources/static/js');
 
 function load(nodes) {
   const document = {
+    querySelector() { return null; },
     createElement() {
       let text = '';
       return {
