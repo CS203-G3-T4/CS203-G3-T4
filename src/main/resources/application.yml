@@ -36,6 +36,10 @@ weather:
     heat-threshold-c: ${WEATHER_HEAT_THRESHOLD_C:33}
 
 forecast:
+  admin:
+    local-basic-enabled: ${WATTLY_FORECAST_LOCAL_ADMIN_ENABLED:false}
+    username: ${WATTLY_ADMIN_USER:}
+    password: ${WATTLY_ADMIN_PASSWORD:}
   mode: ${FORECAST_MODE:LIVE}
   python-url: ${FORECAST_PYTHON_URL:http://127.0.0.1:8001}
   python-timeout: ${FORECAST_PYTHON_TIMEOUT:5s}

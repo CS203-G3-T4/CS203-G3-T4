@@ -1,0 +1,31 @@
+{
+  "status": "PASS",
+  "independentSavedPredictionMae": true,
+  "coverageAndTargetAlignment": true,
+  "canonicalTruthAndSplitPurging": true,
+  "artifactIntegrityAndDependencies": true,
+  "fittedHorizons": 24,
+  "forecastSmokePoints": 24,
+  "splits": {
+    "fold-1": {
+      "commonPairs": 624,
+      "distinctOrigins": 26,
+      "distinctTargets": 49
+    },
+    "fold-2": {
+      "commonPairs": 1431,
+      "distinctOrigins": 66,
+      "distinctTargets": 82
+    },
+    "fold-3": {
+      "commonPairs": 456,
+      "distinctOrigins": 19,
+      "distinctTargets": 65
+    },
+    "validation": {
+      "commonPairs": 2511,
+      "distinctOrigins": 111,
+      "distinctTargets": 196
+    }
+  }
+}

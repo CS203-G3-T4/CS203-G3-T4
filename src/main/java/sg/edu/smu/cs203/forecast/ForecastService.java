@@ -28,6 +28,14 @@ public class ForecastService {
         this.staleAfter=staleAfter; this.mode=mode; this.mappingVerified=!mappingEvidence.isBlank();
     }
     public String mode() { return mode; }
+    public java.util.Map<String,Object> today() {
+        Instant now=clock.instant();
+        Instant start=now.atZone(java.time.ZoneId.of("Asia/Singapore")).toLocalDate().atStartOfDay(java.time.ZoneId.of("Asia/Singapore")).toInstant();
+        var prices=history.asOf(now).stream().filter(row -> !row.periodStart().isBefore(start)).toList();
+        return java.util.Map.of("asOf",now,"start",start,"intervalMinutes",30,"units","SGD_PER_MWH","prices",prices,
+                "expectedPeriods",java.time.Duration.between(start,BaselineForecastService.floor(now)).toMinutes()/30+1,
+                "observedPeriods",prices.size());
+    }
     public boolean mappingVerified() { return mappingVerified; }
     public boolean mappingVerified(List<MarketRevision> rows) {
         return mappingVerified && rows.stream().allMatch(r -> r.timeMapping().equals("EMC_PERIOD")

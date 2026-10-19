@@ -1,0 +1,23 @@
+{
+  "protocolVersion": "acceptance-2026-10-18-v1",
+  "frozenBeforeNewStudyResults": true,
+  "timezone": "Asia/Singapore",
+  "trainingStart": "2025-07-01T00:00:00+08:00",
+  "trainingCutoff": "2026-07-01T00:00:00+08:00",
+  "validationStart": "2026-07-01T00:00:00+08:00",
+  "validationEnd": "2026-07-29T00:00:00+08:00",
+  "testStart": "2026-07-29T00:00:00+08:00",
+  "testEnd": "2026-09-23T00:00:00+08:00",
+  "baselineScoreboardStart": "2026-04-01T00:00:00+08:00",
+  "baselineScoreboardEnd": "2026-07-01T00:00:00+08:00",
+  "warmupStart": "2025-06-01T00:00:00+08:00",
+  "excludedDemoDate": "2026-09-28",
+  "model": "Existing production HistGradientBoostingRegressor, 24 horizons, squared_error, max_iter=40, max_leaf_nodes=15, l2_regularization=1, seed=42",
+  "features": "Schema 2: existing prices/calendar plus versioned public holidays and genuinely origin-known target demand; missing demand is explicitly missing",
+  "selection": "No new model or hyperparameter search; baseline ranking uses July validation common pairs only",
+  "spikes": {"minimumSamples":14,"k":3,"spreadFloor":1},
+  "sensitivityRecommendation": "Retain k=3 pending team agreement; descriptive k=2/3/4 comparison is not threshold selection",
+  "truth": "Official EMC historical final prices; reconstructed period-end availability only under explicit RETROSPECTIVE_FINAL_PRICE assumption",
+  "prohibitions": ["No demand receipt timestamps invented from historical CSV demand columns", "No test-based selection or approval", "No research approval flag changes"],
+  "priorExposure": "Collector research examined September 24 onward, so test ends before that history. Individual August 30/September 4 observations and the September 20 official sample were previously inspected; model-unseen evaluation is not a claim of complete analyst blindness."
+}
