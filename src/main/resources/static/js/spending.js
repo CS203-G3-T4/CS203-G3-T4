@@ -12,10 +12,9 @@
     const title = new Intl.DateTimeFormat('en-SG', { month: 'long', year: 'numeric', timeZone: 'Asia/Singapore' })
       .format(new Date(month + '-01T00:00:00+08:00'));
     byId('month-label').textContent = title + ' · Modelled household spending';
-    byId('spent-to-date').textContent = money(data.estimatedSpendToDateSgd);
     byId('projected-spend').textContent = money(data.projectedSpendMonthSgd);
     byId('budget-value').textContent = money(data.monthlyBudgetSgd);
-    byId('energy-to-date').textContent = kwh(data.modelledKwhToDate);
+    // "Spent so far" and the line under it come from the month-to-date spend (spend.js, CSDT4-41).
     byId('energy-month').textContent = kwh(data.modelledKwhMonth);
     byId('monthly-budget').value = data.monthlyBudgetSgd == null ? '' : data.monthlyBudgetSgd;
     byId('planning-rate').value = data.planningRateCentsPerKwh == null ? '' : data.planningRateCentsPerKwh;
@@ -26,10 +25,10 @@
         Number(data.rateCentsPerKwh).toFixed(2) + ' ¢/kWh from Household Settings.';
     }
     byId('assumption-note').textContent = data.rateSource === 'USER_PLANNING_RATE'
-      ? 'Estimates use modelled load and your planning rate, not actual meter readings or a live bill. Taxes, fixed fees and other charges are excluded.'
+      ? 'The projection and daily chart use modelled load and your planning rate, not meter readings; they leave out taxes and other bill charges. “Spent so far” includes them.'
       : data.rateSource === 'FIXED_PLAN'
-        ? 'Estimates use modelled load and your saved fixed rate, not actual meter readings or a live bill. Taxes, fixed fees and other charges are excluded.'
-        : 'Enter a planning rate to estimate spending. Energy use is modelled, not measured; taxes and other bill charges are excluded.';
+        ? 'The projection and daily chart use modelled load and your saved fixed rate, not meter readings.'
+        : 'Enter a planning rate to project this month’s spending. “Spent so far” already uses the real half-hourly prices, bill charges and GST.';
     const chart = byId('spending-chart');
     chart.replaceChildren();
     const days = data.days || [];
