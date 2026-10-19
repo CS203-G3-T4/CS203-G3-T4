@@ -114,7 +114,7 @@ Every suggestion passes five guards in `RecommendationService.generate`:
 | Past start | Never a start before now |
 | Disabled appliance | Only enabled `FLEXIBLE` appliances are considered (`HouseholdDirectory.flexibleAppliances`); a switched-off appliance's open suggestion is closed |
 | Fixed-rate household | `exposedToWholesalePrice` must be true; switching to a fixed plan closes open suggestions |
-| Stale feed | While F1's price is `STALE` (or there is no price yet), no new suggestions from F3's forecast. The labelled demo forecast doesn't use the live feed, so it is only blocked when `RECOMMENDATION_STALE_FEED_BLOCKS_DEMO=true` |
+| Stale feed | While F1's price is `STALE` (or there is no price yet), no new suggestions from F3's forecast. The labelled demo forecast doesn't use the live feed, so a real stale feed only blocks it when `RECOMMENDATION_STALE_FEED_BLOCKS_DEMO=true`. The admin **simulated outage** switch (CSDT4-26) always blocks every forecast, the demo forecast included, so a demo shows suggestions stopping while the feed is down |
 
 **Ranking.** Each appliance's best shift is ranked by expected saving against its usual start
 (ties: earlier start first). Savings under `RECOMMENDATION_MINIMUM_SAVING_SGD` ($0.05) are skipped,
