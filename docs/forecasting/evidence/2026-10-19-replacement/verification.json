@@ -1,0 +1,122 @@
+{
+  "verificationDateSGT": "2026-10-19",
+  "forecastParent": "2c7fbb45ef2abf1231a280ab6466c5bd8ad32544",
+  "upstreamMain": "b89bf25a80c5f19d71d714a55111d8d8e775e35e",
+  "command": "python scripts/verify-forecast-stack.py",
+  "proof": {
+    "status": "PASS",
+    "isolatedPostgres": true,
+    "postgresVersion": "17",
+    "realSpringPythonHttp": true,
+    "realBrowserPages": true,
+    "weeklyShortDataAttemptExit": 2,
+    "nativeTimerFired": true,
+    "fullSuitesInThisInvocation": true,
+    "mainDashboardRecommendationsBudgetPages": true,
+    "defaultStartupWithoutPythonOrHistory": true,
+    "mainRecommendationDefaultPreserved": true,
+    "configuredHouseholdScenarios": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "collectorModified": false,
+    "liveDatabaseUsed": false,
+    "archivedCollectorFeed": "Original payload/timestamps preserved; stale inputs remain unavailable, never made fresh for the proof"
+  },
+  "java": {
+    "tests": 204,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "python": {
+    "passed": 58,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 391.65,
+    "warnings": [
+      "Upstream Starlette/AnyIO BlockingPortal alias deprecation"
+    ]
+  },
+  "javascript": {
+    "passed": 15,
+    "failed": 0,
+    "skipped": 0
+  },
+  "migration": {
+    "mainV1ThroughV13ByteIdentical": true,
+    "forecastVersion": 14,
+    "forecastSqlIdenticalToReviewedV13": true,
+    "forecastSqlSha256": "36327f1ae32cf8aad5d439f5c6e016e76988e636121d3c85785a9a99e699703b",
+    "packagedObsoleteForecastV12V13Absent": true,
+    "legacyForecastV12AndV13RejectedWithoutRepairs": true
+  },
+  "browser": {
+    "source": "ISOLATED_APP_WITH_ARCHIVED_REAL_COLLECTOR_PRICES",
+    "actualPageRequests": true,
+    "anonymousApiStatus": 403,
+    "anonymousPageStatus": 401,
+    "adminAuthorized": true,
+    "residentAvailable": true,
+    "residentMethod": "B2",
+    "residentForecastRows": 24,
+    "actualPeriods": 4,
+    "adminSeriesPairs": 0,
+    "adminCommonPairs": 0,
+    "horizonSelector": true,
+    "mobileOverflow": false,
+    "browserErrors": []
+  },
+  "mainBrowser": {
+    "source": "ISOLATED_APP_ONLY",
+    "dashboard": true,
+    "recommendations": true,
+    "spendingBudgetSavedAndReloaded": true,
+    "fixedRatePreserved": true,
+    "browserErrors": []
+  },
+  "savings": {
+    "status": "COMPLETE",
+    "modelled": true,
+    "simulatedSavings": true,
+    "aiSavingsSgd": "168.9872190359428571428571428",
+    "baselineSavingsSgd": "176.4233564647428571428571432",
+    "aiMinusBaselineSgd": "-7.4361374288000000000000004",
+    "baselineMethod": "B3",
+    "uniqueApplianceRuns": 497,
+    "exclusions": {
+      "USUAL_RUN_OUTSIDE_FORECAST": 724,
+      "INCOMPLETE_IDENTICAL_FORECAST_WINDOW": 1
+    }
+  },
+  "weekly": {
+    "timerFired": true,
+    "expectedExit": 2,
+    "championRetained": true,
+    "persistedFailedAttempts": 2,
+    "reason": "Insufficient verified history; safe rejection, not a successful training/promotion or permanent deployment"
+  },
+  "frozenEvidenceArchive": {
+    "files": 37,
+    "sha256": "4d153531160edf9cb77e160cc1107a37e80434b61585c0f9d689af8531c63551",
+    "buildAndVerify": "PASS"
+  },
+  "initialFailure": "First latest-main integration proof failed HTTP 400 at savings replay; final proof includes required spike JSON field and AVOID replay selection.",
+  "limitations": [
+    "No live database changes or collector modifications",
+    "No shared-production auth flow or owner sign-off",
+    "No persistent legacy-database cutover",
+    "No independently labelled spike evaluation or future confirmation",
+    "No permanent weekly deployment",
+    "New PR GitHub CI has not yet run"
+  ],
+  "rawLocalEvidence": ".local/new-pr-validation-v2/",
+  "historicalCheckpoint": {
+    "reviewedHead": "195ab04cc6ac99e6d81e9af292b7e610c512b9c9",
+    "scope": "Historical validation before PR20/main c8ccfda. These counts do not cover the merged V15 tree.",
+    "supersededBy": "docs/forecasting/evidence/2026-10-19-v15/verification.json"
+  }
+}

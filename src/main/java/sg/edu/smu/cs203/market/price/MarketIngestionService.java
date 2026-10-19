@@ -45,6 +45,7 @@ public class MarketIngestionService {
 
     public void poll() {
         Instant startedAt = clock.instant();
+        var previousStatus = runs.findLatest().map(IngestionRun::status);
         IngestionRun run;
         boolean changed = false;
         try {
@@ -68,7 +69,9 @@ public class MarketIngestionService {
             LOG.error("USEP ingestion failed; stored prices remain available", exception);
         }
         runs.save(run);
-        if (changed) {
+        // Imported history may already contain this revision; recovery still makes it usable.
+        if (changed || run.status() == IngestionStatus.SUCCESS
+                && previousStatus.filter(status -> status == IngestionStatus.SUCCESS).isEmpty()) {
             try {
                 events.publishEvent(new MarketObservationSaved());
             } catch (RuntimeException exception) {

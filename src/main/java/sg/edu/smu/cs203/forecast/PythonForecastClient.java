@@ -23,16 +23,19 @@ public class PythonForecastClient {
         this.client=RestClient.builder().requestFactory(factory).build(); this.url=url;
     }
     public JsonNode forecast(String requestId, Instant asOf, List<MarketRevision> history) {
+        return forecast(requestId,asOf,history,List.of());
+    }
+    public JsonNode forecast(String requestId, Instant asOf, List<MarketRevision> history,List<ForecastOperationsRepository.Demand> expectedDemand) {
         List<Map<String,Object>> prices=history.stream().map(r -> Map.<String,Object>of(
                 "periodStart",r.periodStart(),"sourceUpdatedAt",r.sourceUpdatedAt(),"availableAt",r.availableAt(),"usep",r.usep())).toList();
-        JsonNode result=client.post().uri(url+"/forecast").body(Map.of("schemaVersion",1,"requestId",requestId,
+        JsonNode result=client.post().uri(url+"/forecast").body(Map.of("schemaVersion",2,"requestId",requestId,
                 "asOf",asOf,"intervalMinutes",30,"horizonCount",24,"mappingVerified",true,"priceHistory",prices,
-                "weather",List.of())).retrieve().body(JsonNode.class);
+                "weather",List.of(),"expectedDemand",expectedDemand)).retrieve().body(JsonNode.class);
         validate(result,requestId,asOf);
         return result;
     }
     static void validate(JsonNode response,String requestId,Instant asOf) {
-        if (response==null || response.path("schemaVersion").asInt()!=1 || !response.path("requestId").asText().equals(requestId)
+        if (response==null || !List.of(1,2).contains(response.path("schemaVersion").asInt()) || !response.path("requestId").asText().equals(requestId)
                 || !"SGD_PER_MWH".equals(response.path("units").asText()) || !"AI".equals(response.path("modelType").asText())
                 || !Instant.parse(response.path("asOf").asText()).equals(asOf)
                 || response.path("modelVersion").asText().isBlank()

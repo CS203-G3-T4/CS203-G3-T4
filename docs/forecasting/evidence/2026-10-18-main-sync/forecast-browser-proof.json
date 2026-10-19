@@ -1,0 +1,16 @@
+{
+  "source": "ISOLATED_APP_WITH_ARCHIVED_REAL_COLLECTOR_PRICES",
+  "actualPageRequests": true,
+  "anonymousApiStatus": 403,
+  "anonymousPageStatus": 401,
+  "adminAuthorized": true,
+  "residentAvailable": true,
+  "residentMethod": "B2",
+  "residentForecastRows": 24,
+  "actualPeriods": 12,
+  "adminSeriesPairs": 0,
+  "adminCommonPairs": 0,
+  "horizonSelector": true,
+  "mobileOverflow": false,
+  "browserErrors": []
+}

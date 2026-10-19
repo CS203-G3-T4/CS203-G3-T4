@@ -37,8 +37,15 @@ WattlyForecast.render = function (view, assessment) {
   if (!assessment || assessment.actualPrice === null) {
     current.textContent = 'Current price unavailable.';
   } else {
+    const deviation = assessment.available && Number.isFinite(assessment.deviationPercent) ?
+      ' · ' + Math.abs(assessment.deviationPercent).toFixed(0) + '% ' +
+      (assessment.deviationPercent < 0 ? 'below' : 'above') + ' typical' :
+      assessment.available && Number.isFinite(assessment.deviation) ?
+        ' · ' + Math.abs(assessment.deviation).toFixed(2) + ' SGD/MWh ' +
+        (assessment.deviation < 0 ? 'below' : 'above') + ' typical (percentage unavailable for zero/negative typical prices)' : '';
     current.textContent = 'Current price: ' + (Number(assessment.actualPrice) / 10).toFixed(2) + ' cents/kWh. ' +
-      (assessment.available ? assessment.classification.toLowerCase() + ' against ' + assessment.sampleCount + ' prior days.' :
+      (assessment.available ? (assessment.classification === 'EXPENSIVE' ? 'normal (above typical)' : assessment.classification.toLowerCase()) +
+        deviation + ' against ' + assessment.sampleCount + ' prior days.' :
         'Spike assessment: Insufficient history (' + assessment.sampleCount + ' reference samples).') +
       (assessment.stale ? ' Price data is stale.' : '');
   }
@@ -46,7 +53,8 @@ WattlyForecast.render = function (view, assessment) {
 
 WattlyForecast.refresh = async function () {
   const results = await Promise.all([
-    Wattly.api('GET', '/api/v1/forecast/latest'), Wattly.api('GET', '/api/v1/forecast/current-assessment')
+    Wattly.api('GET', '/api/v1/forecast/latest'), Wattly.api('GET', '/api/v1/forecast/current-assessment'),
+    Wattly.api('GET', '/api/v1/forecast/today')
   ]);
   if (!results[0].ok) {
     document.getElementById('forecast-status').textContent = 'Cannot load the forecast. Retrying in one minute.';
@@ -54,9 +62,26 @@ WattlyForecast.refresh = async function () {
     document.getElementById('forecast-table').hidden = true;
     document.getElementById('forecast-points').replaceChildren();
     document.getElementById('current-assessment').textContent = 'Current price unavailable.';
+    const chart=document.getElementById('live-price-chart'); if (chart) chart.replaceChildren();
     return;
   }
   WattlyForecast.render(results[0].data, results[1].ok ? results[1].data : null);
+  const chart=document.getElementById('live-price-chart');
+  if (chart && typeof WattlyPriceChart !== 'undefined') {
+    const actuals=results[2].ok && Array.isArray(results[2].data.prices) ? results[2].data.prices : [];
+    const view=results[0].data;
+    WattlyPriceChart.draw(chart,[
+      {name:'Actual',color:'#176346',points:actuals.map(p=>({time:p.periodStart,value:Number(p.usep)}))},
+      {name:view.stale?'Stale forecast':'Forecast',color:'#2a78d6',points:view.available?view.run.points.map(p=>({time:p.targetPeriod,value:Number(p.predictedUsep),spike:p.spikeFlag===true})):[]}
+    ]);
+    const rows=document.getElementById('actual-points');
+    rows.replaceChildren();
+    actuals.forEach(p=>{ const tr=document.createElement('tr');
+      [new Date(p.periodStart).toLocaleString('en-SG',{timeZone:'Asia/Singapore'}),Number(p.usep).toFixed(2)].forEach(v=>{
+        const td=document.createElement('td'); td.textContent=v; tr.appendChild(td); }); rows.appendChild(tr); });
+    document.getElementById('actual-coverage').textContent=results[2].ok ?
+      (results[2].data.observedPeriods || 0)+' of '+(results[2].data.expectedPeriods || 0)+' expected periods received today. Gaps are not interpolated.' : 'Today’s actuals unavailable.';
+  }
 };
 
 Wattly.keepHouseholdInLinks();

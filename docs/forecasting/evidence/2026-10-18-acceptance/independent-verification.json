@@ -1,0 +1,595 @@
+{
+  "status": "PASS",
+  "baselines": {
+    "commonPairs": 104256,
+    "expectedPairs": 104832,
+    "metrics": {
+      "B1": {
+        "mae": 36.38450791001637,
+        "groups": {
+          "13-24": 38.18163239206057,
+          "7-12": 37.81331491712707,
+          "1-6": 31.36145193881727
+        },
+        "spikes": {
+          "tp": 5754,
+          "fp": 12246,
+          "fn": 9797,
+          "support": 15551,
+          "falseAlarms": 12246,
+          "precision": 0.31966666666666665,
+          "recall": 0.3700083595910231,
+          "assessedPairs": 104256,
+          "distinctTargetPeriods": 4367,
+          "distinctPositiveTargets": 658,
+          "distinctNegativeTargets": 3709,
+          "distinctPositiveEvents": 176,
+          "falseAlarmTargets": 1431,
+          "minimumDistinctPositiveAndNegativeTargets": 20,
+          "undefinedReason": null
+        }
+      },
+      "B2": {
+        "mae": 30.306989238029466,
+        "groups": {
+          "13-24": 30.323462246777165,
+          "7-12": 30.290781921424188,
+          "1-6": 30.29025053713935
+        },
+        "spikes": {
+          "tp": 6488,
+          "fp": 8262,
+          "fn": 9063,
+          "support": 15551,
+          "falseAlarms": 8262,
+          "precision": 0.43986440677966104,
+          "recall": 0.4172078965982895,
+          "assessedPairs": 104256,
+          "distinctTargetPeriods": 4367,
+          "distinctPositiveTargets": 658,
+          "distinctNegativeTargets": 3709,
+          "distinctPositiveEvents": 176,
+          "falseAlarmTargets": 347,
+          "minimumDistinctPositiveAndNegativeTargets": 20,
+          "undefinedReason": null
+        }
+      },
+      "B3": {
+        "mae": 30.227200777755854,
+        "groups": {
+          "13-24": 30.219409914057703,
+          "7-12": 30.23131648469701,
+          "1-6": 30.238666798210996
+        },
+        "spikes": {
+          "tp": 4608,
+          "fp": 8070,
+          "fn": 10943,
+          "support": 15551,
+          "falseAlarms": 8070,
+          "precision": 0.36346426881211547,
+          "recall": 0.2963153494952093,
+          "assessedPairs": 104256,
+          "distinctTargetPeriods": 4367,
+          "distinctPositiveTargets": 658,
+          "distinctNegativeTargets": 3709,
+          "distinctPositiveEvents": 176,
+          "falseAlarmTargets": 338,
+          "minimumDistinctPositiveAndNegativeTargets": 20,
+          "undefinedReason": null
+        }
+      }
+    },
+    "weeklyBlocks": [
+      {
+        "block": 1,
+        "pairs": 8064,
+        "mae": {
+          "B1": 46.200371610449736,
+          "B2": 36.95024181547619,
+          "B3": 35.15237475198413
+        }
+      },
+      {
+        "block": 2,
+        "pairs": 8064,
+        "mae": {
+          "B1": 37.673297784391536,
+          "B2": 28.052874503968255,
+          "B3": 24.73361359126984
+        }
+      },
+      {
+        "block": 3,
+        "pairs": 8064,
+        "mae": {
+          "B1": 51.16181010251323,
+          "B2": 41.514636656746035,
+          "B3": 37.320293721655325
+        }
+      },
+      {
+        "block": 4,
+        "pairs": 8064,
+        "mae": {
+          "B1": 21.009699074074074,
+          "B2": 23.061605902777778,
+          "B3": 25.63261550453515
+        }
+      },
+      {
+        "block": 5,
+        "pairs": 8064,
+        "mae": {
+          "B1": 21.90885044642857,
+          "B2": 23.082096974206348,
+          "B3": 22.84449688208617
+        }
+      },
+      {
+        "block": 6,
+        "pairs": 8064,
+        "mae": {
+          "B1": 14.43298404431217,
+          "B2": 12.37539558531746,
+          "B3": 13.12756253543084
+        }
+      },
+      {
+        "block": 7,
+        "pairs": 8064,
+        "mae": {
+          "B1": 31.248251901455028,
+          "B2": 31.483582589285714,
+          "B3": 23.2757564484127
+        }
+      },
+      {
+        "block": 8,
+        "pairs": 8064,
+        "mae": {
+          "B1": 15.080328207671958,
+          "B2": 13.133790922619047,
+          "B3": 16.865844494047618
+        }
+      },
+      {
+        "block": 9,
+        "pairs": 8064,
+        "mae": {
+          "B1": 33.14287822420635,
+          "B2": 29.381248759920634,
+          "B3": 23.088419961734694
+        }
+      },
+      {
+        "block": 10,
+        "pairs": 8064,
+        "mae": {
+          "B1": 92.48221023478835,
+          "B2": 62.969365079365076,
+          "B3": 70.46978387188209
+        }
+      },
+      {
+        "block": 11,
+        "pairs": 8064,
+        "mae": {
+          "B1": 26.894879712301588,
+          "B2": 32.582237103174606,
+          "B3": 47.9523650085034
+        }
+      },
+      {
+        "block": 12,
+        "pairs": 8064,
+        "mae": {
+          "B1": 28.495868468915344,
+          "B2": 24.39256820436508,
+          "B3": 17.60166648951247
+        }
+      },
+      {
+        "block": 13,
+        "pairs": 7488,
+        "mae": {
+          "B1": 54.565839565527064,
+          "B2": 35.37307959401709,
+          "B3": 35.247402701465205
+        }
+      }
+    ],
+    "scoresIndependentlyRecomputed": true
+  },
+  "validation": {
+    "commonPairs": 31680,
+    "expectedPairs": 452736,
+    "metrics": {
+      "B1": {
+        "mae": 104.88202493686869,
+        "groups": {
+          "13-24": 107.4758449074074,
+          "7-12": 110.58486868686869,
+          "1-6": 93.99154124579124
+        },
+        "spikes": {
+          "tp": 2023,
+          "fp": 6566,
+          "fn": 3442,
+          "support": 5465,
+          "falseAlarms": 6566,
+          "precision": 0.23553382233088835,
+          "recall": 0.37017383348581884,
+          "assessedPairs": 31680,
+          "distinctTargetPeriods": 1343,
+          "distinctPositiveTargets": 229,
+          "distinctNegativeTargets": 1114,
+          "distinctPositiveEvents": 72,
+          "falseAlarmTargets": 704,
+          "minimumDistinctPositiveAndNegativeTargets": 20,
+          "undefinedReason": null
+        }
+      },
+      "B2": {
+        "mae": 103.03216761363636,
+        "groups": {
+          "13-24": 103.23761931818181,
+          "7-12": 102.9763042929293,
+          "1-6": 102.67712752525253
+        },
+        "spikes": {
+          "tp": 1176,
+          "fp": 3877,
+          "fn": 4289,
+          "support": 5465,
+          "falseAlarms": 3877,
+          "precision": 0.23273302988323769,
+          "recall": 0.2151875571820677,
+          "assessedPairs": 31680,
+          "distinctTargetPeriods": 1343,
+          "distinctPositiveTargets": 229,
+          "distinctNegativeTargets": 1114,
+          "distinctPositiveEvents": 72,
+          "falseAlarmTargets": 163,
+          "minimumDistinctPositiveAndNegativeTargets": 20,
+          "undefinedReason": null
+        }
+      },
+      "B3": {
+        "mae": 76.9810634469697,
+        "groups": {
+          "13-24": 77.1086884920635,
+          "7-12": 76.97049044011544,
+          "1-6": 76.73638636363636
+        },
+        "spikes": {
+          "tp": 1488,
+          "fp": 3712,
+          "fn": 3977,
+          "support": 5465,
+          "falseAlarms": 3712,
+          "precision": 0.28615384615384615,
+          "recall": 0.2722781335773102,
+          "assessedPairs": 31680,
+          "distinctTargetPeriods": 1343,
+          "distinctPositiveTargets": 229,
+          "distinctNegativeTargets": 1114,
+          "distinctPositiveEvents": 72,
+          "falseAlarmTargets": 155,
+          "minimumDistinctPositiveAndNegativeTargets": 20,
+          "undefinedReason": null
+        }
+      },
+      "AI": {
+        "mae": 77.49943854164218,
+        "groups": {
+          "13-24": 80.37044379927778,
+          "7-12": 77.49410269133614,
+          "1-6": 71.76276387667703
+        },
+        "spikes": {
+          "tp": 783,
+          "fp": 2740,
+          "fn": 4682,
+          "support": 5465,
+          "falseAlarms": 2740,
+          "precision": 0.22225376099914845,
+          "recall": 0.14327538883806037,
+          "assessedPairs": 31680,
+          "distinctTargetPeriods": 1343,
+          "distinctPositiveTargets": 229,
+          "distinctNegativeTargets": 1114,
+          "distinctPositiveEvents": 72,
+          "falseAlarmTargets": 363,
+          "minimumDistinctPositiveAndNegativeTargets": 20,
+          "undefinedReason": null
+        }
+      }
+    },
+    "weeklyBlocks": [
+      {
+        "block": 53,
+        "pairs": 6912,
+        "mae": {
+          "B1": 93.9807672646605,
+          "B2": 86.001484375,
+          "B3": 60.20819506448413,
+          "AI": 64.89569060289537
+        }
+      },
+      {
+        "block": 54,
+        "pairs": 8064,
+        "mae": {
+          "B1": 104.2422478505291,
+          "B2": 122.0122445436508,
+          "B3": 82.09309807256236,
+          "AI": 86.83662411847399
+        }
+      },
+      {
+        "block": 55,
+        "pairs": 8064,
+        "mae": {
+          "B1": 101.93339988425926,
+          "B2": 88.77097222222223,
+          "B3": 76.19206048044218,
+          "AI": 69.29272971921091
+        }
+      },
+      {
+        "block": 56,
+        "pairs": 8064,
+        "mae": {
+          "B1": 118.52482845568782,
+          "B2": 114.80376736111111,
+          "B3": 86.80341057256236,
+          "AI": 88.02934831705646
+        }
+      },
+      {
+        "block": 57,
+        "pairs": 576,
+        "mae": {
+          "B1": 94.93549768518518,
+          "B2": 76.53362847222222,
+          "B3": 80.2201810515873,
+          "AI": 65.49900238919662
+        }
+      }
+    ],
+    "scoresIndependentlyRecomputed": true
+  },
+  "unseenWeeks": {
+    "commonPairs": 63936,
+    "expectedPairs": 64512,
+    "metrics": {
+      "B1": {
+        "mae": 233.05585549090756,
+        "groups": {
+          "13-24": 237.41015484234234,
+          "7-12": 249.79413392559226,
+          "1-6": 207.60897835335336
+        },
+        "spikes": {
+          "tp": 5007,
+          "fp": 13715,
+          "fn": 5628,
+          "support": 10635,
+          "falseAlarms": 13715,
+          "precision": 0.26743937613502833,
+          "recall": 0.4708039492242595,
+          "assessedPairs": 63936,
+          "distinctTargetPeriods": 2687,
+          "distinctPositiveTargets": 445,
+          "distinctNegativeTargets": 2242,
+          "distinctPositiveEvents": 153,
+          "falseAlarmTargets": 1167,
+          "minimumDistinctPositiveAndNegativeTargets": 20,
+          "undefinedReason": null
+        }
+      },
+      "B2": {
+        "mae": 198.94150009384384,
+        "groups": {
+          "13-24": 199.87366585335334,
+          "7-12": 199.40023523523524,
+          "1-6": 196.61843343343344
+        },
+        "spikes": {
+          "tp": 2841,
+          "fp": 6159,
+          "fn": 7794,
+          "support": 10635,
+          "falseAlarms": 6159,
+          "precision": 0.31566666666666665,
+          "recall": 0.26713681241184767,
+          "assessedPairs": 63936,
+          "distinctTargetPeriods": 2687,
+          "distinctPositiveTargets": 445,
+          "distinctNegativeTargets": 2242,
+          "distinctPositiveEvents": 153,
+          "falseAlarmTargets": 258,
+          "minimumDistinctPositiveAndNegativeTargets": 20,
+          "undefinedReason": null
+        }
+      },
+      "B3": {
+        "mae": 166.97514565905192,
+        "groups": {
+          "13-24": 167.61340166058915,
+          "7-12": 166.6317402223652,
+          "1-6": 166.04203909266408
+        },
+        "spikes": {
+          "tp": 1669,
+          "fp": 3630,
+          "fn": 8966,
+          "support": 10635,
+          "falseAlarms": 3630,
+          "precision": 0.3149650877524061,
+          "recall": 0.15693464974141985,
+          "assessedPairs": 63936,
+          "distinctTargetPeriods": 2687,
+          "distinctPositiveTargets": 445,
+          "distinctNegativeTargets": 2242,
+          "distinctPositiveEvents": 153,
+          "falseAlarmTargets": 154,
+          "minimumDistinctPositiveAndNegativeTargets": 20,
+          "undefinedReason": null
+        }
+      },
+      "AI": {
+        "mae": 152.02145379708307,
+        "groups": {
+          "13-24": 153.6863402743474,
+          "7-12": 153.1798946234339,
+          "1-6": 147.53324001620362
+        },
+        "spikes": {
+          "tp": 1885,
+          "fp": 3038,
+          "fn": 8750,
+          "support": 10635,
+          "falseAlarms": 3038,
+          "precision": 0.38289660775949624,
+          "recall": 0.1772449459332393,
+          "assessedPairs": 63936,
+          "distinctTargetPeriods": 2687,
+          "distinctPositiveTargets": 445,
+          "distinctNegativeTargets": 2242,
+          "distinctPositiveEvents": 153,
+          "falseAlarmTargets": 364,
+          "minimumDistinctPositiveAndNegativeTargets": 20,
+          "undefinedReason": null
+        }
+      }
+    },
+    "weeklyBlocks": [
+      {
+        "block": 1,
+        "pairs": 8064,
+        "mae": {
+          "B1": 98.16361483134921,
+          "B2": 73.60371031746031,
+          "B3": 65.87978599773243,
+          "AI": 61.095510976474436
+        }
+      },
+      {
+        "block": 2,
+        "pairs": 8064,
+        "mae": {
+          "B1": 120.28515294312169,
+          "B2": 90.03526785714286,
+          "B3": 82.24054067460317,
+          "AI": 76.27839004428992
+        }
+      },
+      {
+        "block": 3,
+        "pairs": 8064,
+        "mae": {
+          "B1": 207.77952339616402,
+          "B2": 122.60316716269841,
+          "B3": 116.16693009495465,
+          "AI": 127.93604994295319
+        }
+      },
+      {
+        "block": 4,
+        "pairs": 8064,
+        "mae": {
+          "B1": 313.3292427248677,
+          "B2": 270.3144915674603,
+          "B3": 184.8989948270975,
+          "AI": 178.38480609478208
+        }
+      },
+      {
+        "block": 5,
+        "pairs": 8064,
+        "mae": {
+          "B1": 207.2990806878307,
+          "B2": 154.03111607142858,
+          "B3": 163.4886511479592,
+          "AI": 131.72046218788049
+        }
+      },
+      {
+        "block": 6,
+        "pairs": 8064,
+        "mae": {
+          "B1": 173.1072800925926,
+          "B2": 132.0222544642857,
+          "B3": 142.70775474773242,
+          "AI": 103.11769395804123
+        }
+      },
+      {
+        "block": 7,
+        "pairs": 8064,
+        "mae": {
+          "B1": 383.5670494378307,
+          "B2": 392.97388268849204,
+          "B3": 289.0045528628118,
+          "AI": 254.4734191727128
+        }
+      },
+      {
+        "block": 8,
+        "pairs": 7488,
+        "mae": {
+          "B1": 370.75128783831906,
+          "B2": 368.0255422008547,
+          "B3": 300.9861710164835,
+          "AI": 293.25328601510336
+        }
+      }
+    ],
+    "scoresIndependentlyRecomputed": true
+  },
+  "savings": {
+    "uniqueApplianceRuns": 497,
+    "aiSavingsSgd": "168.9872190357142857142857142",
+    "baselineSavingsSgd": "176.4330944642857142857142860",
+    "realizedCostsIndependentlyRecomputed": true,
+    "modelled": true,
+    "simulatedSavings": true
+  },
+  "sensitivity": {
+    "independentlyRecomputed": true,
+    "sensitivity": [
+      {
+        "k": 2,
+        "assessedTargets": 4368,
+        "distinctAlertTargets": 884,
+        "distinctAlertEvents": 216,
+        "precision": null,
+        "recall": null,
+        "falseAlarms": null,
+        "unavailableReason": "No independent labels identifying genuine unusual-price events; rule self-labels cannot validate themselves"
+      },
+      {
+        "k": 3,
+        "assessedTargets": 4368,
+        "distinctAlertTargets": 658,
+        "distinctAlertEvents": 176,
+        "precision": null,
+        "recall": null,
+        "falseAlarms": null,
+        "unavailableReason": "No independent labels identifying genuine unusual-price events; rule self-labels cannot validate themselves"
+      },
+      {
+        "k": 4,
+        "assessedTargets": 4368,
+        "distinctAlertTargets": 503,
+        "distinctAlertEvents": 134,
+        "precision": null,
+        "recall": null,
+        "falseAlarms": null,
+        "unavailableReason": "No independent labels identifying genuine unusual-price events; rule self-labels cannot validate themselves"
+      }
+    ]
+  }
+}

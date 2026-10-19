@@ -1,4 +1,4 @@
--- CSDT4-41: the charges on a household bill besides the wholesale energy price, for the
+-- CSDT4-41 (V17; V15/V16 are taken by forecast operations and the snooze change): the charges on a household bill besides the wholesale energy price, for the
 -- month-to-date spend. Each row records where its rate comes from.
 --
 -- unit:  SGD_PER_KWH   added to every kWh (rates here exclude GST)

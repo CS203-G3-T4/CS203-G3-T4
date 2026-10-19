@@ -1,0 +1,57 @@
+{
+  "trainingOriginsPerHorizon": 19702,
+  "excludedMissingBaselineOrigins": 0,
+  "finalPriceOriginsBeforeBaselineFilter": 18840,
+  "provisionalOriginsBeforeBaselineFilter": 862,
+  "trainingCutoff": "2026-10-18T07:30:00+00:00",
+  "spec": {
+    "window": "LONG",
+    "family": "DEFAULT",
+    "parameters": {
+      "max_iter": 40,
+      "max_leaf_nodes": 15,
+      "l2_regularization": 1,
+      "random_state": 42
+    }
+  },
+  "featureOrder": [
+    "latest",
+    "lag1",
+    "lag2",
+    "lag3",
+    "lag6",
+    "lag12",
+    "lag48",
+    "yesterday_target",
+    "last_week_target",
+    "mean6",
+    "std6",
+    "mean48",
+    "std48",
+    "target_half_hour",
+    "target_weekday",
+    "target_weekend",
+    "target_public_holiday",
+    "expected_demand_mw",
+    "expected_demand_available"
+  ],
+  "holidayCalendarSha256": "ddc5a7e23dc3e32c8decd22652cfc478ebea18c697912cde7c90962fae60759d",
+  "dependencies": {
+    "python": "3.12.3",
+    "numpy": "2.2.5",
+    "scipy": "1.18.1",
+    "scikit-learn": "1.6.1",
+    "joblib": "1.6.0"
+  },
+  "researchOnly": true,
+  "productionEligible": false,
+  "modelSha256": "b06bcee658d155f20a31c5be8e467dca67d337627e8f5f14535acad2dfd121bd",
+  "selectionSha256": "eb0e24d8b6f0295cb0b9d26dc8ad5fe847e8744ce23519a8a584c82248bd18f2",
+  "prospectiveSha256": "c953a28d575ba52b087941657842743466edc491ffb531fd43e80b521aab0b32",
+  "referenceFileDigests": {
+    "/home/bryan/CS203_T4/CS203-G3-T4/.local/acceptance-2026-10-18/runtime/models/price-calendar-holiday-demand-v2-20261018/manifest.json": "bd91851dfeca72335d6bf9efae7f3fc6653f05c4082faf75e05502c093b0e406",
+    "/home/bryan/CS203_T4/CS203-G3-T4/.local/acceptance-2026-10-18/runtime/models/price-calendar-holiday-demand-v2-20261018/models.joblib": "08c299eab24128b10102b5c84b94f7df825947f14c81e13e68f961fb1ffacdf8"
+  },
+  "referencePath": "/home/bryan/CS203_T4/CS203-G3-T4/.local/acceptance-2026-10-18/runtime/models/price-calendar-holiday-demand-v2-20261018",
+  "protocolSha256": "a4a19148a9c9c81f8420369ad655854e78e113bba44470c63c1e192c42d03340"
+}

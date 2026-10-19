@@ -1,0 +1,8 @@
+{
+  "source": "ISOLATED_APP_ONLY",
+  "dashboard": true,
+  "recommendations": true,
+  "spendingBudgetSavedAndReloaded": true,
+  "fixedRatePreserved": true,
+  "browserErrors": []
+}

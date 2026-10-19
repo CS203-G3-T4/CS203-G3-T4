@@ -66,3 +66,10 @@ ml/dist/
 /reports/accuracy-study-2026-09-29.md
 /reports/accuracy-study-horizons-2026-09-29.csv
 /reports/presentation-results-2026-09-29.json
+
+# Generated forecasting evidence belongs in the verified archive, never source.
+/docs/forecasting/generated/
+/forecast-artifacts/
+*.joblib
+*.pkl
+*.dump

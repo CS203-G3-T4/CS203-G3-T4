@@ -1,0 +1,64 @@
+{
+  "status": "PASS",
+  "reports": {
+    "saved/withoutB3/summary.json": {
+      "commonPairs": 5415,
+      "methods": 4,
+      "canonicalTruthAndPastOnlyThresholds": true,
+      "independentConfusionAndFixedLeadEvents": true
+    },
+    "saved/aiOnly/summary.json": {
+      "commonPairs": 5967,
+      "methods": 2,
+      "canonicalTruthAndPastOnlyThresholds": true,
+      "independentConfusionAndFixedLeadEvents": true
+    },
+    "saved/old-ai-eight-week-test/summary.json": {
+      "commonPairs": 63936,
+      "methods": 4,
+      "canonicalTruthAndPastOnlyThresholds": true,
+      "independentConfusionAndFixedLeadEvents": true
+    },
+    "historical/pooled/spikes/summary.json": {
+      "commonPairs": 63360,
+      "methods": 5,
+      "canonicalTruthAndPastOnlyThresholds": true,
+      "independentConfusionAndFixedLeadEvents": true
+    }
+  },
+  "historicalArtifacts": [
+    {
+      "method": "LONG_HISTORY",
+      "cutoff": "2026-05-31T16:00:00+00:00",
+      "modelSha256": "2194473df0621c94f5cd68cf58bb6ede23614794d759eff67a4665949c15895f",
+      "trainingOrigins": 16056,
+      "reloadAndBatchParity": true
+    },
+    {
+      "method": "RECENT_28D",
+      "cutoff": "2026-05-31T16:00:00+00:00",
+      "modelSha256": "b58d6618a5d5e890366558e429ba838287c111c9a33d42fc14094baa721e63cb",
+      "trainingOrigins": 1320,
+      "reloadAndBatchParity": true
+    },
+    {
+      "method": "LONG_HISTORY",
+      "cutoff": "2026-06-30T16:00:00+00:00",
+      "modelSha256": "f9898bf2113eeca58350dd3e593ad1f2fe061a17ce8ccb237a182cf7e35e96dc",
+      "trainingOrigins": 17496,
+      "reloadAndBatchParity": true
+    },
+    {
+      "method": "RECENT_28D",
+      "cutoff": "2026-06-30T16:00:00+00:00",
+      "modelSha256": "e0fd178d26e2d1778eb4117c02ef27b4c48a627363b94fc743137b3347c1d41c",
+      "trainingOrigins": 1320,
+      "reloadAndBatchParity": true
+    }
+  ],
+  "sourceFinalPricesRetainNullVintages": true,
+  "historicalFitsExcludeProtectedOriginalTest": true,
+  "frozenFutureCandidateAndPlanUnchanged": true,
+  "julyOriginalValidationReproduced": true,
+  "trainingAudits": "Four research fits audited locally after completion; no claim of pre-fit audit or API synchronization"
+}
