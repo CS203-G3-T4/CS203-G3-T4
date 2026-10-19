@@ -66,7 +66,7 @@ public class ForecastAdminAuthentication extends OncePerRequestFilter {
             response.setHeader("Cache-Control","no-store");
             if (request.getRequestURI().endsWith(".html")) {
                 if (credentials!=null) response.setHeader("WWW-Authenticate","Basic realm=\"Wattly local forecast admin\", charset=\"UTF-8\"");
-                response.sendError(401);
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             } else response.sendError(403);
             return;
         }
