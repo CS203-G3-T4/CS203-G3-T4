@@ -35,7 +35,7 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U wattly_test"
+          --health-cmd "pg_isready -U wattly_test -d postgres"
           --health-interval 5s
           --health-timeout 3s
           --health-retries 10

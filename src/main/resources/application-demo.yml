@@ -1,0 +1,9 @@
+wattly:
+  demo:
+    accounts:
+      resident:
+        username: resident
+        password: resident-demo
+      admin:
+        username: admin
+        password: admin-demo

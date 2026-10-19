@@ -10,6 +10,7 @@ const staticDir = path.join(__dirname, '../../main/resources/static/js');
 
 function escapingDocument(nodes) {
   return {
+    querySelector() { return null; },
     createElement() {
       let text = '';
       return {
