@@ -174,6 +174,30 @@ class RecommendationServiceTest {
     }
 
     @Test
+    void acceptSavesTheAppliancesPowerAndRunLengthForRealisedSavings() {
+        // CSDT4-53: the run agreed to is kept even if the appliance is edited later.
+        when(repository.findById(5L)).thenReturn(Optional.of(active(5L, sg("2026-09-30T13:00"))));
+        when(households.flexibleAppliances(1L)).thenReturn(List.of(dryer()));
+        when(repository.closeActive(5L, RecommendationStatus.ACCEPTED, now, sg("2026-09-30T13:00"))).thenReturn(true);
+
+        service.accept(5L, null);
+
+        verify(repository).saveRun(5L, new BigDecimal("2.5"), 60);
+    }
+
+    @Test
+    void anApplianceNoLongerFlexibleIsStillAcceptedAndFallsBackToItsCurrentSettings() {
+        when(repository.findById(5L)).thenReturn(Optional.of(active(5L, sg("2026-09-30T13:00"))));
+        when(households.flexibleAppliances(1L)).thenReturn(List.of());
+        when(repository.closeActive(5L, RecommendationStatus.ACCEPTED, now, sg("2026-09-30T13:00"))).thenReturn(true);
+
+        service.accept(5L, null);
+
+        verify(repository).logEvent(5L, "ACCEPTED", now, sg("2026-09-30T13:00"), false);
+        verify(repository, never()).saveRun(anyLong(), any(), org.mockito.ArgumentMatchers.anyInt());
+    }
+
+    @Test
     void anotherResidentsSuggestionCannotBeAccepted() {
         when(repository.findById(5L)).thenReturn(Optional.of(active(5L, sg("2026-09-30T13:00"))));
         when(households.household(1L)).thenThrow(new HouseholdAccessDeniedException());

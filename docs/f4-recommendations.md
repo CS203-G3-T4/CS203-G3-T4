@@ -59,6 +59,7 @@ made-up numbers, and the label keeps it from being presented as an AI prediction
 | `POST /api/v1/recommendations/{recId}/accept` | Accepts. Optional body `{"startTime": "15:10"}` is the resident's own start (Singapore `HH:mm`) inside the same window. |
 | `POST /api/v1/recommendations/{recId}/dismiss` | Dismisses. The same run is not suggested again. |
 | `POST /api/v1/recommendations/{recId}/got-it` | "Got it" on a spike warning (CSDT4-38). That run is not warned about again. |
+| `GET /api/v1/households/{id}/savings?period=week\|month` | Realised savings from actual prices (CSDT4-53): the total for this week (Monday to Sunday) or this month, and the accepted suggestions behind it. Default `week`; 400 for anything else. |
 | `POST /api/v1/recommendations/{recId}/remind-later` | One-tap "Remind me later" on any open suggestion: hidden for an hour, or until an hour before it runs out if sooner. 409 when that is under an hour away. |
 
 Errors: 404 for an unknown household or suggestion, 409 if the suggestion was already decided or
@@ -177,8 +178,8 @@ number (V14: `confidence_cheaper_days`, `confidence_days_checked`, both NULL). F
 forecast the 28 days are the ones before its replay day (26 Sep), since it replays that day.
 
 **Estimated saving.** Every saving is shown as "Estimated saving" and the API sends
-`savingEstimated: true`: it comes from the forecast. Realised savings from actual prices are
-CSDT4-53, which will set it to false and show "Saved $x".
+`savingEstimated: true`: it comes from the forecast. Once an accepted suggestion's realised saving is
+known (CSDT4-53, below) the card shows that instead and the API sends `savingEstimated: false`.
 
 **Next sprint: confidence option B.** Once F3 has saved a few weeks of forecasts
 (`forecast_run` / `forecast_point`), also measure how often F3's forecast was right: for past
@@ -217,12 +218,48 @@ the source by the card's `forecastSource`: `F3_FORECAST` → `GET /api/v1/foreca
 prices as the explanation. A spike that would flatten the other bars is drawn full height and
 marked off the scale (the exact price is in its tooltip).
 
+## Realised savings from actual prices (CSDT4-53)
+
+**Accepted counts as followed.** Wattly can't see the meter, so an accepted suggestion is treated
+as followed: the resident ran the appliance at the time they chose (`accepted_start`, the
+suggestion or their own time) instead of the usual time. The page and the API say so. Only
+accepted shift suggestions count; a spike warning answered "Got it" doesn't say when it ran.
+
+**The sum.** For each accepted suggestion:
+
+    realised saving = cost of the run at the usual time - cost of the run at the chosen time
+
+both at actual prices and worked out like month-to-date spend (CSDT4-41): for each half-hour the
+run touches, kWh x (USEP / 1000 + every per-kWh charge in `tariff_component` that applies then),
+then + GST (9%). kWh in a half-hour = power x the hours the run spends in it, so a 13:15 start is
+split 15 / 30 / 15 minutes. Monthly charges are the same whenever you run, so they're left out.
+On a fixed-rate plan every time costs the same, so the saving is $0. Each cost is rounded to cents
+and the saving is the difference of the rounded costs, so the list always adds up to the total.
+The saving can be negative when the chosen time turned out dearer; the card then says "Cost $x
+more". Code: `RealisedSavingsCalculator` (plain Java, no clock) and `RealisedSavingsService`.
+
+**Pending, never guessed.** A suggestion only counts once both runs have finished and every
+half-hour they touch has an actual price (F1's USEP as known at the clock's time). Until then it
+is listed as `PENDING` with the reason and left out of the total.
+
+**Run size.** Accepting saves the appliance's power and run length (V22: `run_power_kw`,
+`run_minutes`), so editing the appliance later doesn't change past savings. Suggestions accepted
+before V22 fall back to the appliance's current settings.
+
+**Periods.** This week is Monday to Sunday and this month the calendar month, both in Singapore
+time from the injected `Clock`, so in demo mode they follow the demo clock. A suggestion belongs to
+the period of its chosen start.
+
+**Page.** The Accepted tab of the Recommendations page shows "Saved this week" and "Saved this
+month" (from `GET …/savings`) with the notes above, and each accepted card shows "Saved $x" once
+its saving is realised (`realisedSavingSgd` on the card; "Estimated saving" until then). Showing
+these on the Spending page is CSDT4-54.
+
 ## Not done here (later stories)
 
 - Confidence option B (next sprint, see above).
-- Realised savings from actual prices (CSDT4-53; the "estimated" label is ready for it), and
-  feeding accepted runs into F2's load profile.
-- Login: accept/dismiss are open to anyone until CSDT4-23.
+- Realised savings on the Spending page (CSDT4-54) and admin tiles (CSDT4-55).
+- Feeding accepted runs into F2's load profile.
 
 ## Try it
 

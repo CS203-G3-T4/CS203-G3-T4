@@ -1,6 +1,7 @@
 // Recommendations page (CSDT4-40): tabs for Active, Accepted, Dismissed and History, "Remind me
 // later" until a chosen time, and a mini forecast chart on each open suggestion. The chart uses the
 // forecast the suggestion was built from: F3's (/api/v1/forecast/latest) or the demo forecast.
+// CSDT4-53: the Accepted tab shows what accepted suggestions really saved this week and this month.
 // Needs wattly.js and recommendations.js first. Every figure comes from the API.
 
 const WattlyRecommendationsPage = {};
@@ -27,6 +28,50 @@ const WattlyRecommendationsPage = {};
     }
     return count + ' ' + (tab === 'HISTORY' && count === 1 ? 'suggestion' : label) +
       ' in the last 30 days, newest first.';
+  };
+
+  Page.savingsUrl = function (householdId, period) {
+    return '/api/v1/households/' + encodeURIComponent(householdId) + '/savings?period=' + period;
+  };
+
+  // A realised total: "$0.41", or "-$0.12" if the chosen times turned out dearer overall.
+  Page.savedText = function (value) {
+    const amount = Number(value);
+    return (amount < 0 ? '-' : '') + WattlyRecommendations.money(Math.abs(amount));
+  };
+
+  // The notes under the totals, from the API (both periods, without repeats), plus how many wait.
+  Page.realisedNote = function (week, month) {
+    const notes = [];
+    [week, month].forEach(function (data) {
+      (data.notes || []).forEach(function (note) { if (notes.indexOf(note) < 0) notes.push(note); });
+    });
+    if (month.pendingCount > 0) {
+      notes.push(month.pendingCount === 1 ? '1 accepted run this month is not counted yet.'
+        : month.pendingCount + ' accepted runs this month are not counted yet.');
+    }
+    return notes.join(' ');
+  };
+
+  // Totals for this week (Monday to Sunday) and this month, at actual prices.
+  Page.loadSavings = async function () {
+    const householdId = Wattly.householdId();
+    const results = await Promise.all([Wattly.api('GET', Page.savingsUrl(householdId, 'week')),
+      Wattly.api('GET', Page.savingsUrl(householdId, 'month'))]);
+    if (current !== 'ACCEPTED') return;
+    const week = results[0];
+    const month = results[1];
+    el('realised-block').hidden = false;
+    if (!week.ok || !month.ok) {
+      el('saved-week').textContent = '—';
+      el('saved-month').textContent = '—';
+      const failed = !week.ok ? week : month;
+      el('realised-note').textContent = (failed.data && failed.data.detail) || 'Could not load your realised savings.';
+      return;
+    }
+    el('saved-week').textContent = Page.savedText(week.data.totalSavedSgd);
+    el('saved-month').textContent = Page.savedText(month.data.totalSavedSgd);
+    el('realised-note').textContent = Page.realisedNote(week.data, month.data);
   };
 
   // Chart points by forecast source, fetched only for the sources the suggestions used.
@@ -66,6 +111,8 @@ const WattlyRecommendationsPage = {};
     const list = el('recommendation-list');
     const note = el('recommendation-note');
     const snoozedBlock = el('snoozed-block');
+    el('realised-block').hidden = true;
+    if (tab === 'ACCEPTED') Page.loadSavings();
     const result = await Wattly.api('GET', Page.tabUrl(Wattly.householdId(), tab));
     if (current !== tab) return; // another tab was picked while this one loaded
     if (!result.ok) {
