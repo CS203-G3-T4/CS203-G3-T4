@@ -14,7 +14,11 @@ import java.time.Instant;
  * CSDT4-39: reason explains the suggestion with the forecast prices (¢/kWh), times and window
  * limit. confidence* say on how many of the last 28 days (with actual prices) the suggested time
  * was really cheaper; all null when there wasn't enough history. savingEstimated is true while the
- * saving comes from the forecast; realised savings from actual prices come with CSDT4-53.
+ * saving comes from the forecast.
+ *
+ * CSDT4-53: realisedSavingSgd is what an accepted suggestion really saved at actual prices (cost
+ * at the usual time minus cost at the chosen time, with per-kWh charges and GST); null until both
+ * runs have finished and their prices are in. While it is set, savingEstimated is false.
  *
  * CSDT4-40: runMinutes (from the appliance, when known) lets the page mark both runs on the mini
  * forecast chart; remindAt is when a snoozed suggestion comes back; deadline is when it runs out.
@@ -45,13 +49,18 @@ public record RecommendationResponse(
         Integer confidencePercent,
         boolean savingEstimated,
         Integer runMinutes,
-        Instant deadline) {
+        Instant deadline,
+        BigDecimal realisedSavingSgd) {
 
     public static RecommendationResponse from(Recommendation r) {
         return from(r, null);
     }
 
     public static RecommendationResponse from(Recommendation r, Integer runMinutes) {
+        return from(r, runMinutes, null);
+    }
+
+    public static RecommendationResponse from(Recommendation r, Integer runMinutes, BigDecimal realisedSavingSgd) {
         Integer percent = r.confidenceDaysChecked() == null ? null
                 : new BacktestConfidence.Confidence(r.confidenceCheaperDays(), r.confidenceDaysChecked()).percent();
         return new RecommendationResponse(
@@ -78,8 +87,9 @@ public record RecommendationResponse(
                 r.confidenceCheaperDays(),
                 r.confidenceDaysChecked(),
                 percent,
-                true,
+                realisedSavingSgd == null,
                 runMinutes,
-                r.deadline());
+                r.deadline(),
+                realisedSavingSgd);
     }
 }

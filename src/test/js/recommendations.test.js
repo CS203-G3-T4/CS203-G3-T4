@@ -225,6 +225,16 @@ test('the saving is labelled estimated until actual prices are known', () => {
   assert.equal(Recs.savingText({ estSavingSgd: 2.2232, savingEstimated: false }), 'Saved $2.22');
 });
 
+test('an accepted card shows what it really saved once actual prices are in (CSDT4-53)', () => {
+  const { Recs } = load();
+
+  assert.equal(Recs.savingText({ estSavingSgd: 0.30, realisedSavingSgd: 0.41, savingEstimated: false }), 'Saved $0.41');
+  assert.equal(Recs.savingText({ estSavingSgd: 0.30, realisedSavingSgd: -0.12, savingEstimated: false }),
+    'Cost $0.12 more');
+  assert.equal(Recs.savingText({ estSavingSgd: 0.30, realisedSavingSgd: 0, savingEstimated: false }), 'Saved $0.00');
+  assert.equal(Recs.savingText({ estSavingSgd: 0.30, realisedSavingSgd: null }), 'Estimated saving $0.30');
+});
+
 // CSDT4-40: Remind me later until a chosen time, read-only cards for the tabs, and the mini chart.
 test('Remind me later offers a time picker until 15 minutes before the suggestion runs out', () => {
   const { Recs } = load();

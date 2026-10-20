@@ -1,5 +1,6 @@
 package sg.edu.smu.cs203.recommendation;
 
+import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -192,6 +193,54 @@ public class RecommendationRepository {
                 acceptedStart == null ? null : Timestamp.from(acceptedStart),
                 id);
         return changed == 1;
+    }
+
+    /** Saves the run the resident agreed to when accepting (CSDT4-53): the appliance's power and length then. */
+    public void saveRun(long id, BigDecimal powerKw, int runMinutes) {
+        jdbc.update("UPDATE recommendation SET run_power_kw = ?, run_minutes = ? WHERE id = ?",
+                powerKw, runMinutes, id);
+    }
+
+    private static final String ACCEPTED_RUNS = """
+            SELECT r.id, r.appliance_id, a.name AS appliance_name, r.usual_start, r.accepted_start,
+                   COALESCE(r.run_power_kw, a.power_kw) AS power_kw,
+                   COALESCE(r.run_minutes, a.run_minutes) AS run_minutes, r.est_saving
+            FROM recommendation r
+            JOIN appliance a ON a.id = r.appliance_id
+            WHERE r.household_id = ? AND r.status = 'ACCEPTED' AND r.kind = 'SHIFT_START'
+            """;
+
+    private static final RowMapper<AcceptedRun> ACCEPTED_RUN_MAPPER = (rs, rowNum) -> new AcceptedRun(
+            rs.getLong("id"),
+            rs.getLong("appliance_id"),
+            rs.getString("appliance_name"),
+            instant(rs, "usual_start"),
+            instant(rs, "accepted_start"),
+            rs.getBigDecimal("power_kw"),
+            rs.getInt("run_minutes"),
+            rs.getBigDecimal("est_saving"));
+
+    /**
+     * Accepted shift suggestions whose chosen start is in [from, to), earliest first (CSDT4-53).
+     * Spike warnings are left out: "Got it" doesn't say when the appliance was run.
+     */
+    public List<AcceptedRun> findAcceptedRuns(long householdId, Instant from, Instant to) {
+        return jdbc.query(ACCEPTED_RUNS + " AND r.accepted_start >= ? AND r.accepted_start < ?"
+                        + " ORDER BY r.accepted_start, r.id",
+                ACCEPTED_RUN_MAPPER, householdId, Timestamp.from(from), Timestamp.from(to));
+    }
+
+    /** The accepted shift suggestions among these ids (CSDT4-53). */
+    public List<AcceptedRun> findAcceptedRuns(long householdId, List<Long> ids) {
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+        String placeholders = String.join(", ", ids.stream().map(id -> "?").toList());
+        List<Object> args = new ArrayList<>();
+        args.add(householdId);
+        args.addAll(ids);
+        return jdbc.query(ACCEPTED_RUNS + " AND r.id IN (" + placeholders + ") ORDER BY r.accepted_start, r.id",
+                ACCEPTED_RUN_MAPPER, args.toArray());
     }
 
     /**
