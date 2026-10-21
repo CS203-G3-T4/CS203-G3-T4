@@ -24,8 +24,14 @@ const WattlyRecommendations = {};
     return '$' + Number(value).toFixed(2);
   };
 
-  // "Estimated saving $2.22" until actual prices are known (CSDT4-53 will show the real saving).
+  // "Estimated saving $2.22" until actual prices are known. Then an accepted suggestion shows what
+  // it really saved (CSDT4-53): "Saved $0.41", or "Cost $0.12 more" if the chosen time turned out dearer.
   WattlyRecommendations.savingText = function (rec) {
+    if (rec.realisedSavingSgd !== null && rec.realisedSavingSgd !== undefined) {
+      const saved = Number(rec.realisedSavingSgd);
+      return saved < 0 ? 'Cost ' + WattlyRecommendations.money(-saved) + ' more'
+        : 'Saved ' + WattlyRecommendations.money(saved);
+    }
     return (rec.savingEstimated === false ? 'Saved ' : 'Estimated saving ') +
       WattlyRecommendations.money(rec.estSavingSgd);
   };

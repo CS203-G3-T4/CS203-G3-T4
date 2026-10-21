@@ -55,6 +55,11 @@
     .rec-chart-empty { grid-column: 1 / -1; margin: 0; color: var(--muted); font-size: 12.5px; }
     .rec-confidence { margin-top: 4px; color: var(--ink-2); font-size: 12.5px; }
     .rec-flag { color: var(--warning); font-size: 11.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+    .rec-realised { margin-top: 16px; padding: 16px 18px; border-radius: 11px; background: var(--teal-tint); }
+    .rec-realised-figures { display: flex; flex-wrap: wrap; gap: 28px; }
+    .rec-realised-figure span { color: var(--ink-2); font-size: 12px; }
+    .rec-realised-figure strong { display: block; margin-top: 3px; color: var(--teal); font: 700 24px/1.2 "Space Grotesk", sans-serif; }
+    .rec-realised .rec-help { margin: 10px 0 0; }
     @media (max-width: 620px) { .rec-item { grid-template-columns: 1fr; } .rec-overview { gap: 8px; } }
   </style>
 </head>
@@ -113,6 +118,13 @@
         <button type="button" role="tab" id="tab-history" data-tab="HISTORY" aria-controls="rec-tabpanel" aria-selected="false" tabindex="-1">History</button>
       </div>
       <div id="rec-tabpanel" role="tabpanel" aria-labelledby="tab-active">
+        <div class="rec-realised" id="realised-block" hidden>
+          <div class="rec-realised-figures">
+            <div class="rec-realised-figure"><span>Saved this week</span><strong id="saved-week">—</strong></div>
+            <div class="rec-realised-figure"><span>Saved this month</span><strong id="saved-month">—</strong></div>
+          </div>
+          <p class="rec-help" id="realised-note" aria-live="polite"></p>
+        </div>
         <p class="rec-note" id="recommendation-note" aria-live="polite">Loading your suggestions…</p>
         <ul class="rec-list" id="recommendation-list"></ul>
         <div class="rec-snoozed" id="snoozed-block" hidden>
@@ -121,7 +133,7 @@
           <ul class="rec-list" id="recommendation-snoozed"></ul>
         </div>
       </div>
-      <p class="rec-help">Accepting a suggestion records your choice. You still start the appliance yourself. Estimated savings are for one run and may differ from your bill.</p>
+      <p class="rec-help">Accepting a suggestion records your choice. You still start the appliance yourself. Estimated savings are for one run and may differ from your bill. Once an accepted run has happened, its card shows what it saved at actual prices.</p>
     </section>
   </main>
 </div>

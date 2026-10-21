@@ -55,6 +55,9 @@ import sg.edu.smu.cs203.household.appliance.ApplianceResponse;
  * (RecommendationExplanation), carries a confidence from actual past prices (BacktestConfidence,
  * option A), and its saving is labelled estimated.
  *
+ * CSDT4-53: accepting saves the appliance's power and run length, so the realised saving from
+ * actual prices (RealisedSavingsService) can replace the estimate on accepted cards.
+ *
  * CSDT4-40: the Recommendations page lists suggestions by tab (RecommendationTab), any open
  * suggestion can be snoozed until a time the resident picks, and the page can chart the demo
  * forecast the same way it charts F3's.
@@ -82,6 +85,7 @@ public class RecommendationService {
     private final int maxActive;
     private final boolean staleFeedBlocksDemo;
     private PastPrices pastPrices = PastPrices.NONE;
+    private RealisedSavingsService realisedSavings;
 
     public RecommendationService(RecommendationRepository recommendations,
                                  HouseholdDirectory households,
@@ -108,6 +112,12 @@ public class RecommendationService {
     @Autowired(required = false)
     public void setPastPrices(PastPrices pastPrices) {
         this.pastPrices = pastPrices;
+    }
+
+    /** Realised savings for accepted cards (CSDT4-53); without it, cards show the estimate only. */
+    @Autowired(required = false)
+    public void setRealisedSavings(RealisedSavingsService realisedSavings) {
+        this.realisedSavings = realisedSavings;
     }
 
     /**
@@ -325,13 +335,16 @@ public class RecommendationService {
         Instant now = clock.instant();
         Instant start = recommendation.suggestedStart();
         boolean overridden = false;
+        ApplianceResponse appliance = households.flexibleAppliances(recommendation.householdId()).stream()
+                .filter(a -> a.id() == recommendation.applianceId())
+                .findFirst()
+                .orElse(null);
 
         if (request != null && request.startTime() != null) {
-            ApplianceResponse appliance = households.flexibleAppliances(recommendation.householdId()).stream()
-                    .filter(a -> a.id() == recommendation.applianceId())
-                    .findFirst()
-                    .orElseThrow(() -> new RecommendationNotActiveException(
-                            "This appliance is no longer flexible, so its start can't be moved"));
+            if (appliance == null) {
+                throw new RecommendationNotActiveException(
+                        "This appliance is no longer flexible, so its start can't be moved");
+            }
             CheapestStartCalculator.ShiftableRun run = runOf(appliance);
             Instant wanted = CheapestStartCalculator.startInSameWindow(
                     run, recommendation.suggestedStart(), LocalTime.parse(request.startTime()));
@@ -348,6 +361,10 @@ public class RecommendationService {
         }
 
         close(recommendation, RecommendationStatus.ACCEPTED, now, start);
+        if (appliance != null) {
+            // The run agreed to, for realised savings later (CSDT4-53) even if the appliance is edited.
+            recommendations.saveRun(recommendationId, appliance.powerKw(), appliance.runMinutes());
+        }
         recommendations.logEvent(recommendationId, RecommendationStatus.ACCEPTED.name(), now, start, overridden);
         return RecommendationResponse.from(recommendations.findById(recommendationId).orElseThrow());
     }
@@ -492,11 +509,24 @@ public class RecommendationService {
                 runMinutes.put(appliance.id(), appliance.runMinutes());
             }
         }
+        Map<Long, BigDecimal> realised = realisedSavings(householdId, rows);
         List<RecommendationResponse> shown = rows.stream()
-                .map(r -> RecommendationResponse.from(r, runMinutes.get(r.applianceId())))
+                .map(r -> RecommendationResponse.from(r, runMinutes.get(r.applianceId()), realised.get(r.id())))
                 .toList();
         return new RecommendationsResponse(householdId, status.forecastSource(), status.forecastModel(),
                 PriceForecast.DEMO.equals(status.forecastSource()), status.message(), shown, status.refreshedAt());
+    }
+
+    /** Realised savings for the accepted ones among these rows (CSDT4-53), by recommendation id. */
+    private Map<Long, BigDecimal> realisedSavings(long householdId, List<Recommendation> rows) {
+        List<Long> accepted = rows.stream()
+                .filter(r -> r.status() == RecommendationStatus.ACCEPTED && !r.isWarning())
+                .map(Recommendation::id)
+                .toList();
+        if (realisedSavings == null || accepted.isEmpty()) {
+            return Map.of();
+        }
+        return realisedSavings.realisedSavings(householdId, accepted);
     }
 
     static CheapestStartCalculator.ShiftableRun runOf(ApplianceResponse appliance) {

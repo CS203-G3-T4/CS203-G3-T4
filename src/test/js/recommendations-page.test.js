@@ -93,7 +93,7 @@ test('loading the Active tab shows open cards with charts and the snoozed ones r
     setAttribute(name, value) { this.attrs[name] = value; }, tabIndex: 0 });
   const nodes = {};
   ['recommendation-list', 'recommendation-note', 'recommendation-source', 'recommendation-count',
-    'recommendation-savings', 'snoozed-block', 'recommendation-snoozed', 'rec-tabpanel',
+    'recommendation-savings', 'snoozed-block', 'recommendation-snoozed', 'rec-tabpanel', 'realised-block',
     'tab-active', 'tab-accepted', 'tab-dismissed', 'tab-history'].forEach((id) => { nodes[id] = element(); });
   const { Wattly, Page } = load(nodes);
   const points = [];
@@ -119,7 +119,8 @@ test('a decided tab shows read-only cards without charts or buttons', async () =
   const element = () => ({ textContent: '', innerHTML: '', hidden: false, setAttribute() {}, tabIndex: 0 });
   const nodes = {};
   ['recommendation-list', 'recommendation-note', 'recommendation-source', 'snoozed-block', 'rec-tabpanel',
-    'tab-active', 'tab-accepted', 'tab-dismissed', 'tab-history'].forEach((id) => { nodes[id] = element(); });
+    'realised-block', 'tab-active', 'tab-accepted', 'tab-dismissed', 'tab-history']
+    .forEach((id) => { nodes[id] = element(); });
   const { Wattly, Page } = load(nodes);
   const urls = [];
   Wattly.api = async (method, url) => {
@@ -134,4 +135,67 @@ test('a decided tab shows read-only cards without charts or buttons', async () =
   assert.doesNotMatch(nodes['recommendation-list'].innerHTML, /data-action=|rec-chart/);
   assert.equal(nodes['recommendation-note'].textContent, '1 dismissed in the last 30 days, newest first.');
   assert.equal(nodes['snoozed-block'].hidden, true);
+  assert.equal(nodes['realised-block'].hidden, true);
+});
+
+// CSDT4-53: realised savings on the Accepted tab.
+test('the Accepted tab shows this week and this month at actual prices, and says accepted counts as followed',
+  async () => {
+    const element = () => ({ textContent: '', innerHTML: '', hidden: true, setAttribute() {}, tabIndex: 0 });
+    const nodes = {};
+    ['recommendation-list', 'recommendation-note', 'recommendation-source', 'snoozed-block', 'rec-tabpanel',
+      'realised-block', 'saved-week', 'saved-month', 'realised-note',
+      'tab-active', 'tab-accepted', 'tab-dismissed', 'tab-history'].forEach((id) => { nodes[id] = element(); });
+    const { Wattly, Page } = load(nodes);
+    const followed = 'We count an accepted suggestion as followed: we assume you ran the appliance at the time you chose '
+      + 'instead of your usual time.';
+    const urls = [];
+    Wattly.api = async (method, url) => {
+      urls.push(url);
+      if (url.endsWith('period=week')) {
+        return { ok: true, data: { totalSavedSgd: 0.41, pendingCount: 1, notes: [followed, 'At actual prices.'] } };
+      }
+      if (url.endsWith('period=month')) {
+        return { ok: true, data: { totalSavedSgd: 1.5, pendingCount: 2, notes: [followed, 'At actual prices.'] } };
+      }
+      return { ok: true, data: { recommendations: [rec(5, { status: 'ACCEPTED', acceptedStart: soon(-600),
+        suggestedStart: soon(-600), decidedAt: soon(-900), realisedSavingSgd: 0.41, savingEstimated: false })] } };
+    };
+
+    await Page.loadTab('ACCEPTED');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    assert.ok(urls.includes('/api/v1/households/4/savings?period=week'));
+    assert.ok(urls.includes('/api/v1/households/4/savings?period=month'));
+    assert.equal(nodes['realised-block'].hidden, false);
+    assert.equal(nodes['saved-week'].textContent, '$0.41');
+    assert.equal(nodes['saved-month'].textContent, '$1.50');
+    assert.equal(nodes['realised-note'].textContent,
+      followed + ' At actual prices. 2 accepted runs this month are not counted yet.');
+    assert.match(nodes['recommendation-list'].innerHTML, /class="rec-saving">Saved \$0\.41</);
+  });
+
+test('realised totals can be negative, and a failed load says so instead of showing $0', async () => {
+  const { Page } = load();
+  assert.equal(Page.savedText(-0.12), '-$0.12');
+  assert.equal(Page.savedText('0'), '$0.00');
+  assert.equal(Page.savingsUrl(4, 'month'), '/api/v1/households/4/savings?period=month');
+  assert.equal(Page.realisedNote({ notes: ['a'] }, { notes: ['a', 'b'], pendingCount: 1 }),
+    'a b 1 accepted run this month is not counted yet.');
+
+  const element = () => ({ textContent: '', innerHTML: '', hidden: true, setAttribute() {}, tabIndex: 0 });
+  const nodes = {};
+  ['recommendation-list', 'recommendation-note', 'recommendation-source', 'snoozed-block', 'rec-tabpanel',
+    'realised-block', 'saved-week', 'saved-month', 'realised-note',
+    'tab-active', 'tab-accepted', 'tab-dismissed', 'tab-history'].forEach((id) => { nodes[id] = element(); });
+  const page = load(nodes);
+  page.Wattly.api = async (method, url) => url.includes('/savings')
+    ? { ok: false, data: { detail: 'You do not have access to this household.' } }
+    : { ok: true, data: { recommendations: [] } };
+
+  await page.Page.loadTab('ACCEPTED');
+  await new Promise((resolve) => setTimeout(resolve, 0));
+
+  assert.equal(nodes['saved-week'].textContent, '—');
+  assert.equal(nodes['realised-note'].textContent, 'You do not have access to this household.');
 });
