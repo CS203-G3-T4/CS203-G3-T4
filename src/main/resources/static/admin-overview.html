@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin overview · Wattly</title>
+  <link rel="stylesheet" href="/css/wattly.css">
+  <style>
+    body { max-width: 1180px; margin: 0 auto; padding: 32px 20px; }
+    .tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin: 20px 0; }
+    .tile { padding: 18px; }
+    .tile-label { color: var(--muted); font-size: 12px; }
+    .tile-value { display: block; margin-top: 8px; font: 700 25px/1.15 "Space Grotesk", sans-serif; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { padding: 11px 10px; border-bottom: 1px solid var(--gridline); text-align: left; }
+    th { color: var(--muted); font-size: 12px; }
+    .simulated { color: var(--muted); font-size: 12px; }
+    .status { font-weight: 600; }
+    .status.ON_TRACK { color: var(--teal); }
+    .status.OVER_PACE { color: var(--critical); }
+    .status.NOT_EXPOSED { color: var(--muted); }
+    .num { text-align: right; white-space: nowrap; }
+    @media (max-width: 800px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  </style>
+</head>
+<body>
+  <p><a href="/dashboard.html">Resident dashboard</a> · <a href="/admin-feed.html">Feed health</a> · <a href="/admin-forecast.html">Forecast accuracy</a></p>
+  <h1>Platform overview</h1>
+  <p id="status" role="status" aria-live="polite">Loading platform figures…</p>
+  <div id="error" class="banner error" hidden></div>
+  <section class="tiles" aria-label="Platform totals">
+    <div class="card tile"><span class="tile-label">Households monitored</span><strong class="tile-value" id="households-monitored">—</strong></div>
+    <div class="card tile"><span class="tile-label">Price-linked households</span><strong class="tile-value" id="price-linked">—</strong></div>
+    <div class="card tile"><span class="tile-label">Savings this month</span><strong class="tile-value" id="savings-total">—</strong></div>
+    <div class="card tile"><span class="tile-label">Forecast MAE</span><strong class="tile-value" id="forecast-mae">—</strong></div>
+  </section>
+  <section class="card" style="padding: 20px">
+    <h2>Household summary</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Household</th><th>Plan</th><th class="num">Savings this month</th><th>Status</th></tr></thead>
+        <tbody id="household-rows"></tbody>
+      </table>
+    </div>
+  </section>
+  <script src="/js/admin-overview.js"></script>
+</body>
+</html>
