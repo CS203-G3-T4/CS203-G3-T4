@@ -28,6 +28,7 @@
     .budget-form { display: grid; gap: 14px; margin-top: 18px; }
     .budget-form .btn-primary { justify-self: start; }
     .chart { display: flex; align-items: flex-end; gap: 3px; height: 180px; margin-top: 22px; border-bottom: 1px solid var(--gridline); }
+    .week-group { flex: 1; min-width: 44px; height: 100%; display: flex; align-items: flex-end; gap: 3px; }
     .chart-bar { flex: 1; min-width: 0; border-radius: 3px 3px 0 0; background: var(--accent); }
     .chart-bar.future { background: var(--base-load); }
     .chart-axis { display: flex; justify-content: space-between; color: var(--muted); font-size: 11px; margin-top: 5px; }
@@ -35,6 +36,13 @@
     .chart-key span { display: inline-block; width: 9px; height: 9px; margin-right: 5px; border-radius: 2px; background: var(--accent); }
     .chart-key .future-key { background: var(--base-load); margin-left: 14px; }
     .assumption { margin: 0; }
+    .savings-panel { margin-top: 16px; padding: 20px 22px; }
+    .savings-total { color: var(--teal); font: 700 25px/1.2 "Space Grotesk", sans-serif; }
+    .savings-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .savings-table th, .savings-table td { padding: 9px 10px 9px 0; border-top: 1px solid var(--gridline); text-align: left; }
+    .savings-table thead th { border-top: 0; color: var(--muted); font-size: 12px; font-weight: 600; }
+    .savings-table .num { text-align: right; white-space: nowrap; }
+    .savings-table .pending { color: var(--muted); }
     @media (max-width: 1000px) { .spending-grid { grid-template-columns: 1fr; } }
     .spend-breakdown { margin-top: 16px; padding: 20px 22px; }
     .spend-breakdown h2 { font-size: 17px; }
@@ -103,11 +111,11 @@
     </div>
     <div class="spending-grid">
       <section class="card panel" aria-labelledby="pattern-title">
-        <h2 id="pattern-title">Daily spend</h2>
+        <h2 id="pattern-title">Weekly spending</h2>
         <p id="chart-description">Loading this month’s spending…</p>
         <div class="chart" id="spending-chart" role="img" aria-label="Daily estimated spending"></div>
-        <div class="chart-axis"><span>1</span><span id="chart-end">End of month</span></div>
-        <div class="chart-key"><span></span>Spent <span class="future-key"></span>Projected (7-day average)</div>
+        <div class="chart-axis"><span id="chart-start">Week of</span><span id="chart-end">End of month</span></div>
+        <div class="chart-key"><span></span>Spent <span class="future-key"></span>Budget pace</div>
         <div class="budget-progress" id="budget-progress" hidden><span id="budget-progress-fill"></span></div>
         <p class="budget-verdict" id="budget-verdict" aria-live="polite"></p>
       </section>
@@ -127,6 +135,17 @@
       </section>
     </div>
     <div class="banner info assumption" id="assumption-note">Use is modelled from your home, not read from a meter. “Spent so far” uses each half-hour’s price, the bill charges and GST; the projection adds your average daily spend over the last 7 days for the rest of the month.</div>
+    <section class="card savings-panel" aria-labelledby="savings-title">
+      <h2 id="savings-title">Recent savings</h2>
+      <p id="savings-description">Savings from accepted Wattly recommendations this week, calculated from actual prices.</p>
+      <strong class="savings-total" id="savings-total">—</strong>
+      <div class="spend-table-scroll">
+        <table class="savings-table">
+          <thead><tr><th scope="col">Appliance</th><th scope="col">Run</th><th scope="col" class="num">Saved</th></tr></thead>
+          <tbody id="savings-rows"></tbody>
+        </table>
+      </div>
+    </section>
     <section class="card spend-breakdown" id="spend-breakdown" aria-labelledby="spend-breakdown-title" hidden>
       <h2 id="spend-breakdown-title">How “spent so far” is worked out</h2>
       <p id="spend-breakdown-intro"></p>

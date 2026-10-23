@@ -8,6 +8,8 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.ZonedDateTime;
+import java.time.DayOfWeek;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -19,6 +21,7 @@ import org.springframework.stereotype.Service;
 import sg.edu.smu.cs203.household.HouseholdResponse;
 import sg.edu.smu.cs203.household.HouseholdService;
 import sg.edu.smu.cs203.household.PlanType;
+import sg.edu.smu.cs203.household.budget.BudgetRepository;
 import sg.edu.smu.cs203.household.load.LoadProfileResponse;
 import sg.edu.smu.cs203.household.load.LoadProfileService;
 import sg.edu.smu.cs203.market.price.MarketHistoryRepository;
@@ -41,15 +44,22 @@ public class SpendService {
     private final LoadProfileService loads;
     private final MarketHistoryRepository prices;
     private final TariffRepository tariffs;
+    private final BudgetRepository budgets;
     private final Clock clock;
 
     public SpendService(HouseholdService households, LoadProfileService loads, MarketHistoryRepository prices,
-                        TariffRepository tariffs, Clock clock) {
+                        TariffRepository tariffs, BudgetRepository budgets, Clock clock) {
         this.households = households;
         this.loads = loads;
         this.prices = prices;
         this.tariffs = tariffs;
+        this.budgets = budgets;
         this.clock = clock;
+    }
+
+    public SpendService(HouseholdService households, LoadProfileService loads, MarketHistoryRepository prices,
+                        TariffRepository tariffs, Clock clock) {
+        this(households, loads, prices, tariffs, null, clock);
     }
 
     public MonthToDateSpendResponse monthToDate(long householdId) {
@@ -128,6 +138,47 @@ public class SpendService {
                     : SpendCalculator.fixedRate(halfHours, rate));
         }
         return days;
+    }
+
+    public WeeklySpendResponse weekly(long householdId, YearMonth requestedMonth) {
+        households.get(householdId);
+        ZonedDateTime local = clock.instant().atZone(SpendCalculator.SINGAPORE);
+        YearMonth month = requestedMonth == null ? YearMonth.from(local) : requestedMonth;
+        LocalDate first = month.atDay(1);
+        LocalDate last = month.atEndOfMonth();
+        Map<LocalDate, SpendCalculator.Result> daily = dailySpend(householdId, first);
+        BigDecimal budget = budgets == null ? null : budgets.find(householdId)
+                .map(BudgetRepository.Settings::monthlyBudgetSgd).orElse(null);
+        int daysInMonth = month.lengthOfMonth();
+        LocalDate today = local.toLocalDate();
+        List<WeeklySpendResponse.Week> weeks = new ArrayList<>();
+        for (LocalDate weekStart = first.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+             !weekStart.isAfter(last); weekStart = weekStart.plusWeeks(1)) {
+            LocalDate from = weekStart.isBefore(first) ? first : weekStart;
+            LocalDate weekEnd = weekStart.plusDays(6);
+            LocalDate to = weekEnd.isAfter(last) ? last : weekEnd;
+            BigDecimal spent = BigDecimal.ZERO;
+            int daysWithSpend = 0;
+            for (LocalDate day = from; !day.isAfter(to); day = day.plusDays(1)) {
+                if (!day.isAfter(today)) {
+                    SpendCalculator.Result result = daily.get(day);
+                    if (result != null) {
+                        spent = spent.add(result.totalSgd());
+                        if (result.halfHoursSoFar() > 0) {
+                            daysWithSpend++;
+                        }
+                    }
+                }
+            }
+            int daysInWeek = from.until(to).getDays() + 1;
+            BigDecimal pace = budget == null ? null
+                    : budget.multiply(BigDecimal.valueOf(daysInWeek))
+                            .divide(BigDecimal.valueOf(daysInMonth), 2, RoundingMode.HALF_UP);
+            weeks.add(new WeeklySpendResponse.Week(from, to, SpendCalculator.sgd(spent), pace,
+                    !today.isBefore(from) && !today.isAfter(to), daysWithSpend));
+        }
+        return new WeeklySpendResponse(householdId, month, clock.instant(),
+                budget == null ? null : SpendCalculator.sgd(budget), weeks);
     }
 
     static int halfHoursIn(YearMonth month) {

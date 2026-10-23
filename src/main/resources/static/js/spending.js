@@ -1,5 +1,5 @@
 // Spending & Budget page. "Spent so far" and its breakdown come from spend.js (CSDT4-41). The
-// projection, budget comparison, over-budget banner and daily chart come from the shared
+// projection, budget comparison, over-budget banner and weekly chart come from the shared
 // projection in budget-status.js (CSDT4-42), the same figures the Dashboard shows.
 (function () {
   const money = WattlyBudget.money;
@@ -7,7 +7,7 @@
   let current;
   let readOnly = false;
 
-  function render(status) {
+  function render(status, weekly) {
     current = status;
     byId('save-budget').disabled = readOnly;
     const title = new Intl.DateTimeFormat('en-SG', { month: 'long', year: 'numeric', timeZone: 'Asia/Singapore' })
@@ -23,23 +23,33 @@
 
     const chart = byId('spending-chart');
     chart.replaceChildren();
-    const days = status.days || [];
-    const max = Math.max(0.01, ...days.map(day => Number(day.spendSgd) || 0));
-    days.forEach(day => {
-      const value = Number(day.spendSgd) || 0;
-      const bar = document.createElement('span');
-      bar.className = 'chart-bar' + (day.kind === 'PROJECTED' ? ' future' : '');
-      bar.style.height = Math.max(2, value / max * 100) + '%';
-      bar.title = day.date + ': ' + money(day.spendSgd) +
-        (day.kind === 'PROJECTED' ? ' (projected)' : day.kind === 'TODAY' ? ' (today, partly projected)' : '');
-      chart.appendChild(bar);
+    const weeks = weekly && weekly.weeks ? weekly.weeks : [];
+    const max = Math.max(0.01, ...weeks.flatMap(week => [
+      Number(week.spentSgd) || 0, Number(week.budgetPaceSgd) || 0
+    ]));
+    weeks.forEach(week => {
+      const group = document.createElement('span');
+      group.className = 'week-group';
+      const spent = document.createElement('span');
+      spent.className = 'chart-bar';
+      spent.style.height = Math.max(2, (Number(week.spentSgd) || 0) / max * 100) + '%';
+      spent.title = week.from + '–' + week.to + ': ' + money(week.spentSgd) + ' spent';
+      group.appendChild(spent);
+      if (week.budgetPaceSgd != null) {
+        const pace = document.createElement('span');
+        pace.className = 'chart-bar future';
+        pace.style.height = Math.max(2, Number(week.budgetPaceSgd) / max * 100) + '%';
+        pace.title = week.from + '–' + week.to + ': ' + money(week.budgetPaceSgd) + ' budget pace';
+        group.appendChild(pace);
+      }
+      chart.appendChild(group);
     });
-    chart.setAttribute('aria-label', 'Daily spending for ' + title + ': actual so far, then projected');
-    byId('chart-description').textContent = status.averageDailySpendSgd == null
-      ? 'Daily spend so far. ' + (status.message || '')
-      : 'Daily spend so far, then ' + money(status.averageDailySpendSgd) +
-        '/day for the rest of the month (your average over the last ' + status.daysInAverage + ' days).';
-    byId('chart-end').textContent = String(days.length);
+    chart.setAttribute('aria-label', 'Weekly spending for ' + title);
+    byId('chart-description').textContent = weekly && weekly.monthlyBudgetSgd == null
+      ? 'Actual spending by week. Set a budget to see the budget pace.'
+      : 'Actual spending by week compared with the even pace of your monthly budget.';
+    byId('chart-start').textContent = weeks.length ? weeks[0].from : 'Week of';
+    byId('chart-end').textContent = weeks.length ? weeks[weeks.length - 1].to : 'End of month';
 
     const progress = byId('budget-progress');
     const verdict = byId('budget-verdict');
@@ -49,6 +59,27 @@
       verdict.textContent = status.monthlyBudgetSgd == null ? 'Set a budget to see how your projection compares.'
         : (status.message || 'The projection isn’t ready yet.');
       return;
+    }
+
+    function renderSavings(data) {
+      byId('savings-total').textContent = money(data.totalSavedSgd);
+      byId('savings-description').textContent = 'Savings from accepted Wattly recommendations this week, calculated from actual prices.';
+      const rows = byId('savings-rows');
+      rows.replaceChildren();
+      (data.items || []).forEach(item => {
+        const row = document.createElement('tr');
+        const state = item.state === 'REALISED';
+        row.innerHTML = '<th scope="row">' + Wattly.escape(item.applianceName) + '</th>' +
+          '<td>' + Wattly.escape(state ? new Date(item.chosenStart).toLocaleDateString('en-SG') : 'Pending') + '</td>' +
+          '<td class="num ' + (state ? '' : 'pending') + '">' +
+          (state ? money(item.savedSgd) : Wattly.escape(item.pendingReason || 'Pending actual prices')) + '</td>';
+        rows.appendChild(row);
+      });
+      if (!data.items || data.items.length === 0) {
+        const row = document.createElement('tr');
+        row.innerHTML = '<td colspan="3" class="pending">No accepted recommendations in this week.</td>';
+        rows.appendChild(row);
+      }
     }
     progress.hidden = false;
     const over = status.overBudget;
@@ -61,16 +92,21 @@
   }
 
   async function load() {
-    const result = await Wattly.api('GET', WattlyBudget.url(Wattly.householdId()));
-    if (!result.ok) {
+    const [result, weekly, savings] = await Promise.all([
+      Wattly.api('GET', WattlyBudget.url(Wattly.householdId())),
+      Wattly.api('GET', '/api/v1/households/' + Wattly.householdId() + '/spend/weekly'),
+      Wattly.api('GET', '/api/v1/households/' + Wattly.householdId() + '/savings?period=week')
+    ]);
+    if (!result.ok || !weekly.ok || !savings.ok) {
       if (result.status === 404 && await Wattly.leaveMissingHousehold()) return;
       byId('page-banner').className = 'banner error';
-      byId('page-banner').textContent = (result.data && result.data.detail) || 'Could not load the budget.';
+      byId('page-banner').textContent = (result.data && result.data.detail) || 'Could not load spending data.';
       return;
     }
     byId('page-banner').textContent = '';
     byId('page-banner').className = '';
-    render(result.data);
+    render(result.data, weekly.data);
+    renderSavings(savings.data);
   }
 
   async function loadHousehold() {
