@@ -70,6 +70,8 @@ the existing schema and initialize new databases.
 ## API
 
 - `GET /api/v1/market-prices/latest` returns the latest stored price and `LIVE` or `STALE` freshness.
+- `GET /api/v1/households/{id}/spend/weekly?month=YYYY-MM` returns each calendar week's modelled spend and its even budget pace for the month.
+- `GET /api/v1/households/{id}/savings?period=week|month` returns accepted recommendation runs, realised savings calculated from actual prices, and pending runs that are not counted yet.
 - `GET /api/v1/market-prices?from=2026-09-23T00:00:00Z&to=2026-09-24T00:00:00Z` returns historical intervals. The range is at most 31 days.
 - `GET /api/v1/market-prices/feed-status` reports the most recent poll result (`SUCCESS`, `STALE_SOURCE`, `FAILURE`, or `NEVER_POLLED`).
 - `GET /api/v1/admin/feed-status` (admin) reports NEMS feed health: last poll, last successful sync, consecutive failed polls, uptime % and fallback count for the current month, the open incident and the 10 most recent incidents.
