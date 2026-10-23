@@ -16,6 +16,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import sg.edu.smu.cs203.household.HouseholdResponse;
@@ -47,6 +48,7 @@ public class SpendService {
     private final BudgetRepository budgets;
     private final Clock clock;
 
+    @Autowired
     public SpendService(HouseholdService households, LoadProfileService loads, MarketHistoryRepository prices,
                         TariffRepository tariffs, BudgetRepository budgets, Clock clock) {
         this.households = households;
