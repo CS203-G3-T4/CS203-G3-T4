@@ -28,6 +28,7 @@ import sg.edu.smu.cs203.household.HouseholdService;
 import sg.edu.smu.cs203.household.PlanType;
 import sg.edu.smu.cs203.household.load.LoadProfileResponse;
 import sg.edu.smu.cs203.household.load.LoadProfileService;
+import sg.edu.smu.cs203.household.budget.BudgetRepository;
 import sg.edu.smu.cs203.market.price.MarketHistoryRepository;
 import sg.edu.smu.cs203.market.price.MarketRevision;
 
@@ -40,6 +41,7 @@ class SpendServiceTest {
     private final LoadProfileService loads = mock(LoadProfileService.class);
     private final MarketHistoryRepository prices = mock(MarketHistoryRepository.class);
     private final TariffRepository tariffs = mock(TariffRepository.class);
+    private final BudgetRepository budgets = mock(BudgetRepository.class);
 
     @Test
     void onlyFinishedHalfHoursOfThisMonthAreCountedWithTheirOwnPrices() {
@@ -127,8 +129,34 @@ class SpendServiceTest {
         assertThat(days.get(LocalDate.of(2026, 10, 2)).halfHoursSoFar()).isEqualTo(2);
     }
 
+    @Test
+    void weeklySplitsTheMonthCalculatesBudgetPaceAndMarksCurrentWeek() {
+        Instant now = sg("2026-10-15T12:00");
+        when(households.get(1L)).thenReturn(household(PlanType.FIXED, new BigDecimal("30")));
+        when(loads.profile(eq(1L), any())).thenAnswer(call -> day(call.getArgument(1), "1.0"));
+        when(budgets.find(1L)).thenReturn(java.util.Optional.of(
+                new BudgetRepository.Settings(new BigDecimal("310.00"), null, true)));
+
+        WeeklySpendResponse result = service(now).weekly(1L, YearMonth.of(2026, 10));
+
+        assertThat(result.month()).isEqualTo(YearMonth.of(2026, 10));
+        assertThat(result.monthlyBudgetSgd()).isEqualByComparingTo("310.00");
+        assertThat(result.weeks()).extracting(WeeklySpendResponse.Week::from)
+                .containsExactly(LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 5),
+                        LocalDate.of(2026, 10, 12), LocalDate.of(2026, 10, 19),
+                        LocalDate.of(2026, 10, 26));
+        assertThat(result.weeks()).extracting(WeeklySpendResponse.Week::spentSgd)
+                .containsExactly(new BigDecimal("57.60"), new BigDecimal("100.80"),
+                        new BigDecimal("50.40"), new BigDecimal("0.00"), new BigDecimal("0.00"));
+        assertThat(result.weeks()).extracting(WeeklySpendResponse.Week::budgetPaceSgd)
+                .containsExactly(new BigDecimal("40.00"), new BigDecimal("70.00"),
+                        new BigDecimal("70.00"), new BigDecimal("70.00"), new BigDecimal("60.00"));
+        assertThat(result.weeks()).extracting(WeeklySpendResponse.Week::current)
+                .containsExactly(false, false, true, false, false);
+    }
+
     private SpendService service(Instant now) {
-        return new SpendService(households, loads, prices, tariffs, Clock.fixed(now, SINGAPORE));
+        return new SpendService(households, loads, prices, tariffs, budgets, Clock.fixed(now, SINGAPORE));
     }
 
     private void priceLinked() {

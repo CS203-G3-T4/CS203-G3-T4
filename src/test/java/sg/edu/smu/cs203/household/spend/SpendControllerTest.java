@@ -48,4 +48,19 @@ class SpendControllerTest {
 
         mvc.perform(get("/api/v1/households/42/spend/month-to-date")).andExpect(status().isNotFound());
     }
+
+    @Test
+    void returnsWeeklySpendAndBudgetPaceForTheRequestedMonth() throws Exception {
+        when(service.weekly(1L, YearMonth.of(2026, 10))).thenReturn(new WeeklySpendResponse(1L,
+                YearMonth.of(2026, 10), Instant.parse("2026-10-23T14:00:00Z"), new BigDecimal("120.00"),
+                List.of(new WeeklySpendResponse.Week(YearMonth.of(2026, 10).atDay(1),
+                        YearMonth.of(2026, 10).atDay(4), new BigDecimal("18.50"), new BigDecimal("15.48"),
+                        false, 4))));
+
+        mvc.perform(get("/api/v1/households/1/spend/weekly").param("month", "2026-10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.monthlyBudgetSgd").value(120.00))
+                .andExpect(jsonPath("$.weeks[0].spentSgd").value(18.50))
+                .andExpect(jsonPath("$.weeks[0].budgetPaceSgd").value(15.48));
+    }
 }
