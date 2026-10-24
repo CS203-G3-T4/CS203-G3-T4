@@ -179,8 +179,9 @@ for Singapore local date/time, `LocalDate.now(clock)` for Singapore dates, and
 instants; do not replace them with local date/time values.
 
 Never call a no-argument `now()`, `System.currentTimeMillis()`, or create another
-system Clock in business code. `TimeConfig` is the single source of system time,
-so a future DemoClock can replace it without changing services. Tests should
+system Clock in business code. `TimeConfig` provides the shared `DemoClock` as a
+`Clock`: it uses real Singapore time normally and a controllable instant when
+demo mode is started. Existing services continue to inject `Clock`. Tests should
 inject `Clock.fixed(instant, ZoneId.of("Asia/Singapore"))` when time affects behavior.
 
 The main-code review on 26 September 2026 found that the price and weather
