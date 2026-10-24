@@ -8,17 +8,21 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.ZonedDateTime;
+import java.time.DayOfWeek;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import sg.edu.smu.cs203.household.HouseholdResponse;
 import sg.edu.smu.cs203.household.HouseholdService;
 import sg.edu.smu.cs203.household.PlanType;
+import sg.edu.smu.cs203.household.budget.BudgetRepository;
 import sg.edu.smu.cs203.household.load.LoadProfileResponse;
 import sg.edu.smu.cs203.household.load.LoadProfileService;
 import sg.edu.smu.cs203.market.price.MarketHistoryRepository;
@@ -41,14 +45,17 @@ public class SpendService {
     private final LoadProfileService loads;
     private final MarketHistoryRepository prices;
     private final TariffRepository tariffs;
+    private final BudgetRepository budgets;
     private final Clock clock;
 
+    @Autowired
     public SpendService(HouseholdService households, LoadProfileService loads, MarketHistoryRepository prices,
-                        TariffRepository tariffs, Clock clock) {
+                        TariffRepository tariffs, BudgetRepository budgets, Clock clock) {
         this.households = households;
         this.loads = loads;
         this.prices = prices;
         this.tariffs = tariffs;
+        this.budgets = budgets;
         this.clock = clock;
     }
 
@@ -122,6 +129,69 @@ public class SpendService {
                 : household.fixedRateCentsPerKwh();
         Map<LocalDate, SpendCalculator.Result> days = new LinkedHashMap<>();
         for (LocalDate day = from; !day.isAfter(today); day = day.plusDays(1)) {
+            List<SpendCalculator.HalfHour> halfHours = finishedHalfHours(householdId, day, now, usep);
+            days.put(day, priceLinked
+                    ? SpendCalculator.priceLinked(halfHours, components, halfHoursIn(YearMonth.from(day)))
+                    : SpendCalculator.fixedRate(halfHours, rate));
+        }
+        return days;
+    }
+
+    public WeeklySpendResponse weekly(long householdId, YearMonth requestedMonth) {
+        households.get(householdId);
+        ZonedDateTime local = clock.instant().atZone(SpendCalculator.SINGAPORE);
+        YearMonth month = requestedMonth == null ? YearMonth.from(local) : requestedMonth;
+        LocalDate first = month.atDay(1);
+        LocalDate last = month.atEndOfMonth();
+        Map<LocalDate, SpendCalculator.Result> daily = dailySpend(householdId, first, last);
+        BigDecimal budget = budgets.find(householdId)
+                .map(BudgetRepository.Settings::monthlyBudgetSgd).orElse(null);
+        int daysInMonth = month.lengthOfMonth();
+        LocalDate today = local.toLocalDate();
+        List<WeeklySpendResponse.Week> weeks = new ArrayList<>();
+        for (LocalDate weekStart = first.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+             !weekStart.isAfter(last); weekStart = weekStart.plusWeeks(1)) {
+            LocalDate from = weekStart.isBefore(first) ? first : weekStart;
+            LocalDate weekEnd = weekStart.plusDays(6);
+            LocalDate to = weekEnd.isAfter(last) ? last : weekEnd;
+            BigDecimal spent = BigDecimal.ZERO;
+            int daysWithSpend = 0;
+            for (LocalDate day = from; !day.isAfter(to); day = day.plusDays(1)) {
+                if (!day.isAfter(today)) {
+                    SpendCalculator.Result result = daily.get(day);
+                    if (result != null) {
+                        spent = spent.add(result.totalSgd());
+                        if (result.halfHoursSoFar() > 0) {
+                            daysWithSpend++;
+                        }
+                    }
+                }
+            }
+            int daysInWeek = from.until(to).getDays() + 1;
+            BigDecimal pace = budget == null ? null
+                    : budget.multiply(BigDecimal.valueOf(daysInWeek))
+                            .divide(BigDecimal.valueOf(daysInMonth), 2, RoundingMode.HALF_UP);
+            weeks.add(new WeeklySpendResponse.Week(from, to, SpendCalculator.sgd(spent), pace,
+                    !today.isBefore(from) && !today.isAfter(to), daysWithSpend));
+        }
+        return new WeeklySpendResponse(householdId, month, clock.instant(),
+                budget == null ? null : SpendCalculator.sgd(budget), weeks);
+    }
+
+    private Map<LocalDate, SpendCalculator.Result> dailySpend(long householdId, LocalDate from, LocalDate through) {
+        HouseholdResponse household = households.get(householdId);
+        Instant now = clock.instant();
+        LocalDate today = now.atZone(SpendCalculator.SINGAPORE).toLocalDate();
+        LocalDate end = through.isBefore(today) ? through : today;
+        boolean priceLinked = household.planType() == PlanType.PRICE_LINKED;
+        Instant fromStart = from.atStartOfDay(SpendCalculator.SINGAPORE).toInstant();
+        Map<Instant, BigDecimal> usep = priceLinked ? usep(fromStart, now) : Map.of();
+        List<TariffComponent> components = priceLinked
+                ? tariffs.forPeriod(PlanType.PRICE_LINKED, from, end) : List.of();
+        BigDecimal rate = household.fixedRateCentsPerKwh() == null ? BigDecimal.ZERO
+                : household.fixedRateCentsPerKwh();
+        Map<LocalDate, SpendCalculator.Result> days = new LinkedHashMap<>();
+        for (LocalDate day = from; !day.isAfter(end); day = day.plusDays(1)) {
             List<SpendCalculator.HalfHour> halfHours = finishedHalfHours(householdId, day, now, usep);
             days.put(day, priceLinked
                     ? SpendCalculator.priceLinked(halfHours, components, halfHoursIn(YearMonth.from(day)))

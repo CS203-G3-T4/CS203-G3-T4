@@ -2,9 +2,15 @@ package sg.edu.smu.cs203.household.spend;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.time.YearMonth;
+import java.util.Map;
+
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
+
+import sg.edu.smu.cs203.household.ValidationFailedException;
 
 @Tag(name = "Household spending and budget")
 @RestController
@@ -22,5 +28,16 @@ public class SpendController {
             + "contracted rate (fixed). Each charge lists its source. Follows the app's Clock (demo mode too)")
     public MonthToDateSpendResponse monthToDate(@PathVariable long householdId) {
         return service.monthToDate(householdId);
+    }
+
+    @GetMapping("/api/v1/households/{householdId}/spend/weekly")
+    @Operation(summary = "Weekly spending and budget pace for a calendar month (CSDT4-54)")
+    public WeeklySpendResponse weekly(@PathVariable long householdId,
+                                      @RequestParam(required = false) String month) {
+        try {
+            return service.weekly(householdId, month == null || month.isBlank() ? null : YearMonth.parse(month));
+        } catch (java.time.format.DateTimeParseException exception) {
+            throw new ValidationFailedException(Map.of("month", "Use YYYY-MM"));
+        }
     }
 }
