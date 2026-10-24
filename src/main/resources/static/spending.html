@@ -113,6 +113,7 @@
       <section class="card panel" aria-labelledby="pattern-title">
         <h2 id="pattern-title">Weekly spending</h2>
         <p id="chart-description">Loading this month’s spending…</p>
+        <p class="field-error" id="weekly-error" aria-live="polite"></p>
         <div class="chart" id="spending-chart" role="img" aria-label="Daily estimated spending"></div>
         <div class="chart-axis"><span id="chart-start">Week of</span><span id="chart-end">End of month</span></div>
         <div class="chart-key"><span></span>Spent <span class="future-key"></span>Budget pace</div>
@@ -138,6 +139,7 @@
     <section class="card savings-panel" aria-labelledby="savings-title">
       <h2 id="savings-title">Recent savings</h2>
       <p id="savings-description">Savings from accepted Wattly recommendations this week, calculated from actual prices.</p>
+      <p class="field-error" id="savings-error" aria-live="polite"></p>
       <strong class="savings-total" id="savings-total">—</strong>
       <div class="spend-table-scroll">
         <table class="savings-table">

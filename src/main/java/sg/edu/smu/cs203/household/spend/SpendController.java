@@ -31,7 +31,7 @@ public class SpendController {
     }
 
     @GetMapping("/api/v1/households/{householdId}/spend/weekly")
-    @Operation(summary = "Weekly spending and budget pace for a calendar month (CSDT4-154)")
+    @Operation(summary = "Weekly spending and budget pace for a calendar month (CSDT4-54)")
     public WeeklySpendResponse weekly(@PathVariable long householdId,
                                       @RequestParam(required = false) String month) {
         try {
