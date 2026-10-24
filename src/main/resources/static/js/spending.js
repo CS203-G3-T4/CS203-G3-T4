@@ -7,6 +7,31 @@
   let current;
   let readOnly = false;
 
+  function renderSavings(data) {
+    byId('savings-error').textContent = '';
+    byId('savings-total').textContent = money(data.totalSavedSgd);
+    byId('savings-description').textContent = 'Savings from accepted Wattly recommendations this week, calculated from actual prices.';
+    const rows = byId('savings-rows');
+    rows.replaceChildren();
+    (data.items || []).forEach(item => {
+      const row = document.createElement('tr');
+      const state = item.state === 'REALISED';
+      const date = state ? new Intl.DateTimeFormat('en-SG', {
+        day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Singapore'
+      }).format(new Date(item.chosenStart)) : 'Pending';
+      row.innerHTML = '<th scope="row">' + Wattly.escape(item.applianceName) + '</th>' +
+        '<td>' + Wattly.escape(date) + '</td>' +
+        '<td class="num ' + (state ? '' : 'pending') + '">' +
+        (state ? money(item.savedSgd) : Wattly.escape(item.pendingReason || 'Pending actual prices')) + '</td>';
+      rows.appendChild(row);
+    });
+    if (!data.items || data.items.length === 0) {
+      const row = document.createElement('tr');
+      row.innerHTML = '<td colspan="3" class="pending">No accepted recommendations in this week.</td>';
+      rows.appendChild(row);
+    }
+  }
+
   function render(status, weekly) {
     current = status;
     byId('save-budget').disabled = readOnly;
@@ -61,26 +86,6 @@
       return;
     }
 
-    function renderSavings(data) {
-      byId('savings-total').textContent = money(data.totalSavedSgd);
-      byId('savings-description').textContent = 'Savings from accepted Wattly recommendations this week, calculated from actual prices.';
-      const rows = byId('savings-rows');
-      rows.replaceChildren();
-      (data.items || []).forEach(item => {
-        const row = document.createElement('tr');
-        const state = item.state === 'REALISED';
-        row.innerHTML = '<th scope="row">' + Wattly.escape(item.applianceName) + '</th>' +
-          '<td>' + Wattly.escape(state ? new Date(item.chosenStart).toLocaleDateString('en-SG') : 'Pending') + '</td>' +
-          '<td class="num ' + (state ? '' : 'pending') + '">' +
-          (state ? money(item.savedSgd) : Wattly.escape(item.pendingReason || 'Pending actual prices')) + '</td>';
-        rows.appendChild(row);
-      });
-      if (!data.items || data.items.length === 0) {
-        const row = document.createElement('tr');
-        row.innerHTML = '<td colspan="3" class="pending">No accepted recommendations in this week.</td>';
-        rows.appendChild(row);
-      }
-    }
     progress.hidden = false;
     const over = status.overBudget;
     const fill = byId('budget-progress-fill');
@@ -97,7 +102,7 @@
       Wattly.api('GET', '/api/v1/households/' + Wattly.householdId() + '/spend/weekly'),
       Wattly.api('GET', '/api/v1/households/' + Wattly.householdId() + '/savings?period=week')
     ]);
-    if (!result.ok || !weekly.ok || !savings.ok) {
+    if (!result.ok) {
       if (result.status === 404 && await Wattly.leaveMissingHousehold()) return;
       byId('page-banner').className = 'banner error';
       byId('page-banner').textContent = (result.data && result.data.detail) || 'Could not load spending data.';
@@ -105,8 +110,15 @@
     }
     byId('page-banner').textContent = '';
     byId('page-banner').className = '';
-    render(result.data, weekly.data);
-    renderSavings(savings.data);
+    render(result.data, weekly.ok ? weekly.data : null);
+    byId('weekly-error').textContent = weekly.ok ? '' : 'Weekly spending is unavailable right now.';
+    if (savings.ok) {
+      renderSavings(savings.data);
+    } else {
+      byId('savings-total').textContent = '—';
+      byId('savings-rows').replaceChildren();
+      byId('savings-error').textContent = 'Recent savings are unavailable right now.';
+    }
   }
 
   async function loadHousehold() {
