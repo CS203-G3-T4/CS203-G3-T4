@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class TimeConfig {
     @Bean
-    public Clock clock() {
-        return Clock.system(ZoneId.of("Asia/Singapore"));
+    public DemoClock clock() {
+        return new DemoClock(Clock.system(ZoneId.of("Asia/Singapore")));
     }
 }
