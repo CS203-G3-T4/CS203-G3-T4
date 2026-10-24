@@ -25,6 +25,7 @@ public class AdminOverviewService {
 
     static final String ON_TRACK = "ON_TRACK";
     static final String OVER_PACE = "OVER_PACE";
+    static final String NO_BUDGET = "NO_BUDGET";
     static final String NOT_EXPOSED = "NOT_EXPOSED";
 
     private final HouseholdService households;
@@ -71,6 +72,9 @@ public class AdminOverviewService {
     private static String status(HouseholdResponse household, BudgetStatusResponse budget) {
         if (household.planType() == PlanType.FIXED) {
             return NOT_EXPOSED;
+        }
+        if (budget.monthlyBudgetSgd() == null) {
+            return NO_BUDGET;
         }
         return budget.overBudget() ? OVER_PACE : ON_TRACK;
     }

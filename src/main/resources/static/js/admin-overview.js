@@ -3,7 +3,12 @@
   const escape = value => String(value).replace(/[&<>"']/g, character => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
   }[character]));
-  const statusText = { ON_TRACK: 'On track', OVER_PACE: 'Over pace', NOT_EXPOSED: 'Not exposed' };
+  const statusText = {
+    ON_TRACK: 'On track',
+    OVER_PACE: 'Over pace',
+    NO_BUDGET: 'No budget',
+    NOT_EXPOSED: 'Not exposed'
+  };
 
   function render(data) {
     document.getElementById('households-monitored').textContent = data.householdsMonitored;
