@@ -11,6 +11,8 @@
     .tile { padding: 18px; }
     .tile-label { color: var(--muted); font-size: 12px; }
     .tile-value { display: block; margin-top: 8px; font: 700 25px/1.15 "Space Grotesk", sans-serif; }
+    .tile-detail { display: block; margin-top: 6px; color: var(--muted); font-size: 12px; }
+    .simulated-note { margin: -6px 0 20px; color: var(--ink-2); font-size: 13px; }
     .table-wrap { overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; font-size: 14px; }
     th, td { padding: 11px 10px; border-bottom: 1px solid var(--gridline); text-align: left; }
@@ -30,11 +32,12 @@
   <p id="status" role="status" aria-live="polite">Loading platform figures…</p>
   <div id="error" class="banner error" hidden></div>
   <section class="tiles" aria-label="Platform totals">
-    <div class="card tile"><span class="tile-label">Households monitored</span><strong class="tile-value" id="households-monitored">—</strong></div>
-    <div class="card tile"><span class="tile-label">Price-linked households</span><strong class="tile-value" id="price-linked">—</strong></div>
-    <div class="card tile"><span class="tile-label">Savings this month</span><strong class="tile-value" id="savings-total">—</strong></div>
+    <div class="card tile"><span class="tile-label">Households monitored</span><strong class="tile-value" id="households-monitored">—</strong><span class="tile-detail" id="households-split" hidden></span></div>
+    <div class="card tile"><span class="tile-label">Price-linked households</span><strong class="tile-value" id="price-linked">—</strong><span class="tile-detail" id="price-linked-split" hidden></span></div>
+    <div class="card tile"><span class="tile-label">Savings this month</span><strong class="tile-value" id="savings-total">—</strong><span class="tile-detail" id="savings-split" hidden></span></div>
     <div class="card tile"><span class="tile-label">Forecast MAE</span><strong class="tile-value" id="forecast-mae">—</strong></div>
   </section>
+  <p class="simulated-note" id="simulated-note" hidden></p>
   <section class="card" style="padding: 20px">
     <h2>Household summary</h2>
     <div class="table-wrap">
