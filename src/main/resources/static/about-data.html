@@ -78,6 +78,52 @@
           USEP is a wholesale signal, not your full tariff.</p>
       </section>
 
+      <section class="card" id="price-history">
+        <h2>Past prices <span class="tag measured">Official, final</span></h2>
+        <p>To train and check the price forecast, Wattly also uses EMC's official final USEP history, downloaded as CSV
+          from the <a href="https://www.nems.emcsg.com/nems-prices#market-data-download" target="_blank" rel="noopener">market
+          data download</a> on EMC's NEMS Prices page. It covers 1 June 2025 to 30 September 2026 with no missing
+          half-hours. These are final prices, so they are not exactly what was known live at the time.</p>
+      </section>
+
+      <section class="card" id="bill-charges">
+        <h2>Other charges on the bill <span class="tag measured">Published rates</span></h2>
+        <p>A price-linked bill is more than the wholesale price. For "Spent so far" and realised savings, Wattly adds
+          SP Group's published charges for a low-tension household buying at the wholesale electricity price.
+          The rates below exclude GST.</p>
+        <table>
+          <thead><tr><th>Charge</th><th class="num">Rate</th><th>When</th></tr></thead>
+          <tbody>
+            <tr><td>Transmission charge (peak)</td><td class="num">6.10¢/kWh</td><td>7am–11pm</td></tr>
+            <tr><td>Transmission charge (off-peak)</td><td class="num">4.78¢/kWh</td><td>11pm–7am</td></tr>
+            <tr><td>Market Development and Systems Charge</td><td class="num">0.19¢/kWh</td><td>All day</td></tr>
+            <tr><td>Retail Settlement Uplift</td><td class="num">0.1471¢/kWh</td><td>All day</td></tr>
+            <tr><td>Meter Reading and Data Management</td><td class="num">S$2.18/month</td><td>Spread over the month</td></tr>
+            <tr><td>GST</td><td class="num">9%</td><td>On the total</td></tr>
+          </tbody>
+        </table>
+        <p>Sources: <a href="https://www.spgroup.com.sg/dam/jcr:3f430f5e-14d5-4d05-bb6a-a3cd7cc6d1f4/Fact%20Sheet%20for%20WEP_1Jul2026_w%20customer%20advisory_web.pdf"
+          target="_blank" rel="noopener">SP Group, Fact Sheet for buying at the Wholesale Electricity Price (version 1 July 2026)</a>;
+          peak and off-peak hours from the
+          <a href="https://www.spgroup.com.sg/dam/jcr:aa566693-96a3-4eac-bead-b4bbe4bb95ee/Transmission%20Service%20Rate%20Schedule%20(Applicable%20with%20effect%20from%201%20Apr%202025).pdf"
+          target="_blank" rel="noopener">SP PowerAssets Transmission Service Rate Schedule</a>.
+          The vesting contract debit or credit is not included, because it varies and isn't published per household.
+          Fixed-rate plans use the contracted rate from Household Settings instead, with no charges added.</p>
+      </section>
+
+      <section class="card" id="price-forecast">
+        <h2>Price forecast <span class="tag modelled">Estimate</span></h2>
+        <p>The Forecast page estimates USEP for the next 24 half-hours (12 hours). It comes from a model trained on
+          the past prices above, with Singapore public holidays from the
+          <a href="https://www.mom.gov.sg/employment-practices/public-holidays" target="_blank" rel="noopener">Ministry of Manpower</a>.
+          When the model isn't available, Wattly falls back to a simple baseline built from past prices and never
+          labels it as AI. Forecasts can be wrong, especially during price spikes.</p>
+        <p>A half-hour is flagged as a likely spike when its forecast is well above the typical price for that time
+          over the last 28 days. With too little history, nothing is flagged.</p>
+        <p>Suggestions can also use a <strong>demo forecast</strong>: the real prices of 26 September 2026 replayed
+          by time of day. Every suggestion built from it is labelled "Demo forecast".</p>
+      </section>
+
       <section class="card">
         <h2>Your household's electricity use <span class="tag modelled">Modelled, not metered</span></h2>
         <p>There is no public way to read a home's live smart-meter data, so Wattly models it:</p>
@@ -117,6 +163,20 @@
         <p>Daily temperature forecasts come from the National Environment Agency through
           <a href="https://data.gov.sg/datasets/d_ce2eb1e307bda31993c533285834ef2b/view" target="_blank" rel="noopener">data.gov.sg</a>.
           A hot-day hint is a temperature signal, not a price prediction.</p>
+        <p>Wattly also saves NEA's
+          <a href="https://api-open.data.gov.sg/v2/real-time/api/two-hr-forecast" target="_blank" rel="noopener">two-hour area forecasts</a>
+          next to each price, so weather and prices can be studied together.</p>
+      </section>
+
+      <section class="card" id="spending">
+        <h2>Spending and budget <span class="tag modelled">Modelled</span></h2>
+        <p><strong>Spent so far this month</strong> adds up every finished half-hour since the 1st: your modelled use
+          × that half-hour's market price, plus the charges above and GST. A half-hour with no saved price is left out
+          and counted, never guessed. It is not your bill: use is modelled, not metered, and the vesting charge is
+          missing.</p>
+        <p><strong>Projected this month</strong> is our assumption: spent so far + your average daily spend over the
+          last 7 full days × the days left. Days with any missing price are left out of that average. If there are
+          none left, Wattly shows no projection instead of guessing.</p>
       </section>
 
       <section class="card">
@@ -128,8 +188,39 @@
 
       <section class="card">
         <h2>Savings <span class="tag modelled">Assumption</span></h2>
-        <p>Because Wattly cannot see your meter, an accepted suggestion is treated as followed. Savings are
-          labelled "estimated" until the actual half-hourly prices are known.</p>
+        <p>Because Wattly cannot see your meter, <strong>an accepted suggestion is treated as followed</strong>: we
+          assume you ran the appliance at the time you chose instead of your usual time.</p>
+        <ul>
+          <li><strong>Estimated saving</strong> is what the forecast predicted, using the wholesale price only.</li>
+          <li><strong>Saved</strong> replaces it once both runs have finished and every half-hour they cover has an
+            actual price. It is the cost at your usual time minus the cost at the time you chose, at actual prices
+            plus the per-kWh charges and GST. It can be negative if the chosen time turned out dearer. On a
+            fixed-rate plan it is always $0.</li>
+          <li>The run's power and length are saved when you accept, so editing the appliance later doesn't change
+            past savings.</li>
+          <li><strong>How sure</strong> counts how many of the last 28 days, at actual prices, the suggested time
+            really was cheaper than your usual time. With fewer than 14 days of prices it says there isn't enough
+            history yet.</li>
+        </ul>
+      </section>
+
+      <section class="card" id="sources">
+        <h2>All sources</h2>
+        <ul>
+          <li>Live USEP: <a href="https://nems.sn.sg/" target="_blank" rel="noopener">NEMS API</a> (unofficial)</li>
+          <li>Final USEP and history: <a href="https://www.nems.emcsg.com/nems-prices" target="_blank" rel="noopener">EMC NEMS Prices</a></li>
+          <li>Average household use: <a href="https://www.mse.gov.sg/latest-news/written-reply-to-parliamentary-question-on--monthly-average-electricity-and-water-consumption-rates-for-households/"
+            target="_blank" rel="noopener">MSE reply to a parliamentary question (EMA data)</a></li>
+          <li>Bill charges: <a href="https://www.spgroup.com.sg/dam/jcr:3f430f5e-14d5-4d05-bb6a-a3cd7cc6d1f4/Fact%20Sheet%20for%20WEP_1Jul2026_w%20customer%20advisory_web.pdf"
+            target="_blank" rel="noopener">SP Group fact sheet (1 July 2026)</a> and
+            <a href="https://www.spgroup.com.sg/dam/jcr:aa566693-96a3-4eac-bead-b4bbe4bb95ee/Transmission%20Service%20Rate%20Schedule%20(Applicable%20with%20effect%20from%201%20Apr%202025).pdf"
+            target="_blank" rel="noopener">SP PowerAssets rate schedule</a></li>
+          <li>Public holidays: <a href="https://www.mom.gov.sg/employment-practices/public-holidays" target="_blank" rel="noopener">Ministry of Manpower</a></li>
+          <li>Daily weather: <a href="https://data.gov.sg/datasets/d_ce2eb1e307bda31993c533285834ef2b/view" target="_blank" rel="noopener">NEA on data.gov.sg</a></li>
+          <li>Two-hour weather: <a href="https://api-open.data.gov.sg/v2/real-time/api/two-hr-forecast" target="_blank" rel="noopener">NEA two-hour forecast API</a></li>
+        </ul>
+        <p>Your appliances and plan come from you. The simulated households and the daily usage pattern are our own
+          assumptions.</p>
       </section>
     </div>
   </main>
