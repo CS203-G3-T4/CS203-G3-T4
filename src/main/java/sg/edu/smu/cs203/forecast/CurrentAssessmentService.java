@@ -7,10 +7,13 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import sg.edu.smu.cs203.common.DemoClock;
 import sg.edu.smu.cs203.market.price.MarketHistoryRepository;
 import sg.edu.smu.cs203.market.price.MarketRevision;
+import sg.edu.smu.cs203.market.price.ReplayPriceService;
 import tools.jackson.databind.JsonNode;
 import static sg.edu.smu.cs203.forecast.ForecastTypes.*;
 
@@ -21,6 +24,7 @@ public class CurrentAssessmentService {
     private final int minimum;
     private final BigDecimal k, spreadFloor, band;
     private final ForecastService forecasts;
+    private ReplayPriceService replayPrices;
 
     public CurrentAssessmentService(MarketHistoryRepository history, Clock clock, ForecastService forecasts,
             @Value("${forecast.spike.minimum-samples:14}") int minimum,
@@ -31,6 +35,10 @@ public class CurrentAssessmentService {
             throw new IllegalArgumentException("Invalid spike configuration");
         this.history=history; this.clock=clock; this.forecasts=forecasts;
         this.minimum=minimum; this.k=k; this.spreadFloor=spreadFloor; this.band=band;
+    }
+    @Autowired(required = false)
+    public void setReplayPrices(ReplayPriceService replayPrices) {
+        this.replayPrices = replayPrices;
     }
     /** An AI run must use the same spike definition as its evaluated artifact. */
     public void requireModelConfig(JsonNode config) {
@@ -55,6 +63,29 @@ public class CurrentAssessmentService {
     public Assessment current() {
         Instant asOf=clock.instant();
         List<MarketRevision> rows=history.asOf(asOf);
+        if (clock instanceof DemoClock demoClock && demoClock.isRunning()) {
+            if (replayPrices == null) {
+                throw new IllegalStateException("Replay price service is required while demo mode is active");
+            }
+            var replay = replayPrices.latest(asOf);
+            if (replay.isEmpty()) {
+                return new Assessment(false,true,null,null,null,null,null,"UNAVAILABLE",0,28,"NO_PRICE");
+            }
+            var price = replay.get();
+            Reference ref=reference(rows,price.intervalStart(),asOf);
+            if (!ref.available()) {
+                return new Assessment(false,false,price.usepSgdPerMwh(),null,null,null,null,
+                        "UNAVAILABLE",ref.sampleCount(),28,"INSUFFICIENT_REFERENCE_HISTORY");
+            }
+            BigDecimal delta=price.usepSgdPerMwh().subtract(ref.typical());
+            BigDecimal pct=ref.typical().signum()>0 ? delta.multiply(BigDecimal.valueOf(100))
+                    .divide(ref.typical(),4,RoundingMode.HALF_UP) : null;
+            String classification=price.usepSgdPerMwh().compareTo(ref.threshold())>0 ? "SPIKE"
+                    : delta.compareTo(ref.spread().multiply(band))>0 ? "EXPENSIVE"
+                    : delta.compareTo(ref.spread().multiply(band).negate())<0 ? "CHEAP" : "NORMAL";
+            return new Assessment(true,false,price.usepSgdPerMwh(),ref.typical(),delta,pct,
+                    ref.threshold(),classification,ref.sampleCount(),28,null);
+        }
         if (rows.isEmpty()) return new Assessment(false,true,null,null,null,null,null,"UNAVAILABLE",0,28,"NO_PRICE");
         MarketRevision current=rows.getLast();
         boolean stale=forecasts.stale(rows,asOf);

@@ -166,6 +166,58 @@ Wattly.initials = function (name) {
 
 Wattly.addLogoutControl();
 
+Wattly.addDemoClockStatus = async function () {
+  if (typeof document.getElementById !== 'function') {
+    return;
+  }
+  if (document.getElementById('demo-clock-message')) {
+    return;
+  }
+  const main = document.querySelector('main');
+  if (!main) {
+    return;
+  }
+
+  const status = document.createElement('p');
+  status.className = 'demo-clock-status';
+  status.setAttribute('role', 'status');
+  status.setAttribute('aria-live', 'polite');
+  status.textContent = 'Demo clock status loading…';
+  main.prepend(status);
+
+  function displayTime(value) {
+    return new Intl.DateTimeFormat('en-SG', {
+      timeZone: 'Asia/Singapore',
+      dateStyle: 'medium',
+      timeStyle: 'short'
+    }).format(new Date(value)) + ' SGT';
+  }
+
+  async function refresh() {
+    const result = await Wattly.api('GET', '/api/v1/demo/state');
+    if (!result.ok) {
+      if (result.status === 401 || result.status === 403) {
+        status.hidden = true;
+        return;
+      }
+      status.hidden = false;
+      status.className = 'demo-clock-status error';
+      status.textContent = 'Demo clock status is unavailable.';
+      return;
+    }
+    status.hidden = false;
+    status.className = 'demo-clock-status' + (result.data.running ? ' running' : '');
+    status.textContent = result.data.running
+      ? 'Demo mode ON · ' + displayTime(result.data.currentTime)
+      : 'Demo mode OFF · Real time · ' + displayTime(result.data.currentTime);
+  }
+
+  await refresh();
+  window.setInterval(refresh, 10000);
+};
+
+Wattly.addDemoClockStatus();
+
 // Fills the household card at the bottom of the sidebar.
 Wattly.renderHouseholdCard = function (household) {
   const card = document.getElementById('household-card');
