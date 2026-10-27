@@ -11,8 +11,12 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.Optional;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
+import sg.edu.smu.cs203.common.DemoClock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 class MarketPriceServiceTest {
 
@@ -57,6 +61,31 @@ class MarketPriceServiceTest {
         when(prices.findLatest()).thenReturn(Optional.empty());
 
         assertThatThrownBy(service::latest).isInstanceOf(NoMarketPriceException.class);
+    }
+
+    @Test
+    void demoReadsOnlyReplayRowsAndBoundsThemAtTheSimulatedClock() {
+        DemoClock demoClock = new DemoClock(Clock.fixed(now.plusSeconds(3600), ZoneOffset.UTC));
+        demoClock.startAt(now);
+        ReplayPriceService replay = mock(ReplayPriceService.class);
+        MarketPriceService demoService = new MarketPriceService(
+                prices, runs, demoClock, Duration.ofMinutes(40));
+        demoService.setReplayPrices(replay);
+        MarketPrice replayPrice = new MarketPrice("REPLAY", now, now, now,
+                new BigDecimal("95.0000"), new BigDecimal("7000.000"), null);
+        when(replay.latest(now)).thenReturn(Optional.of(replayPrice));
+
+        LatestPriceResponse latest = demoService.latest();
+        assertThat(latest.source()).isEqualTo("REPLAY");
+        assertThat(latest.price()).isEqualByComparingTo("95.0000");
+        verify(replay).latest(now);
+        verifyNoInteractions(prices, runs);
+
+        Instant from = now.minus(Duration.ofHours(1));
+        Instant to = now.plus(Duration.ofHours(1));
+        when(replay.history(from, to, now)).thenReturn(List.of(replayPrice));
+        assertThat(demoService.history(from, to)).containsExactly(replayPrice);
+        verify(replay).history(from, to, now);
     }
 
     private MarketPrice price() {

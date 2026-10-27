@@ -10,6 +10,8 @@ import org.springframework.context.annotation.Configuration;
 import sg.edu.smu.cs203.forecast.CurrentAssessmentService;
 import sg.edu.smu.cs203.forecast.ForecastService;
 import sg.edu.smu.cs203.market.price.MarketHistoryRepository;
+import sg.edu.smu.cs203.market.price.ReplayPriceCatalog;
+import java.time.LocalDate;
 
 /**
  * Picks the forecast behind recommendations (decision recorded in docs/f4-recommendations.md):
@@ -26,15 +28,15 @@ public class PriceForecastConfiguration {
     @Bean
     public PriceForecastSource priceForecastSource(
             @Value("${recommendation.forecast-source:demo}") String source,
-            @Value("${recommendation.demo-forecast-file:data/replay/2026-09-26_data(main_day).csv}")
-            String demoFile,
+            @Value("${recommendation.demo-replay-day:2026-09-26}") LocalDate defaultReplayDay,
             @Value("${recommendation.demo-spikes:true}") boolean demoSpikes,
             ObjectProvider<ForecastService> forecastService,
             ObjectProvider<MarketHistoryRepository> history,
             ObjectProvider<CurrentAssessmentService> assessments,
+            ReplayPriceCatalog replayCatalog,
             Clock clock) {
         return switch (source.trim().toLowerCase()) {
-            case "demo" -> DemoPriceForecastSource.fromClasspath(demoFile, clock,
+            case "demo" -> DemoPriceForecastSource.fromCatalog(replayCatalog, defaultReplayDay, clock,
                     demoSpikes ? new MarketHistorySpikeThresholds(history.getObject(), assessments.getObject()) : null);
             case "f3" -> new F3PriceForecastSource(forecastService.getObject());
             default -> throw new IllegalArgumentException(
