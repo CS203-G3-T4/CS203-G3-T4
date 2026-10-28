@@ -157,13 +157,14 @@ class DemoClockControllerTest {
                 .andExpect(status().isOk());
 
         Mockito.verify(replayPrices).loadDay(LocalDate.parse("2026-09-26"));
-        Mockito.verify(replayRefresh, Mockito.times(2)).refresh();
+        Mockito.verify(replayRefresh).start();
+        Mockito.verify(replayRefresh).refresh();
     }
 
     @Test
     void failedRefreshDoesNotLeaveTheClockAtAnUnrefreshedTime() throws Exception {
         Mockito.doThrow(new IllegalStateException("refresh failed"))
-                .when(replayRefresh).refresh();
+                .when(replayRefresh).start();
         mvc.perform(post("/api/v1/demo/start")
                         .with(user("admin").roles("ADMIN")).with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)

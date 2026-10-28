@@ -2,6 +2,7 @@ package sg.edu.smu.cs203.common;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import sg.edu.smu.cs203.forecast.ForecastJob;
 import sg.edu.smu.cs203.recommendation.RecommendationService;
 
@@ -22,6 +23,20 @@ public class DemoReplayRefreshService {
     }
 
     public void refresh() {
+        Long householdId = demoHouseholdId();
+        forecasts.runOnce();
+        recommendations.generate(householdId);
+    }
+
+    @Transactional
+    public void start() {
+        Long householdId = demoHouseholdId();
+        recommendations.resetForReplay(householdId);
+        forecasts.runOnce();
+        recommendations.generate(householdId);
+    }
+
+    private Long demoHouseholdId() {
         Long householdId = jdbc.queryForObject("""
                 SELECT id FROM household
                 WHERE name = ? AND simulated = TRUE
@@ -29,7 +44,6 @@ public class DemoReplayRefreshService {
         if (householdId == null) {
             throw new IllegalStateException("The replay demo household has not been seeded");
         }
-        forecasts.runOnce();
-        recommendations.generate(householdId);
+        return householdId;
     }
 }

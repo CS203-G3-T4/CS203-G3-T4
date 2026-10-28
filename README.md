@@ -194,6 +194,17 @@ services use the injected Clock and no direct system-time calls remain outside
 rule to future changes. Feature-lead acknowledgements are tracked in the
 [CSDT4-21 acceptance checklist](docs/jira-alignment.md#shared-clock-adoption-csdt4-21).
 
+Admins can control this clock at `/admin-demo.html`. Starting a replay loads the
+selected date from the configured replay catalog; advancing moves simulated time
+in half-hour periods and refreshes the forecast and dedicated replay household's
+suggestions. Starting a new replay clears only that dedicated household's prior
+recommendations and decisions so the same demo sequence can be repeated.
+During replay, current/history prices, price-linked spend, realised
+savings, and recommendation confidence use replay prices only up to simulated
+now. Live price ingestion continues on wall-clock time and writes to the normal
+market tables. Stopping demo mode immediately returns clock-based features to
+real Singapore time.
+
 ## F3: forecaster and baseline evaluator
 
 The [forecast page](/forecast.html) reads saved 24-interval forecasts from Spring.
