@@ -26,4 +26,20 @@ class DemoReplayRefreshServiceTest {
         verify(forecasts).runOnce();
         verify(recommendations).generate(4242L);
     }
+
+    @Test
+    void startResetsTheReplayHouseholdBeforeRefreshingIt() {
+        JdbcTemplate jdbc = mock(JdbcTemplate.class);
+        ForecastJob forecasts = mock(ForecastJob.class);
+        RecommendationService recommendations = mock(RecommendationService.class);
+        when(jdbc.queryForObject(anyString(), eq(Long.class), eq("Replay Demo Household")))
+                .thenReturn(4242L);
+
+        new DemoReplayRefreshService(jdbc, forecasts, recommendations).start();
+
+        org.mockito.InOrder order = org.mockito.Mockito.inOrder(recommendations, forecasts);
+        order.verify(recommendations).resetForReplay(4242L);
+        order.verify(forecasts).runOnce();
+        order.verify(recommendations).generate(4242L);
+    }
 }

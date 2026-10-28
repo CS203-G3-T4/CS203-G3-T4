@@ -50,7 +50,7 @@ public class DemoClockController {
         replayPrices.loadDay(request.date());
         clock.startAt(start);
         try {
-            replayRefresh.refresh();
+            replayRefresh.start();
         } catch (RuntimeException exception) {
             clock.stop();
             throw exception;
