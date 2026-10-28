@@ -4,10 +4,13 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import sg.edu.smu.cs203.market.price.*;
 import static sg.edu.smu.cs203.forecast.ForecastTypes.*;
+import sg.edu.smu.cs203.common.DemoClock;
+import sg.edu.smu.cs203.market.price.ReplayPriceService;
 
 /** F4 must require actionable before recommending a shift; F5 supplies the shared Clock. */
 @Service
@@ -19,6 +22,7 @@ public class ForecastService {
     private final Duration staleAfter;
     private final String mode;
     private final boolean mappingVerified;
+    private ReplayPriceService replayPrices;
 
     public ForecastService(ForecastRepository repository,MarketHistoryRepository history,IngestionRunRepository ingestion,
             Clock clock,@Value("${market.feed.stale-after}") Duration staleAfter,
@@ -27,10 +31,26 @@ public class ForecastService {
         this.repository=repository; this.history=history; this.ingestion=ingestion; this.clock=clock;
         this.staleAfter=staleAfter; this.mode=mode; this.mappingVerified=!mappingEvidence.isBlank();
     }
+    @Autowired(required = false)
+    public void setReplayPrices(ReplayPriceService replayPrices) {
+        this.replayPrices = replayPrices;
+    }
     public String mode() { return mode; }
     public java.util.Map<String,Object> today() {
         Instant now=clock.instant();
         Instant start=now.atZone(java.time.ZoneId.of("Asia/Singapore")).toLocalDate().atStartOfDay(java.time.ZoneId.of("Asia/Singapore")).toInstant();
+        if (clock instanceof DemoClock demoClock && demoClock.isRunning()) {
+            if (replayPrices == null) {
+                throw new IllegalStateException("Replay price service is required while demo mode is active");
+            }
+            var prices = replayPrices.today(now).stream()
+                    .map(price -> java.util.Map.<String,Object>of(
+                            "periodStart", price.intervalStart(), "usep", price.usepSgdPerMwh()))
+                    .toList();
+            return java.util.Map.of("asOf",now,"start",start,"intervalMinutes",30,"units","SGD_PER_MWH",
+                    "prices",prices,"expectedPeriods",Duration.between(start,BaselineForecastService.floor(now))
+                    .toMinutes()/30+1,"observedPeriods",prices.size());
+        }
         var prices=history.asOf(now).stream().filter(row -> !row.periodStart().isBefore(start)).toList();
         return java.util.Map.of("asOf",now,"start",start,"intervalMinutes",30,"units","SGD_PER_MWH","prices",prices,
                 "expectedPeriods",java.time.Duration.between(start,BaselineForecastService.floor(now)).toMinutes()/30+1,

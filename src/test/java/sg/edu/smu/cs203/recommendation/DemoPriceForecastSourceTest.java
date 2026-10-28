@@ -10,10 +10,13 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import sg.edu.smu.cs203.common.DemoClock;
+import sg.edu.smu.cs203.market.price.ReplayPriceCatalog;
 
 import org.junit.jupiter.api.Test;
 
@@ -87,6 +90,32 @@ class DemoPriceForecastSourceTest {
                 "data/replay/2026-09-26_data(main_day).csv", clock);
 
         assertThat(source.forecast().forecast().points()).noneMatch(PriceForecast.HalfHourPrice::spike);
+    }
+
+    @Test
+    void demoDateSelectsItsOwnReplayCurveAndIsRepeatable() {
+        ReplayPriceCatalog catalog = new ReplayPriceCatalog(
+                "data/replay/2026-09-25_data(backup_day).csv,"
+                        + "data/replay/2026-09-26_data(main_day).csv");
+        DemoClock demoClock = new DemoClock(clock);
+        DemoPriceForecastSource source = DemoPriceForecastSource.fromCatalog(
+                catalog, LocalDate.parse("2026-09-26"), demoClock, null);
+
+        demoClock.startAt(sgt("2026-09-25T08:00"));
+        List<PriceForecast.HalfHourPrice> day25 = source.forecast().forecast().points();
+        BigDecimal expected25 = catalog.day(LocalDate.parse("2026-09-25")).stream()
+                .filter(row -> row.intervalStart().equals(sgt("2026-09-25T08:30")))
+                .findFirst().orElseThrow().usep();
+        assertThat(day25.getFirst().usepSgdPerMwh()).isEqualByComparingTo(expected25);
+        assertThat(source.forecast().forecast().points()).isEqualTo(day25);
+
+        demoClock.startAt(sgt("2026-09-26T08:00"));
+        List<PriceForecast.HalfHourPrice> day26 = source.forecast().forecast().points();
+        BigDecimal expected26 = catalog.day(LocalDate.parse("2026-09-26")).stream()
+                .filter(row -> row.intervalStart().equals(sgt("2026-09-26T08:30")))
+                .findFirst().orElseThrow().usep();
+        assertThat(day26.getFirst().usepSgdPerMwh()).isEqualByComparingTo(expected26);
+        assertThat(day26.getFirst().usepSgdPerMwh()).isNotEqualByComparingTo(day25.getFirst().usepSgdPerMwh());
     }
 
     private static boolean spikeAt(List<PriceForecast.HalfHourPrice> points, String time) {

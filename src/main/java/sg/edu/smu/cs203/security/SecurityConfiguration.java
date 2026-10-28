@@ -38,6 +38,8 @@ public class SecurityConfiguration {
                                 "/api/v1/admin/forecast-training-attempts",
                                 "/api/v1/admin/forecast-savings-replay")
                         .permitAll()
+                        .requestMatchers("/admin-demo.html")
+                        .hasRole("ADMIN")
                         .requestMatchers("/api/v1/admin/**", "/api/v1/demo/**",
                                 "/admin-feed.html", "/admin-overview.html")
                         .hasRole("ADMIN")
