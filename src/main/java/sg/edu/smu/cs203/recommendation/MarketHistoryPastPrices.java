@@ -1,13 +1,12 @@
 package sg.edu.smu.cs203.recommendation;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.Instant;
-import java.util.Map;
 
 import org.springframework.stereotype.Component;
 
-import sg.edu.smu.cs203.forecast.BaselineForecastService;
-import sg.edu.smu.cs203.market.price.MarketHistoryRepository;
+import sg.edu.smu.cs203.market.price.AsOfMarketPrices;
 
 /**
  * F1's saved prices as they were known at asOf (the latest revision published by then), the same
@@ -16,14 +15,14 @@ import sg.edu.smu.cs203.market.price.MarketHistoryRepository;
 @Component
 public class MarketHistoryPastPrices implements PastPrices {
 
-    private final MarketHistoryRepository history;
+    private final AsOfMarketPrices prices;
 
-    public MarketHistoryPastPrices(MarketHistoryRepository history) {
-        this.history = history;
+    public MarketHistoryPastPrices(AsOfMarketPrices prices) {
+        this.prices = prices;
     }
 
     @Override
-    public Map<Instant, BigDecimal> actualPrices(Instant asOf) {
-        return BaselineForecastService.values(history.asOf(asOf), asOf);
+    public java.util.Map<Instant, BigDecimal> actualPrices(Instant asOf) {
+        return prices.prices(asOf.minus(Duration.ofDays(29)), asOf);
     }
 }

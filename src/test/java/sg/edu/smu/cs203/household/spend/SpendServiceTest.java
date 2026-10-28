@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
+import sg.edu.smu.cs203.common.DemoClock;
 import sg.edu.smu.cs203.household.DwellingType;
 import sg.edu.smu.cs203.household.HouseholdResponse;
 import sg.edu.smu.cs203.household.HouseholdService;
@@ -29,8 +30,7 @@ import sg.edu.smu.cs203.household.PlanType;
 import sg.edu.smu.cs203.household.load.LoadProfileResponse;
 import sg.edu.smu.cs203.household.load.LoadProfileService;
 import sg.edu.smu.cs203.household.budget.BudgetRepository;
-import sg.edu.smu.cs203.market.price.MarketHistoryRepository;
-import sg.edu.smu.cs203.market.price.MarketRevision;
+import sg.edu.smu.cs203.market.price.AsOfMarketPrices;
 
 /** CSDT4-41: "this month" and "so far" come from the injected Clock. Fixed Clock throughout. */
 class SpendServiceTest {
@@ -39,7 +39,7 @@ class SpendServiceTest {
 
     private final HouseholdService households = mock(HouseholdService.class);
     private final LoadProfileService loads = mock(LoadProfileService.class);
-    private final MarketHistoryRepository prices = mock(MarketHistoryRepository.class);
+    private final AsOfMarketPrices prices = mock(AsOfMarketPrices.class);
     private final TariffRepository tariffs = mock(TariffRepository.class);
     private final BudgetRepository budgets = mock(BudgetRepository.class);
 
@@ -49,7 +49,8 @@ class SpendServiceTest {
         Instant now = sg("2026-10-01T01:10");
         priceLinked();
         when(loads.profile(1L, LocalDate.of(2026, 10, 1))).thenReturn(day(LocalDate.of(2026, 10, 1), "0.5"));
-        when(prices.asOf(now, sg("2026-10-01T00:00"))).thenReturn(List.of(price("2026-10-01T00:00", "200")));
+        when(prices.prices(sg("2026-10-01T00:00"), now))
+                .thenReturn(java.util.Map.of(sg("2026-10-01T00:00"), new BigDecimal("200")));
         when(tariffs.forPeriod(PlanType.PRICE_LINKED, LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 1)))
                 .thenReturn(List.of(component("TRANSMISSION_OFF_PEAK", "0.0478", "23:00", "07:00"),
                         new TariffComponent("GST", "GST (9%)", TariffComponent.Unit.PERCENT, new BigDecimal("9"),
@@ -81,8 +82,26 @@ class SpendServiceTest {
         assertThat(spend.month()).isEqualTo(YearMonth.of(2026, 9));
         assertThat(spend.asOf()).isEqualTo(demo);
         assertThat(spend.halfHoursSoFar()).isEqualTo(25 * 48 + 24);
-        verify(prices).asOf(demo, sg("2026-09-01T00:00"));
+        verify(prices).prices(sg("2026-09-01T00:00"), demo);
         verify(loads, times(26)).profile(eq(1L), any());
+    }
+
+    @Test
+    void priceLinkedSpendUsesReplayPricesWhileTheDemoClockIsRunning() {
+        Instant now = sg("2026-10-01T01:10");
+        priceLinked();
+        when(loads.profile(1L, LocalDate.of(2026, 10, 1)))
+                .thenReturn(day(LocalDate.of(2026, 10, 1), "0.5"));
+        when(prices.prices(sg("2026-10-01T00:00"), now))
+                .thenReturn(java.util.Map.of(sg("2026-10-01T00:00"), new BigDecimal("200")));
+        DemoClock clock = new DemoClock(Clock.fixed(now, SINGAPORE));
+        clock.startAt(now);
+        SpendService spendService = new SpendService(households, loads, prices, tariffs, budgets, clock);
+        MonthToDateSpendResponse spend = spendService.monthToDate(1L);
+
+        assertThat(spend.halfHoursCounted()).isEqualTo(1);
+        assertThat(spend.halfHoursWithoutPrice()).isEqualTo(1);
+        verify(prices).prices(sg("2026-10-01T00:00"), now);
     }
 
     @Test
@@ -96,7 +115,7 @@ class SpendServiceTest {
         // 2 half-hours x 1.0 kWh x 29.5 cents = $0.59
         assertThat(spend.totalSgd()).isEqualByComparingTo("0.59");
         assertThat(spend.charges()).isEmpty();
-        verify(prices, never()).asOf(any(), any());
+        verify(prices, never()).prices(any(), any());
     }
 
     @Test
@@ -180,12 +199,6 @@ class SpendServiceTest {
         return new LoadProfileResponse(1L, date, "HDB 4-room", new BigDecimal("400"), true,
                 kwh.multiply(BigDecimal.valueOf(48)), kwh.multiply(BigDecimal.valueOf(48)), BigDecimal.ZERO,
                 BigDecimal.ZERO, slots, List.of());
-    }
-
-    private static MarketRevision price(String localPeriod, String usep) {
-        Instant period = sg(localPeriod);
-        return new MarketRevision(1L, "EMC", period, period, period, new BigDecimal(usep), null, null, "FINAL",
-                "VERIFIED");
     }
 
     private static TariffComponent component(String code, String rate, String from, String to) {

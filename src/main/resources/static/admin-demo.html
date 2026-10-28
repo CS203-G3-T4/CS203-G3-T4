@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Demo clock · Wattly admin</title>
+  <link rel="stylesheet" href="/css/wattly.css">
+  <style>
+    main { max-width: 760px; margin: 32px auto; padding: 16px; }
+    h1, h2, p, label { margin-bottom: 12px; }
+    .clock-card { padding: 22px; margin: 18px 0; }
+    .clock-form { display: flex; align-items: end; gap: 12px; flex-wrap: wrap; }
+    .clock-form label { display: grid; gap: 5px; font-weight: 600; }
+    .clock-form input { min-height: 40px; padding: 8px; border: 1px solid var(--border); border-radius: 8px; font: inherit; }
+    .clock-form button { min-height: 40px; padding: 8px 14px; cursor: pointer; }
+    .clock-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .clock-actions button { min-height: 40px; padding: 8px 14px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); font: inherit; cursor: pointer; }
+    .clock-actions button:disabled { cursor: not-allowed; opacity: .6; }
+    #demo-clock-message { min-height: 22px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Demo clock</h1>
+  <p>Set the shared application clock to a date and time in Singapore, then advance it in half-hour intervals. All features that use the shared clock will follow it.</p>
+  <p id="demo-clock-message" role="status" aria-live="polite">Loading demo clock…</p>
+  <section class="card clock-card" aria-labelledby="start-title">
+    <h2 id="start-title">Start or reset demo time</h2>
+    <form id="demo-clock-start" class="clock-form">
+      <label for="demo-start-at">Start date and time (Singapore time)
+        <input id="demo-start-at" type="datetime-local" step="60" required>
+      </label>
+      <button class="btn-primary" type="submit">Start demo</button>
+    </form>
+  </section>
+  <section class="card clock-card" aria-labelledby="advance-title">
+    <h2 id="advance-title">Advance demo time</h2>
+    <form id="demo-clock-advance" class="clock-form">
+      <label for="demo-half-hours">Half-hour periods to advance
+        <input id="demo-half-hours" type="number" min="1" step="1" value="1" required>
+      </label>
+      <button class="btn-primary" id="demo-advance-button" type="submit">Advance time</button>
+    </form>
+  </section>
+  <div class="clock-actions">
+    <button class="btn-ghost" id="demo-stop-button" type="button">Stop demo and use real time</button>
+  </div>
+  <p><a href="/households.html">Households</a> · <a href="/admin-feed.html">USEP price feed</a> · <a href="/admin-forecast.html">Forecast accuracy</a></p>
+</main>
+<script src="/js/wattly.js"></script>
+<script src="/js/admin-demo-clock.js"></script>
+</body>
+</html>
