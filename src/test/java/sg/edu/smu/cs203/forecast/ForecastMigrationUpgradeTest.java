@@ -93,7 +93,7 @@ class ForecastMigrationUpgradeTest {
                 assertThat(rows.next()).isTrue(); assertThat(rows.getInt(1)).isZero();
             }
             try (var rows=sql.executeQuery("SELECT max(version::int) FROM flyway_schema_history WHERE version IS NOT NULL")) {
-                assertThat(rows.next()).isTrue(); assertThat(rows.getInt(1)).isEqualTo(22);
+                assertThat(rows.next()).isTrue(); assertThat(rows.getInt(1)).isEqualTo(23);
             }
         }
     }
