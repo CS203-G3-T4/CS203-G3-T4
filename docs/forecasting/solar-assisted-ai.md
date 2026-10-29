@@ -30,7 +30,7 @@ Training used revised final archives with assumed period-end availability; live 
 - Solar values, receipt times and snapshot identity are saved with forecast inputs. Solar revisions change the input/run identity even when prices are unchanged.
 - Unapproved models are registered as EXPERIMENTAL in the app database. The immutable manifest retains productionEligible=false. No approved current.json pointer is written.
 - Missing/stale/malformed solar blocks new solar AI inference. Java retains its ordinary baseline fallback. An older numerical model is never silently substituted as the solar model.
-- Manual resident recommendation generation is verified against the saved F3 forecast. Existing background recomputation logs household-access denials; this integration does not establish unattended recommendation refresh.
+- Resident and automatic recommendation generation use the saved F3 forecast. Background work reads only real household inputs through a dedicated internal path and runs after forecast commit, without changing resident ownership rules. The open recommendations page reads updated advice every minute. See [automatic refresh](../automatic-recommendation-refresh.md).
 
 ## Reproduction
 

@@ -7,18 +7,21 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 import sg.edu.smu.cs203.household.HouseholdChanged;
 import sg.edu.smu.cs203.household.HouseholdDirectory;
 import sg.edu.smu.cs203.household.HouseholdNotFoundException;
 import sg.edu.smu.cs203.household.HouseholdResponse;
 import sg.edu.smu.cs203.market.price.MarketObservationSaved;
+import sg.edu.smu.cs203.forecast.ForecastSaved;
 
 /**
  * CSDT4-37: suggestions are recomputed in the background, never on page load.
  *
  * - on startup, so a fresh app has suggestions straight away
- * - when F1 saves a new price (MarketObservationSaved)
+ * - after F3 commits a saved forecast (or a new price when using the demo forecast)
  * - when a household or one of its appliances changes (HouseholdChanged, from F2)
  * - every 30 minutes, which also picks up a new F3 forecast and moves the demo forecast along
  *
@@ -33,12 +36,15 @@ public class RecommendationRecomputeJob {
     private final RecommendationService recommendations;
     private final HouseholdDirectory households;
     private final boolean enabled;
+    private final boolean usesF3;
 
     public RecommendationRecomputeJob(RecommendationService recommendations, HouseholdDirectory households,
-                                      @Value("${recommendation.auto-recompute:true}") boolean enabled) {
+                                      @Value("${recommendation.auto-recompute:true}") boolean enabled,
+                                      @Value("${recommendation.forecast-source:demo}") String source) {
         this.recommendations = recommendations;
         this.households = households;
         this.enabled = enabled;
+        this.usesF3 = "f3".equalsIgnoreCase(source.trim());
     }
 
     @EventListener(ApplicationReadyEvent.class)
@@ -48,7 +54,17 @@ public class RecommendationRecomputeJob {
 
     @EventListener
     public void onNewPrice(MarketObservationSaved event) {
-        recomputeAll("new price");
+        if (!usesF3) recomputeAll("new price");
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onForecastSaved(ForecastSaved event) {
+        if (!usesF3 || !"LIVE".equals(event.mode())) return;
+        try {
+            recomputeAll("saved forecast");
+        } catch (RuntimeException failure) {
+            LOG.warn("Forecast {} committed; recommendation refresh failed",event.runId(),failure);
+        }
     }
 
     @EventListener
@@ -80,7 +96,7 @@ public class RecommendationRecomputeJob {
             return false;
         }
         try {
-            recommendations.generate(householdId);
+            recommendations.generateInBackground(householdId);
             return true;
         } catch (HouseholdNotFoundException deleted) {
             return false; // deleted in the meantime: nothing to do

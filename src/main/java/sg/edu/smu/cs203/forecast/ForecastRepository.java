@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.JsonNode;
@@ -18,7 +19,10 @@ import static sg.edu.smu.cs203.forecast.ForecastTypes.*;
 public class ForecastRepository {
     private final JdbcTemplate jdbc;
     private final ObjectMapper mapper;
-    public ForecastRepository(JdbcTemplate jdbc,ObjectMapper mapper) { this.jdbc=jdbc; this.mapper=mapper; }
+    private final ApplicationEventPublisher events;
+    public ForecastRepository(JdbcTemplate jdbc,ObjectMapper mapper,ApplicationEventPublisher events) {
+        this.jdbc=jdbc; this.mapper=mapper; this.events=events;
+    }
 
     public static class ModelManifestConflict extends IllegalStateException {
         ModelManifestConflict(String version) { super("Model version changed manifest: "+version); }
@@ -56,6 +60,7 @@ public class ForecastRepository {
                         """,run.id(),entry.getKey(),p.horizon(),ts(p.targetPeriod()),p.predictedUsep(),p.spikeThreshold(),p.spikeFlag());
             }
         }
+        events.publishEvent(new ForecastSaved(run.id(),run.mode()));
         return true;
     }
     public Optional<Run> latest(String mode,Instant asOf) {
