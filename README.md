@@ -197,6 +197,10 @@ rule to future changes. Feature-lead acknowledgements are tracked in the
 
 ## F3: forecaster and baseline evaluator
 
+[Local experimental AI activation](docs/forecasting/local-experimental-ai.md) connects an actual
+trained model to the forecast and recommendation pages with explicit labels and fallback.
+This optional local mode does not approve a research bundle or establish live savings.
+
 The [F3 final report](docs/final-report-f3.md) records the final fixed candidate comparison,
 remaining data/review dependencies and the decision to stop open-ended model searching.
 The [delivery handoff](docs/forecasting/delivery-2026-10-29.md) covers runtime verification and inactive WSL weekly preparation.

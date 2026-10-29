@@ -77,6 +77,9 @@ test('saved endpoint response renders 24 rows, provenance, stale, empty and outa
   await vm.runInContext('WattlyForecast.refresh()', context);
   assert.match(nodes['current-assessment'].textContent, /5.00 SGD\/MWh above typical/);
   assert.match(nodes['current-assessment'].textContent, /percentage unavailable.*Price data is stale/);
+  view.run.modelType = 'AI'; view.run.qualityFlags.push('EXPERIMENTAL_AI');
+  await vm.runInContext('WattlyForecast.refresh()', context);
+  assert.match(nodes['forecast-metadata'].textContent, /Experimental AI/);
   view = { ...view, stale: true };
   await vm.runInContext('WattlyForecast.refresh()', context);
   assert.match(nodes['forecast-status'].textContent, /Stale forecast/);

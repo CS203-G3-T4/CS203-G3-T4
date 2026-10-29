@@ -194,7 +194,7 @@ class ForecastPersistenceTest {
                 Thread.sleep(100);
             }
             assertThat(ready).as("Synthetic FastAPI startup; see target/forecast-python-smoke.log").isTrue();
-            var realPython=new PythonForecastClient(url,Duration.ofSeconds(5));
+            var realPython=new PythonForecastClient(url,Duration.ofSeconds(5),false);
             doAnswer(call -> realPython.forecast(call.getArgument(0),call.getArgument(1),call.getArgument(2)))
                     .when(python).forecast(anyString(),any(),anyList());
             job.runOnce(); job.runOnce();

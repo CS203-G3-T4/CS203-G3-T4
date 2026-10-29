@@ -49,14 +49,15 @@ class PythonForecastClientTest {
         server.createContext("/forecast",exchange -> {
             var request=mapper.readTree(exchange.getRequestBody());
             assertThat(request.path("priceHistory").size()).isEqualTo(384);
+            assertThat(java.time.Instant.parse(request.path("asOf").asText())).isEqualTo(NOW);
             byte[] body=response.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
             exchange.getResponseHeaders().set("Content-Type","application/json");
             exchange.sendResponseHeaders(200,body.length); exchange.getResponseBody().write(body); exchange.close();
         });
         server.start();
         try {
-            var client=new PythonForecastClient("http://127.0.0.1:"+server.getAddress().getPort(),Duration.ofSeconds(2));
-            assertThat(client.forecast("test",NOW,rows()).path("points").size()).isEqualTo(24);
+            var client=new PythonForecastClient("http://127.0.0.1:"+server.getAddress().getPort(),Duration.ofSeconds(2),false);
+            assertThat(client.forecast("test",NOW.plusNanos(123),rows()).path("points").size()).isEqualTo(24);
         } finally { server.stop(0); }
     }
 
@@ -72,10 +73,21 @@ class PythonForecastClientTest {
         });
         server.start();
         try {
-            var client=new PythonForecastClient("http://127.0.0.1:"+server.getAddress().getPort(),Duration.ofMillis(50));
+            var client=new PythonForecastClient("http://127.0.0.1:"+server.getAddress().getPort(),Duration.ofMillis(50),false);
             assertThatThrownBy(() -> client.forecast("test",NOW,rows()))
                     .isInstanceOf(org.springframework.web.client.RestClientException.class)
                     .hasRootCauseInstanceOf(java.net.SocketTimeoutException.class);
         } finally { server.stop(0); }
+    }
+    @Test void experimentalForecastNeedsExplicitOptInAndAnHonestLabel() {
+        var response=(tools.jackson.databind.node.ObjectNode)syntheticResponse("local");
+        response.put("servingMode","EXPERIMENTAL");
+        ((tools.jackson.databind.node.ObjectNode)response.path("manifest")).put("productionEligible",false);
+        ((tools.jackson.databind.node.ArrayNode)response.path("qualityFlags")).add("EXPERIMENTAL_AI");
+        assertThatThrownBy(() -> PythonForecastClient.validate(response,"local",NOW)).isInstanceOf(IllegalArgumentException.class);
+        PythonForecastClient.validate(response,"local",NOW,true);
+        response.put("units","WRONG");
+        assertThatThrownBy(() -> PythonForecastClient.validate(response,"local",NOW,true)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new PythonForecastClient("https://example.com",Duration.ofSeconds(1),true)).isInstanceOf(IllegalArgumentException.class);
     }
 }
