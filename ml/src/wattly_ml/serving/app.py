@@ -187,6 +187,17 @@ def create_app(loader=None):
             raise HTTPException(503,detail={"code":"STALE_INPUT"})
         history = KnownPrices({r.periodStart:r.model_dump() for r in request.priceHistory},
                               [r.model_dump() for r in request.expectedDemand])
+        input_evidence = None
+        if manifest.get('featureSchemaVersion') == 3:
+            if not app.state.experimental:
+                raise HTTPException(503,detail={'code':'SOLAR_MODEL_REQUIRES_EXPERIMENTAL_MODE'})
+            try:
+                from ..solar import read_solar_snapshot
+                history.solar_values, input_evidence = read_solar_snapshot(
+                    os.environ.get('WATTLY_SOLAR_SNAPSHOT','/nonexistent-solar-snapshot'),request.asOf)
+            except (OSError,ValueError,KeyError,TypeError,IndexError) as exc:
+                logging.getLogger('wattly_ml').warning('Solar input unavailable: %s',exc)
+                raise HTTPException(503,detail={'code':'SOLAR_INPUT_UNAVAILABLE'})
         try:
             predictions = predict(bundle,history,request.asOf)
         except Exception:
@@ -205,7 +216,7 @@ def create_app(loader=None):
                 "modelVersion":manifest["version"],"usableFrom":manifest["usableFrom"],
                 "servingMode":"EXPERIMENTAL" if app.state.experimental else "APPROVED",
                 "baselineRanking":manifest["baselineRanking"],"manifest":manifest,
-                "points":points,"qualityFlags":(['PRICE_CALENDAR_ONLY'] if manifest.get('featureSchemaVersion',1)==1 else
+                "points":points,"inputEvidence":input_evidence,"qualityFlags":(['PRICE_CALENDAR_HOLIDAY_SOLAR', 'SOLAR_PUBLIC_PROVISIONAL_INPUTS', 'COMPLETED_PERIOD_PRICE_INPUTS'] if manifest.get('featureSchemaVersion')==3 else ['PRICE_CALENDAR_ONLY'] if manifest.get('featureSchemaVersion',1)==1 else
                     ['PRICE_CALENDAR_HOLIDAY_DEMAND', 'EXPECTED_DEMAND_PARTIAL_OR_MISSING'] if len({r.targetPeriod for r in request.expectedDemand if r.targetPeriod in targets(request.asOf)})<24 else ['PRICE_CALENDAR_HOLIDAY_DEMAND'])+
                     (["RETROSPECTIVE_TRAINING"] if manifest["retrospective"] else [])+
                     (["EXPERIMENTAL_AI"] if app.state.experimental else [])}

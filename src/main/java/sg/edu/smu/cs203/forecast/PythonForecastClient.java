@@ -69,6 +69,10 @@ public class PythonForecastClient {
                 || !response.path("points").isArray() || response.path("points").size()!=24) {
             throw new IllegalArgumentException("Invalid Python forecast envelope");
         }
+        if (response.path("manifest").path("featureSchemaVersion").asInt()==3) {
+            if (!experimental) throw new IllegalArgumentException("Solar AI is experimental only");
+            validateSolarEvidence(response.path("inputEvidence"),asOf);
+        }
         List<Instant> targets=BaselineForecastService.targets(asOf);
         for (int i=0;i<24;i++) {
             JsonNode point=response.path("points").get(i);
@@ -82,4 +86,24 @@ public class PythonForecastClient {
         for (JsonNode name : ranking) unique.add(name.asText());
         if (!unique.equals(java.util.Set.of("B1","B2","B3"))) throw new IllegalArgumentException("Invalid validation ranking");
     }
+    private static void validateSolarEvidence(JsonNode evidence,Instant asOf) {
+        if (!"EMC_PUBLIC_PROVISIONAL_SOLAR".equals(evidence.path("source").asText())
+                || !evidence.path("snapshotSha256").asText().matches("[0-9a-f]{64}")
+                || !evidence.path("periods").isArray() || evidence.path("periods").size()!=7)
+            throw new IllegalArgumentException("Missing solar input evidence");
+        Instant latest=BaselineForecastService.floor(asOf).minus(Duration.ofMinutes(30));
+        java.util.Set<Instant> required=new java.util.HashSet<>();
+        for (int i=0;i<6;i++) required.add(latest.minus(Duration.ofMinutes(30L*i)));
+        required.add(latest.minus(Duration.ofDays(1)));
+        for (JsonNode row:evidence.path("periods")) {
+            Instant availableAt=Instant.parse(row.path("availableAt").asText());
+            if (!required.remove(Instant.parse(row.path("periodStart").asText()))
+                    || availableAt.isAfter(asOf) || availableAt.isBefore(asOf.minus(Duration.ofMinutes(10)))
+                    || !row.path("solarMw").isNumber() || !Double.isFinite(row.path("solarMw").asDouble())
+                    || row.path("solarMw").asDouble()<0)
+                throw new IllegalArgumentException("Invalid solar input evidence");
+        }
+        if (!required.isEmpty()) throw new IllegalArgumentException("Incomplete solar input evidence");
+    }
+
 }

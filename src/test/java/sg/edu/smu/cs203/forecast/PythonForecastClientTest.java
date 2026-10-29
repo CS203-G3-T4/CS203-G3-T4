@@ -90,4 +90,33 @@ class PythonForecastClientTest {
         assertThatThrownBy(() -> PythonForecastClient.validate(response,"local",NOW,true)).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> new PythonForecastClient("https://example.com",Duration.ofSeconds(1),true)).isInstanceOf(IllegalArgumentException.class);
     }
+    static tools.jackson.databind.node.ObjectNode solarResponse(String requestId) {
+        var response=(tools.jackson.databind.node.ObjectNode)syntheticResponse(requestId);
+        response.put("servingMode","EXPERIMENTAL");
+        ((tools.jackson.databind.node.ObjectNode)response.path("manifest"))
+                .put("productionEligible",false).put("featureSchemaVersion",3);
+        ((tools.jackson.databind.node.ArrayNode)response.path("qualityFlags")).add("EXPERIMENTAL_AI");
+        var evidence=response.putObject("inputEvidence");
+        evidence.put("source","EMC_PUBLIC_PROVISIONAL_SOLAR").put("snapshotSha256","a".repeat(64));
+        var periods=evidence.putArray("periods");
+        var latest=BaselineForecastService.floor(NOW).minus(Duration.ofMinutes(30));
+        for (int i=0;i<7;i++) periods.addObject()
+                .put("periodStart",latest.minus(i==6?Duration.ofDays(1):Duration.ofMinutes(30L*i)).toString())
+                .put("solarMw",100+i).put("availableAt",NOW.minusSeconds(1).toString());
+        return response;
+    }
+    @Test void solarForecastRequiresCompleteReceiptStampedAuxiliaryEvidence() {
+        var response=solarResponse("solar");
+        PythonForecastClient.validate(response,"solar",NOW,true);
+        var missing=response.deepCopy(); missing.remove("inputEvidence");
+        assertThatThrownBy(() -> PythonForecastClient.validate(missing,"solar",NOW,true)).isInstanceOf(IllegalArgumentException.class);
+        var future=response.deepCopy();
+        ((tools.jackson.databind.node.ObjectNode)future.path("inputEvidence").path("periods").get(0)).put("availableAt",NOW.plusSeconds(1).toString());
+        assertThatThrownBy(() -> PythonForecastClient.validate(future,"solar",NOW,true)).isInstanceOf(IllegalArgumentException.class);
+        var duplicate=response.deepCopy();
+        ((tools.jackson.databind.node.ObjectNode)duplicate.path("inputEvidence").path("periods").get(6))
+                .put("periodStart",duplicate.path("inputEvidence").path("periods").get(0).path("periodStart").asText());
+        assertThatThrownBy(() -> PythonForecastClient.validate(duplicate,"solar",NOW,true)).isInstanceOf(IllegalArgumentException.class);
+    }
+
 }

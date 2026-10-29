@@ -45,7 +45,11 @@ def load_bundle(path: Path):
     manifest = json.loads((path/"manifest.json").read_text())
     validate_config(manifest["spikeConfig"])
     schema = manifest.get('featureSchemaVersion',1)
-    if schema == 2 and (manifest.get('holidayCalendarVersion') != holiday_calendar()['version'] or manifest.get('holidayCalendarSha256') != holiday_digest()):
+    if schema == 3:
+        from .solar import SOLAR_POLICY
+        if manifest.get('productionEligible') is not False or manifest.get('inputPolicy') != SOLAR_POLICY:
+            raise ValueError('Solar recipe is experimental only')
+    if schema in (2,3) and (manifest.get('holidayCalendarVersion') != holiday_calendar()['version'] or manifest.get('holidayCalendarSha256') != holiday_digest()):
         raise ValueError('Incompatible holiday calendar')
     if (manifest["schemaVersion"]!=1 or manifest["featureOrder"]!=feature_names(schema) or
         manifest["dependencies"]!=versions() or digest(path/"models.joblib")!=manifest["modelSha256"]):

@@ -1,4 +1,6 @@
-# Local experimental AI activation — 30 October 2026
+# Earlier local experimental AI activation — 30 October 2026
+
+**Superseded:** the app now uses the solar-assisted SOLAR_183D recipe. See [current solar activation](solar-assisted-ai.md). The text and evidence below describe the earlier compatible model, not the current selection.
 
 The local application now uses a real fitted model for its12-hour forecast and F4 recommendations. It is an explicitly experimental deployment, not an approved production rollout. The model's immutable productionEligible=false manifest and the approved current.json pointer are not altered.
 

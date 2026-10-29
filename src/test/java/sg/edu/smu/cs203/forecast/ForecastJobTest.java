@@ -104,4 +104,24 @@ class ForecastJobTest {
             verify(history,times(2)).asOf(NOW);
         } finally { release.countDown(); job.close(); }
     }
+    @Test void solarRevisionsAreSavedAndChangeRunIdentityWithTheSamePrices() {
+        when(history.asOf(NOW)).thenReturn(rows());
+        when(saved.baselineRanking(NOW,"REPLAY")).thenReturn(List.of());
+        var first=PythonForecastClientTest.solarResponse("solar");
+        var second=first.deepCopy();
+        ((tools.jackson.databind.node.ObjectNode)second.path("inputEvidence")).put("snapshotSha256","b".repeat(64));
+        ((tools.jackson.databind.node.ObjectNode)second.path("inputEvidence").path("periods").get(0)).put("solarMw",200);
+        when(python.forecast(anyString(),eq(NOW),anyList())).thenReturn(first,first,second);
+        var job=job(service("REPLAY","synthetic"));
+        try { job.runOnce();job.runOnce();job.runOnce(); } finally { job.close(); }
+        var runs=ArgumentCaptor.forClass(ForecastTypes.Run.class);
+        var snapshots=ArgumentCaptor.forClass(String.class);
+        verify(saved,times(3)).save(runs.capture(),snapshots.capture(),anyMap(),any());
+        assertThat(runs.getAllValues().get(0).modelType()).isEqualTo("AI");
+        assertThat(runs.getAllValues().get(0).id()).isEqualTo(runs.getAllValues().get(1).id());
+        assertThat(runs.getAllValues().get(2).id()).isNotEqualTo(runs.getAllValues().get(0).id());
+        assertThat(runs.getAllValues().get(2).inputRevision()).isNotEqualTo(runs.getAllValues().get(0).inputRevision());
+        assertThat(snapshots.getAllValues().get(2)).contains("solarInputs","solarMw","availableAt","marketInputs");
+    }
+
 }

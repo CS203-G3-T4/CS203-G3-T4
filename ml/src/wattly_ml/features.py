@@ -34,12 +34,18 @@ def holiday_feature(origin, target):
 
 
 def feature_names(version):
+    if version == 3:
+        from .solar import SOLAR_NAMES
+        return ACTIVE_FEATURES + SOLAR_NAMES
     if version not in (1,2):
         raise ValueError('Unsupported feature schema')
     return FEATURES if version == 1 else ACTIVE_FEATURES
 
 
 def features(history, origin, target, *, schema_version=1):
+    if schema_version == 3:
+        from .solar import solar_features
+        return solar_features(history,origin,target)
     boundary = floor(origin)
     prices = {p: r["usep"] for p, r in history.items() if p <= origin}
     def get(period):

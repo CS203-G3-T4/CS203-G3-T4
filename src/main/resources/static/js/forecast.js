@@ -18,6 +18,7 @@ WattlyForecast.render = function (view, assessment) {
       timeZone: 'Asia/Singapore', dateStyle: 'medium', timeStyle: 'short'
     });
     metadata.textContent = (run.modelType === 'AI' ? (run.qualityFlags.includes('EXPERIMENTAL_AI') ? 'Experimental AI' : 'AI') : 'Baseline ' + run.selectedModel) +
+      (run.qualityFlags.includes('PRICE_CALENDAR_HOLIDAY_SOLAR') ? ' · solar-assisted' : '') +
       ' · ' + run.modelVersion + ' · forecast as of ' + formatted.format(new Date(run.asOf)) + ' SGT' +
       (['PYTHON_UNAVAILABLE_OR_INVALID', 'MODEL_MANIFEST_CONFLICT'].includes(run.fallbackReason) ? ' · AI unavailable; baseline fallback' : '') +
       (run.qualityFlags.includes('BASELINE_RANKING_UNRANKED') ? ' · baseline order not yet validated' : '');

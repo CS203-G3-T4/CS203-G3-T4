@@ -197,7 +197,7 @@ rule to future changes. Feature-lead acknowledgements are tracked in the
 
 ## F3: forecaster and baseline evaluator
 
-[Local experimental AI activation](docs/forecasting/local-experimental-ai.md) connects an actual
+[Local experimental AI activation](docs/forecasting/solar-assisted-ai.md) connects an actual
 trained model to the forecast and recommendation pages with explicit labels and fallback.
 This optional local mode does not approve a research bundle or establish live savings.
 

@@ -31,8 +31,9 @@ public class ForecastRepository {
             String version=model.path("version").asText();
             jdbc.update("""
                     INSERT INTO model_run(version,manifest,registered_at,usable_from,promotion_state)
-                    VALUES (?,?::jsonb,?,?,'APPROVED') ON CONFLICT(version) DO NOTHING
-                    """,version,model.toString(),ts(run.generatedAt()),ts(Instant.parse(model.path("usableFrom").asText())));
+                    VALUES (?,?::jsonb,?,?,?) ON CONFLICT(version) DO NOTHING
+                    """,version,model.toString(),ts(run.generatedAt()),ts(Instant.parse(model.path("usableFrom").asText())),
+                    model.path("productionEligible").asBoolean() ? "APPROVED" : "EXPERIMENTAL");
             String existing=jdbc.queryForObject("SELECT manifest::text FROM model_run WHERE version=?",String.class,version);
             if (!mapper.readTree(existing).equals(model)) throw new ModelManifestConflict(version);
         }
