@@ -197,6 +197,10 @@ rule to future changes. Feature-lead acknowledgements are tracked in the
 
 ## F3: forecaster and baseline evaluator
 
+The [F3 final report](docs/final-report-f3.md) records the final fixed candidate comparison,
+remaining data/review dependencies and the decision to stop open-ended model searching.
+The [delivery handoff](docs/forecasting/delivery-2026-10-29.md) covers runtime verification and inactive WSL weekly preparation.
+
 The [forecast page](/forecast.html) reads saved 24-interval forecasts from Spring.
 F3 adds Java baseline fallback, revision-aware history/imports, PostgreSQL forecast
 runs, and a separate Python training/inference package under `ml/`. Existing F1
