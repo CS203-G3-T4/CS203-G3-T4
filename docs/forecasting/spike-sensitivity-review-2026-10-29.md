@@ -1,3 +1,5 @@
+> **30 October update:** Bryan authorized [the applied k3/pooled-budget/worst-week policy](spike-sensitivity-policy.md). The dated discussion below is preserved; no team approval or new model accuracy is claimed.
+
 # Spike sensitivity review for CSDT4-33/94
 
 Prepared for Jonathan/team review. No human agreement or genuine-event validation is asserted.

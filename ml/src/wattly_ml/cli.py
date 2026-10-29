@@ -96,6 +96,8 @@ def main(argv=None, *, training_attempt=None):
         s=sub.add_parser(name); s.add_argument('dataset',type=Path)
         s.add_argument('--start',type=instant,required=True); s.add_argument('--end',type=instant,required=True)
         s.add_argument('--output',type=Path,required=True); s.add_argument('--retrospective',action='store_true')
+    s = sub.add_parser('assess-warning-budget',help='One fixed earlier-data warning policy review; no search or promotion')
+    s.add_argument('evidence',type=Path); s.add_argument('--output',type=Path,required=True)
     args = p.parse_args(argv)
     attempt = training_attempt
     try:
@@ -103,6 +105,9 @@ def main(argv=None, *, training_attempt=None):
             from .operations import TrainingAttempt
             attempt = TrainingAttempt(args)
             attempt.start()
+        if args.command == 'assess-warning-budget':
+            from .warning_budget import evaluate_file
+            print(json.dumps(evaluate_file(args.evidence,args.output),indent=2)); return 0
         if args.command == 'sync-runs':
             from .operations import sync_runs
             print(json.dumps(sync_runs(args.home))); return 0

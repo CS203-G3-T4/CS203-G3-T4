@@ -216,6 +216,10 @@ unseen study are explicitly retrospective; they do not establish what final pric
 or future demand forecasts were available historically. Research artifacts remain
 unapproved. Live Java baselines continue when Python is absent or invalid.
 
+The [spike sensitivity policy](docs/forecasting/spike-sensitivity-policy.md) retains k=3 and
+uses pooled warning budgets with an earlier-control worst-week safeguard for future
+research review. It does not activate a new warning model or alter recommendations.
+
 ### Model runtime decision (CSDT4-34)
 
 | Option | Benefits | Costs and decision |
