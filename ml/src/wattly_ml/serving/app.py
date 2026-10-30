@@ -10,7 +10,8 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
 
-from ..artifacts import current_bundle
+from ..artifacts import current_bundle, load_bundle
+from ..data import digest
 from ..data import KnownPrices
 from ..backtest import predict
 from ..spikes import reference
@@ -78,12 +79,30 @@ class ForecastRequest(BaseModel):
         return self
 
 
+def experimental_path(home):
+    version = os.environ.get('WATTLY_EXPERIMENTAL_MODEL_VERSION', '')
+    pin = os.environ.get('WATTLY_EXPERIMENTAL_MANIFEST_SHA256', '')
+    path = (home/'models'/version).resolve()
+    if (not version or path.parent != (home/'models').resolve() or len(pin) != 64
+            or digest(path/'manifest.json') != pin):
+        raise ValueError('Pinned compatible experimental model required')
+    return path
+
+
+def experimental_bundle(home):
+    bundle = load_bundle(experimental_path(home))
+    if bundle['manifest'].get('productionEligible') is not False:
+        raise ValueError('Experimental serving requires an explicitly unapproved bundle')
+    return bundle
+
+
 def create_app(loader=None):
     @asynccontextmanager
     async def lifespan(app):
         app.state.reload_lock = threading.Lock()
         app.state.pointer = None
         app.state.bundle = None
+        app.state.experimental = loader is None and os.environ.get('WATTLY_ALLOW_EXPERIMENTAL_AI') == 'true'
         app.state.unavailable = "MODEL_ABSENT"
         try:
             if loader:
@@ -92,10 +111,16 @@ def create_app(loader=None):
                 home = os.environ.get("WATTLY_ML_HOME")
                 if not home:
                     raise ValueError("Set WATTLY_ML_HOME to the trusted artifact directory")
-                app.state.bundle = current_bundle(Path(home))
-                app.state.pointer = (Path(home)/'current.json').read_bytes()
+                if app.state.experimental:
+                    app.state.bundle = experimental_bundle(Path(home))
+                else:
+                    if os.environ.get('WATTLY_EXPERIMENTAL_MODEL_VERSION'):
+                        raise ValueError('Experimental serving requires explicit opt-in')
+                    app.state.bundle = current_bundle(Path(home))
+                app.state.pointer = b'EXPERIMENTAL' if app.state.experimental else (Path(home)/'current.json').read_bytes()
             app.state.unavailable = None
         except Exception as exc:
+            app.state.bundle = None
             app.state.unavailable = type(exc).__name__ + ": " + str(exc)
             logging.getLogger("wattly_ml").warning("Model not ready: %s",app.state.unavailable)
         yield
@@ -107,6 +132,12 @@ def create_app(loader=None):
         home = Path(os.environ.get('WATTLY_ML_HOME','/nonexistent-wattly-home'))
         with app.state.reload_lock:
             try:
+                if app.state.experimental:
+                    path = experimental_path(home)
+                    if app.state.bundle is None:
+                        app.state.bundle = experimental_bundle(home)
+                    app.state.unavailable = None
+                    return
                 pointer = (home/'current.json').read_bytes()
                 if pointer != app.state.pointer:
                     bundle = current_bundle(home)
@@ -137,7 +168,7 @@ def create_app(loader=None):
         bundle = app.state.bundle
         if bundle is None:
             return JSONResponse(status_code=503,content={"ready":False,"reason":app.state.unavailable})
-        return {"ready":True,"modelVersion":bundle["manifest"]["version"]}
+        return {"ready":True,"modelVersion":bundle["manifest"]["version"],"servingMode":"EXPERIMENTAL" if app.state.experimental else "APPROVED"}
 
     @app.post("/forecast")
     def forecast(request: ForecastRequest):
@@ -156,6 +187,17 @@ def create_app(loader=None):
             raise HTTPException(503,detail={"code":"STALE_INPUT"})
         history = KnownPrices({r.periodStart:r.model_dump() for r in request.priceHistory},
                               [r.model_dump() for r in request.expectedDemand])
+        input_evidence = None
+        if manifest.get('featureSchemaVersion') in (3, 4):
+            if not app.state.experimental:
+                raise HTTPException(503,detail={'code':'SOLAR_MODEL_REQUIRES_EXPERIMENTAL_MODE'})
+            try:
+                from ..solar import read_solar_snapshot
+                history.solar_values, input_evidence = read_solar_snapshot(
+                    os.environ.get('WATTLY_SOLAR_SNAPSHOT','/nonexistent-solar-snapshot'),request.asOf)
+            except (OSError,ValueError,KeyError,TypeError,IndexError) as exc:
+                logging.getLogger('wattly_ml').warning('Solar input unavailable: %s',exc)
+                raise HTTPException(503,detail={'code':'SOLAR_INPUT_UNAVAILABLE'})
         try:
             predictions = predict(bundle,history,request.asOf)
         except Exception:
@@ -172,10 +214,12 @@ def create_app(loader=None):
         return {"schemaVersion":request.schemaVersion,"requestId":request.requestId,"asOf":request.asOf,
                 "generatedAt":datetime.now(timezone.utc),"units":"SGD_PER_MWH","modelType":"AI",
                 "modelVersion":manifest["version"],"usableFrom":manifest["usableFrom"],
+                "servingMode":"EXPERIMENTAL" if app.state.experimental else "APPROVED",
                 "baselineRanking":manifest["baselineRanking"],"manifest":manifest,
-                "points":points,"qualityFlags":(['PRICE_CALENDAR_ONLY'] if manifest.get('featureSchemaVersion',1)==1 else
+                "points":points,"inputEvidence":input_evidence,"qualityFlags":(['PRICE_CALENDAR_HOLIDAY_SOLAR', 'SOLAR_PUBLIC_PROVISIONAL_INPUTS', 'COMPLETED_PERIOD_PRICE_INPUTS'] + (['AS_ISSUED_EXPECTED_DEMAND'] if manifest.get('featureSchemaVersion')==4 else []) if manifest.get('featureSchemaVersion') in (3,4) else ['PRICE_CALENDAR_ONLY'] if manifest.get('featureSchemaVersion',1)==1 else
                     ['PRICE_CALENDAR_HOLIDAY_DEMAND', 'EXPECTED_DEMAND_PARTIAL_OR_MISSING'] if len({r.targetPeriod for r in request.expectedDemand if r.targetPeriod in targets(request.asOf)})<24 else ['PRICE_CALENDAR_HOLIDAY_DEMAND'])+
-                    (["RETROSPECTIVE_TRAINING"] if manifest["retrospective"] else [])}
+                    (["RETROSPECTIVE_TRAINING"] if manifest["retrospective"] else [])+
+                    (["EXPERIMENTAL_AI"] if app.state.experimental else [])}
     return app
 
 

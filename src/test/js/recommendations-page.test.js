@@ -27,13 +27,55 @@ function load(nodes) {
     window: { location: { search: '?household=4', hash: '' } }, URLSearchParams });
   ['wattly.js', 'recommendations.js', 'recommendations-page.js'].forEach((file) =>
     vm.runInContext(fs.readFileSync(path.join(staticDir, file), 'utf8'), context));
-  return { Wattly: vm.runInContext('Wattly', context), Page: vm.runInContext('WattlyRecommendationsPage', context) };
+  return { context, Wattly: vm.runInContext('Wattly', context), Page: vm.runInContext('WattlyRecommendationsPage', context) };
 }
 
 const soon = (minutes) => new Date(Date.now() + minutes * 60000).toISOString();
 const rec = (id, extra) => ({ id, kind: 'SHIFT_START', applianceName: 'Dryer', reason: 'r', estSavingSgd: 1,
   suggestedStart: soon(300), usualStart: soon(600), deadline: soon(300), status: 'ACTIVE', runMinutes: 60,
   forecastSource: 'DEMO_FORECAST', ...extra });
+
+test('automatic refresh starts once, every minute and when returning to the page', async () => {
+  const { context, Page } = load();
+  const intervals = [], listeners = [], tabs = [];
+  context.window.setInterval = (callback, milliseconds) => intervals.push({ callback, milliseconds });
+  context.document.addEventListener = (event, callback) => listeners.push({ event, callback });
+  context.document.querySelectorAll = () => [];
+  Page.loadTab = async (tab) => tabs.push(tab);
+  Page.startAutoRefresh();
+  Page.startAutoRefresh();
+  assert.equal(intervals.length, 1);
+  assert.equal(intervals[0].milliseconds, 60000);
+  assert.equal(listeners[0].event, 'visibilitychange');
+  await intervals[0].callback();
+  await listeners[0].callback();
+  assert.deepEqual(tabs, ['ACTIVE', 'ACTIVE']);
+});
+
+test('automatic refresh preserves editing and pending decisions and avoids overlapping requests', async () => {
+  const { context, Page } = load();
+  const doc = context.document;
+  doc.querySelectorAll = () => [];
+  let calls = 0, release;
+  Page.loadTab = () => { calls++; return new Promise((resolve) => { release = resolve; }); };
+  doc.hidden = true;
+  await Page.refreshAutomatically();
+  doc.hidden = false;
+  doc.activeElement = { matches: () => true };
+  await Page.refreshAutomatically();
+  doc.activeElement = null;
+  doc.querySelector = () => ({ disabled: true });
+  await Page.refreshAutomatically();
+  doc.querySelector = () => null;
+  doc.querySelectorAll = () => [{ value: '12:30', defaultValue: '13:00' }];
+  await Page.refreshAutomatically();
+  assert.equal(calls, 0);
+  doc.querySelectorAll = () => [];
+  const pending = Page.refreshAutomatically();
+  await Page.refreshAutomatically();
+  assert.equal(calls, 1);
+  release(); await pending;
+});
 
 test('each tab asks the API for its own status', () => {
   const { Page } = load();
@@ -113,6 +155,24 @@ test('loading the Active tab shows open cards with charts and the snoozed ones r
   assert.equal(nodes['recommendation-count'].textContent, '1');
   assert.equal(nodes['tab-active'].attrs['aria-selected'], 'true');
   assert.equal(nodes['tab-history'].attrs['aria-selected'], 'false');
+});
+
+test('an older refresh cannot overwrite newer advice on the same tab', async () => {
+  const nodes = {};
+  ['recommendation-list', 'recommendation-note', 'recommendation-source', 'recommendation-count',
+    'recommendation-savings', 'snoozed-block', 'recommendation-snoozed', 'rec-tabpanel', 'realised-block',
+    'tab-active', 'tab-accepted', 'tab-dismissed', 'tab-history'].forEach((id) => {
+      nodes[id] = { textContent: '', innerHTML: '', hidden: false, setAttribute() {} };
+    });
+  const { Wattly, Page } = load(nodes);
+  let resolveOlder;
+  Wattly.api = () => new Promise((resolve) => { resolveOlder = resolve; });
+  const older = Page.loadTab('ACTIVE');
+  Wattly.api = async () => ({ ok: true, data: { recommendations: [], message: 'Newer forecast advice' } });
+  await Page.loadTab('ACTIVE');
+  resolveOlder({ ok: true, data: { recommendations: [], message: 'Older forecast advice' } });
+  await older;
+  assert.match(nodes['recommendation-note'].textContent, /Newer forecast advice/);
 });
 
 test('a decided tab shows read-only cards without charts or buttons', async () => {

@@ -92,6 +92,8 @@ const WattlyRecommendationsPage = {};
   };
 
   let current = 'ACTIVE';
+  let loadVersion = 0;
+  let automaticallyRefreshing = false;
 
   function el(id) { return document.getElementById(id); }
 
@@ -106,6 +108,7 @@ const WattlyRecommendationsPage = {};
   }
 
   Page.loadTab = async function (tab) {
+    const version = ++loadVersion;
     current = tab;
     selectTab(tab);
     const list = el('recommendation-list');
@@ -114,7 +117,7 @@ const WattlyRecommendationsPage = {};
     el('realised-block').hidden = true;
     if (tab === 'ACCEPTED') Page.loadSavings();
     const result = await Wattly.api('GET', Page.tabUrl(Wattly.householdId(), tab));
-    if (current !== tab) return; // another tab was picked while this one loaded
+    if (current !== tab || version !== loadVersion) return;
     if (!result.ok) {
       list.innerHTML = '';
       snoozedBlock.hidden = true;
@@ -135,7 +138,7 @@ const WattlyRecommendationsPage = {};
     }
     const split = Page.splitActive(recs, nowMs);
     const points = await Page.forecastPoints(recs);
-    if (current !== tab) return;
+    if (current !== tab || version !== loadVersion) return;
     el('recommendation-source').hidden = !data.demoForecast;
     WattlyRecommendations.showTotals(split.open);
     note.textContent = WattlyRecommendations.noteText(data, split.open.length);
@@ -146,6 +149,26 @@ const WattlyRecommendationsPage = {};
     el('recommendation-snoozed').innerHTML = split.snoozed.map(function (rec) {
       return WattlyRecommendations.itemHtml(rec, { nowMs: nowMs, readOnly: true });
     }).join('');
+  };
+
+  // Read saved results only. Leave an in-progress resident decision untouched.
+  Page.refreshAutomatically = async function () {
+    if (automaticallyRefreshing || current !== 'ACTIVE' || document.hidden ||
+        (document.activeElement && document.activeElement.matches('input, select, textarea')) ||
+        document.querySelector('.rec-actions button:disabled') ||
+        Array.from(document.querySelectorAll('.rec-actions input')).some(function (input) {
+          return input.value !== input.defaultValue;
+        })) return;
+    automaticallyRefreshing = true;
+    try { await Page.loadTab('ACTIVE'); }
+    finally { automaticallyRefreshing = false; }
+  };
+
+  Page.startAutoRefresh = function () {
+    if (Page.autoRefreshStarted) return;
+    Page.autoRefreshStarted = true;
+    window.setInterval(Page.refreshAutomatically, 60000);
+    document.addEventListener('visibilitychange', Page.refreshAutomatically);
   };
 
   function tabFromHash() {
@@ -204,6 +227,7 @@ const WattlyRecommendationsPage = {};
       });
     }
     Page.loadTab(tabFromHash());
+    Page.startAutoRefresh();
   };
 
   if (typeof document !== 'undefined' && document.getElementById && document.getElementById('rec-tabs')) {
