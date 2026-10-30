@@ -197,6 +197,14 @@ rule to future changes. Feature-lead acknowledgements are tracked in the
 
 ## F3: forecaster and baseline evaluator
 
+[Local experimental AI activation](docs/forecasting/solar-assisted-ai.md) connects an actual
+trained model to the forecast and recommendation pages with explicit labels and fallback.
+This optional local mode does not approve a research bundle or establish live savings.
+
+The [F3 final report](docs/final-report-f3.md) records the final fixed candidate comparison,
+remaining data/review dependencies and the decision to stop open-ended model searching.
+The [delivery handoff](docs/forecasting/delivery-2026-10-29.md) covers runtime verification and inactive WSL weekly preparation.
+
 The [forecast page](/forecast.html) reads saved 24-interval forecasts from Spring.
 F3 adds Java baseline fallback, revision-aware history/imports, PostgreSQL forecast
 runs, and a separate Python training/inference package under `ml/`. Existing F1
@@ -211,6 +219,10 @@ history now covers June 2025–September 2026. The twelve-month model and 56-day
 unseen study are explicitly retrospective; they do not establish what final prices
 or future demand forecasts were available historically. Research artifacts remain
 unapproved. Live Java baselines continue when Python is absent or invalid.
+
+The [spike sensitivity policy](docs/forecasting/spike-sensitivity-policy.md) retains k=3 and
+uses pooled warning budgets with an earlier-control worst-week safeguard for future
+research review. It does not activate a new warning model or alter recommendations.
 
 ### Model runtime decision (CSDT4-34)
 
