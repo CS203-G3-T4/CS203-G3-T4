@@ -1,0 +1,69 @@
+{
+  "checkedAt": "2026-10-30T20:21:51.867694+00:00",
+  "reviewedBaseHead": "fb00952bed4afd0d7120e0159f01f48c9078d17b",
+  "scope": "Three review regression repairs; not new model accuracy or savings evidence",
+  "java": {
+    "passed": 389,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "database": "PostgreSQL 17, newly created disposable databases removed after checks",
+    "command": "JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64 ./mvnw -B -ntp -Djvm=/usr/lib/jvm/java-21-openjdk-amd64/bin/java test"
+  },
+  "python": {
+    "passed": 173,
+    "failed": 0,
+    "skipped": 0,
+    "warnings": 1,
+    "command": "PYTHONPATH=ml/src python -B -m pytest -q -p no:cacheprovider ml/tests"
+  },
+  "frontend": {
+    "passed": 73,
+    "failed": 0,
+    "skipped": 0,
+    "command": "node --test src/test/js/*.test.js"
+  },
+  "regressions": {
+    "javaNewCases": 3,
+    "pythonNewCases": 4,
+    "frontendNewCases": 7,
+    "provisionalSelection": "Filter source/status before choosing revisions; retain receipt/publication cutoffs and missing-data behavior",
+    "refreshRace": "Recheck editing and pending decisions after both asynchronous reads, including error responses",
+    "replayCompatibility": "Pinned original DTO while retaining calculator and source-integrity checks"
+  },
+  "savedComparison": {
+    "matchedCases": 600,
+    "scalarCostChecks": 96512,
+    "allThreeFullMethodSummariesExactlyReproduced": true,
+    "samePreviouslyExaminedCohort": true,
+    "modelsFitted": 0,
+    "protectedOutcomesEvaluated": false,
+    "sourceChecksumsUnchanged": true
+  },
+  "browser": {
+    "status": "PASS",
+    "scope": "Current recommendation page with isolated synthetic API responses; no live app requests or model evidence",
+    "cases": [
+      {
+        "width": 1280,
+        "editDuringPendingRequestPreserved": true,
+        "idleRefreshStillUpdates": true,
+        "pageErrors": [],
+        "horizontalOverflow": false
+      },
+      {
+        "width": 390,
+        "editDuringPendingRequestPreserved": true,
+        "idleRefreshStillUpdates": true,
+        "pageErrors": [],
+        "horizontalOverflow": false
+      }
+    ]
+  },
+  "databaseMigrationAdded": false,
+  "liveDeployed": false,
+  "trialReset": false,
+  "modelPromoted": false,
+  "weeklyTimerActivated": false,
+  "independentHumanApprovalClaimed": false
+}
