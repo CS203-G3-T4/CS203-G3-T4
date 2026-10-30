@@ -57,7 +57,7 @@ Report MAE/RMSE overall, ordinary prices, spike prices, each horizon and both he
 
 The price report intentionally states `savingsValidation=PENDING_REAL_F4_REPLAY`. Before adoption, pass the common predictions through the existing F4 replay with identical household profiles, feasible windows, minimum saving and plan-selection policy; report total savings, harmful reschedules, realised losses and losing weeks against frozen solar and B3. The code does not substitute a simplified appliance optimizer or claim bill savings. That outcome replay cannot be run meaningfully until the held-out predictions and actuals exist.
 
-Stop after this candidate/control comparison. Do not launch another parameter search to make the result positive. Keep the current model if demand fails to improve the matched control and the current system's relevant price, warning and savings outcomes. Even a positive two-week result does not establish consistent performance across seasons. CSDT4-100 remains In Progress pending the actual demand-aware fit and evaluation.
+Stop after this candidate/control comparison. Do not launch another parameter search to make the result positive. Keep the current model if demand fails to improve the matched control and the current system's relevant price, warning and savings outcomes. Even a positive two-week result does not establish consistent performance across seasons. This model-performance work belongs to CSDT4-35. CSDT4-100's feature-pipeline scope has its own [acceptance record](csdt4-100-acceptance-2026-10-30.md); its earlier proposed dependency on this entire model experiment was too broad and is superseded by that record.
 
 ## Verification
 

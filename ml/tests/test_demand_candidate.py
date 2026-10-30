@@ -22,6 +22,33 @@ from test_pipeline import request_payload
 from test_solar_serving import snapshot, write_snapshot
 
 
+def test_csdt4_100_requested_inputs_have_known_numeric_values():
+    """Closed-form fixture checks Jira's lag/window/calendar/demand contract."""
+    from wattly_ml.data import KnownPrices
+    origin = instant('2026-08-09T23:32:00+08:00')
+    boundary = floor(origin)
+    past = KnownPrices({boundary-n*STEP:dict(usep=1000-2*n) for n in range(385)})
+    # Completed-price recipe must ignore the already available current-period quote.
+    past[boundary]['usep'] = 999999
+    past.solar_values = {boundary-STEP-n*STEP:200. for n in range(6)}
+    past.solar_values[boundary-STEP-DAY] = 200.
+    past.demand_forecasts = [dict(targetPeriod=t.isoformat(), publishedAt=(origin-STEP).isoformat(),
+        availableAt=origin.isoformat(), demandMw=8000+h, source='SYNTHETIC_FORECAST')
+        for h,t in enumerate(targets(origin))]
+    first = dict(zip(feature_names(4), features(past, origin, targets(origin)[0], schema_version=4)))
+    assert first['latest'] == first['lag1'] == 998
+    assert first['yesterday_target'] == 906
+    assert first['last_week_target'] == 330
+    assert first['mean6'] == 993 and first['std6'] == pytest.approx(math.sqrt(35/3))
+    assert first['mean48'] == 951 and first['std48'] == pytest.approx(math.sqrt(2303/3))
+    # The target crosses Sunday into the Monday substitute National Day holiday.
+    assert (first['target_half_hour'],first['target_weekday'],first['target_weekend']) == (0,0,0)
+    assert first['target_public_holiday'] == 1
+    assert (first['expected_demand_mw'],first['expected_demand_available']) == (8000,1)
+    last = dict(zip(feature_names(4), features(past, origin, targets(origin)[-1], schema_version=4)))
+    assert last['target_half_hour'] == 23 and last['expected_demand_mw'] == 8023
+
+
 def fixture(tmp_path):
     payload = request_payload()
     origin = instant(payload['asOf'])
