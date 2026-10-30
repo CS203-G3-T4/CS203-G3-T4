@@ -50,15 +50,29 @@ public class MarketHistoryRepository {
      * month-to-date spend, which can need more than 29 days).
      */
     public List<MarketRevision> asOf(Instant asOf, Instant from) {
-        List<MarketRevision> rows = jdbc.query("""
+        return select("""
                 SELECT * FROM market_price_revision
                 WHERE period_start>=? AND period_start<=? AND published_at<=? AND available_at<=?
                 ORDER BY period_start,published_at DESC,available_at DESC,id DESC
-                """, (rs,n) -> new MarketRevision(rs.getLong("id"),rs.getString("source"),
+                """, ts(from),ts(asOf),ts(asOf),ts(asOf));
+    }
+
+    /** Select the latest available provisional revision within one source, before collapsing periods. */
+    public List<MarketRevision> provisionalAsOf(String source, Instant asOf, Instant from) {
+        return select("""
+                SELECT * FROM market_price_revision
+                WHERE source=? AND price_status='PROVISIONAL'
+                  AND period_start>=? AND period_start<=? AND published_at<=? AND available_at<=?
+                ORDER BY period_start,published_at DESC,available_at DESC,id DESC
+                """, source,ts(from),ts(asOf),ts(asOf),ts(asOf));
+    }
+
+    private List<MarketRevision> select(String sql, Object... parameters) {
+        List<MarketRevision> rows = jdbc.query(sql, (rs,n) -> new MarketRevision(rs.getLong("id"),rs.getString("source"),
                 rs.getTimestamp("period_start").toInstant(),rs.getTimestamp("published_at").toInstant(),
                 rs.getTimestamp("available_at").toInstant(),rs.getBigDecimal("usep"),rs.getBigDecimal("demand"),
                 rs.getBigDecimal("vcp"),rs.getString("price_status"),rs.getString("time_mapping")),
-                ts(from),ts(asOf),ts(asOf),ts(asOf));
+                parameters);
         var selected = new java.util.LinkedHashMap<Instant,MarketRevision>();
         for (MarketRevision row : rows) {
             MarketRevision prior = selected.putIfAbsent(row.periodStart(),row);

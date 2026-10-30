@@ -103,9 +103,9 @@ public class SavingsMonitoringService {
             Instant usual=Instant.parse(baseline.path("usualStart").asText()),chosen=Instant.parse(baseline.path("chosenStart").asText());
             var values=new HashMap<Instant,BigDecimal>();
             for(var p:forecast.points()) if(p.periodStart().isAfter(BaselineForecastService.floor(now))) values.put(p.periodStart(),p.usepSgdPerMwh());
-            var truth=history.asOf(now,(usual.isBefore(chosen)?usual:chosen).minusSeconds(1800));
+            var truth=history.provisionalAsOf("NEMS_SN_SG",now,(usual.isBefore(chosen)?usual:chosen).minusSeconds(1800));
             var used=check.putArray("observedRevisions");
-            for(var t:truth) if(!t.periodStart().isAfter(BaselineForecastService.floor(now)) && "PROVISIONAL".equals(t.priceStatus()) && "NEMS_SN_SG".equals(t.source())) {
+            for(var t:truth) if(!t.periodStart().isAfter(BaselineForecastService.floor(now))) {
                 values.put(t.periodStart(),t.usep());used.addObject().put("periodStart",t.periodStart().toString()).put("revision",t.id()).put("availableAt",t.availableAt().toString());
             }
             var run=new CheapestStartCalculator.ShiftableRun(baseline.path("powerKw").decimalValue(),baseline.path("runMinutes").asInt(),null,null,null);

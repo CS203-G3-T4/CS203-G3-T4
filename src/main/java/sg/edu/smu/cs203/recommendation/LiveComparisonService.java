@@ -134,7 +134,7 @@ public class LiveComparisonService {
         for(var row:pending) if(LiveEvidenceRepository.time(row,"usual_start").isBefore(from)) from=LiveEvidenceRepository.time(row,"usual_start");
         for(var row:pending) for(String k:List.of("ai_start","b3_start")) if(LiveEvidenceRepository.time(row,k).isBefore(from)) from=LiveEvidenceRepository.time(row,k);
         for(var row:prices) if(LiveEvidenceRepository.time(row,"target_period").isBefore(from)) from=LiveEvidenceRepository.time(row,"target_period");
-        var truth=history.asOf(now,from.minusSeconds(1800)).stream().filter(t->"PROVISIONAL".equals(t.priceStatus())&&"NEMS_SN_SG".equals(t.source()))
+        var truth=history.provisionalAsOf("NEMS_SN_SG",now,from.minusSeconds(1800)).stream()
                 .collect(Collectors.toMap(MarketRevision::periodStart,t->t));
         for(var row:prices) {
             var actual=truth.get(LiveEvidenceRepository.time(row,"target_period"));

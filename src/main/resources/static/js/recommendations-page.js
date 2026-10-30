@@ -107,7 +107,11 @@ const WattlyRecommendationsPage = {};
     el('rec-tabpanel').setAttribute('aria-labelledby', 'tab-' + tab.toLowerCase());
   }
 
-  Page.loadTab = async function (tab) {
+  Page.loadTab = async function (tab, options) {
+    const automatic = options && options.automatic;
+    const mayApply = function () {
+      return current === tab && version === loadVersion && (!automatic || !residentBusy());
+    };
     const version = ++loadVersion;
     current = tab;
     selectTab(tab);
@@ -117,7 +121,7 @@ const WattlyRecommendationsPage = {};
     el('realised-block').hidden = true;
     if (tab === 'ACCEPTED') Page.loadSavings();
     const result = await Wattly.api('GET', Page.tabUrl(Wattly.householdId(), tab));
-    if (current !== tab || version !== loadVersion) return;
+    if (!mayApply()) return;
     if (!result.ok) {
       list.innerHTML = '';
       snoozedBlock.hidden = true;
@@ -139,7 +143,7 @@ const WattlyRecommendationsPage = {};
     }
     const split = Page.splitActive(recs, nowMs);
     const points = await Page.forecastPoints(recs);
-    if (current !== tab || version !== loadVersion) return;
+    if (!mayApply()) return;
     el('recommendation-source').hidden = !data.demoForecast;
     WattlyRecommendations.showTotals(split.open);
     note.textContent = WattlyRecommendations.noteText(data, split.open.length);
@@ -152,17 +156,21 @@ const WattlyRecommendationsPage = {};
     }).join('');
   };
 
-  // Read saved results only. Leave an in-progress resident decision untouched.
+  function residentBusy() {
+    return document.hidden ||
+      (document.activeElement && document.activeElement.matches('input, select, textarea')) ||
+      !!document.querySelector('.rec-actions button:disabled') ||
+      Array.from(document.querySelectorAll('.rec-actions input')).some(function (input) {
+        return input.value !== input.defaultValue;
+      });
+  }
+
+  // Check before requesting and before rendering, including after chart requests.
   Page.refreshAutomatically = async function () {
     if (!document.hidden && current !== 'ACTIVE') { await Page.loadAlerts(); return; }
-    if (automaticallyRefreshing || document.hidden ||
-        (document.activeElement && document.activeElement.matches('input, select, textarea')) ||
-        document.querySelector('.rec-actions button:disabled') ||
-        Array.from(document.querySelectorAll('.rec-actions input')).some(function (input) {
-          return input.value !== input.defaultValue;
-        })) return;
+    if (automaticallyRefreshing || residentBusy()) return;
     automaticallyRefreshing = true;
-    try { await Page.loadTab('ACTIVE'); }
+    try { await Page.loadTab('ACTIVE', { automatic: true }); }
     finally { automaticallyRefreshing = false; }
   };
 

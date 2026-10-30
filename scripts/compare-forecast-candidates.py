@@ -18,6 +18,7 @@ SOURCE=RESEARCH/'.local/bounded-recommendation-2026-10-29-v1'
 BLEND=RESEARCH/'.local/raw-score-blend-2026-10-27-v1/study'
 OUT=args.output.resolve()
 METHODS=('SOLAR_MEAN','RAW_SCORE_BLEND','B3')
+FROZEN_PRICE_FORECAST_SHA256='ccf3cccf373a4b045a061b1d869661704824ed7166cc4041a3185ebf3962315f'
 def read(p): return json.loads(p.read_text())
 def sha(p): return hashlib.sha256(p.read_bytes()).hexdigest()
 def write(p,x):
@@ -26,6 +27,22 @@ def write(p,x):
 def evaluation_opportunities(path):
     with gzip.open(path,'rt') as stream:
         return [row for line in stream if (row:=json.loads(line)).get('evaluation') is True]
+
+def replay_sources(research,delivery):
+    # Freeze the original replay DTO; live provenance fields do not change run costs.
+    relative='src/main/java/sg/edu/smu/cs203/'
+    sources=[]
+    for name in ('household/appliance/TimeWindow.java','recommendation/CheapestStartCalculator.java'):
+        rel=relative+name
+        if sha(research/rel)!=sha(delivery/rel):
+            raise ValueError('Delivery calculator differs; stop instead of mixing versions')
+        sources.append(delivery/rel)
+    original=research/(relative+'recommendation/PriceForecast.java')
+    frozen=delivery/'scripts/forecast-replay/PriceForecast.java'
+    if sha(original)!=FROZEN_PRICE_FORECAST_SHA256 or sha(frozen)!=FROZEN_PRICE_FORECAST_SHA256:
+        raise ValueError('Frozen replay PriceForecast changed')
+    return sources+[frozen]
+
 def cost(origin,start,minutes,power,prices):
     # Independent time-overlap calculation; never uses future actuals for planning.
     end=start+minutes*60; total=Decimal(0)
@@ -39,11 +56,10 @@ def main():
     if not args.javac or not args.java:
         parser.error('Set --javac and --java, or put Java tools on PATH')
     OUT.mkdir()  # write-once; no automatic retry
-    sources=[SOURCE/'inputs.npz',SOURCE/'cohort.json',SOURCE/'summary.json',SOURCE/'raw/opportunities.jsonl.gz',BLEND/'protocol.json',BLEND/'verification.json',Path(__file__)]
-    java=['src/main/java/sg/edu/smu/cs203/household/appliance/TimeWindow.java','src/main/java/sg/edu/smu/cs203/recommendation/PriceForecast.java','src/main/java/sg/edu/smu/cs203/recommendation/CheapestStartCalculator.java']
-    for rel in java:
-        assert sha(RESEARCH/rel)==sha(DELIVERY/rel),'Delivery calculator differs; stop instead of mixing versions'
-        sources.append(DELIVERY/rel)
+    sources=[SOURCE/'inputs.npz',SOURCE/'cohort.json',SOURCE/'plan.json',SOURCE/'summary.json',SOURCE/'F4Replay.java',SOURCE/'raw/opportunities.jsonl.gz',BLEND/'protocol.json',BLEND/'verification.json',Path(__file__)]
+    java=replay_sources(RESEARCH,DELIVERY)
+    sources.extend(java)
+    sources.append(RESEARCH/'src/main/java/sg/edu/smu/cs203/recommendation/PriceForecast.java')
     for w in range(1,9): sources.append(BLEND/f'week-{w}/predictions.jsonl')
     checks={str(p):sha(p) for p in sources}
     write(OUT/'protocol.json',dict(methods=METHODS,sourceChecksums=checks,priceOnlyComparison=True,warningPolicy='Retain saved solar warning flags for BOTH AI candidates; B3 retains own flags',minimumSavingSgd='0.05',selection='Report one fixed comparison; no threshold/model search or live promotion',evaluation='Previously examined June1-July26 2026 development weeks; no fresh validation',householdPolicy='Same 600 cases, original usual start, windows, energy, frequency and refresh opportunities; first acceptance locks; top3/household/refresh',stopping='Stop after verification; no follow-on experiment'))
@@ -66,7 +82,7 @@ def main():
     rows=[r for r in rows if r['usual']+r['minutes']*60<=end]
     adapter=OUT/'F4Replay.java'; shutil.copyfile(SOURCE/'F4Replay.java',adapter)
     classes=OUT/'classes'; classes.mkdir()
-    subprocess.run([args.javac,'--release','21','-d',str(classes),*[str(DELIVERY/p) for p in java],str(adapter)],check=True)
+    subprocess.run([args.javac,'--release','21','-d',str(classes),*map(str,java),str(adapter)],check=True)
     inp=OUT/'blend-input.tsv'; output=OUT/'blend-output.tsv'
     with inp.open('x') as f:
         for n,r in enumerate(rows):

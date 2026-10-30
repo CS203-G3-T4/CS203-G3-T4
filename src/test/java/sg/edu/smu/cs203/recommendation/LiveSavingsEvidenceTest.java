@@ -128,6 +128,44 @@ class LiveSavingsEvidenceTest {
   assertThat(evidence.calibration(comparison.trialId(),"AI","SHORT:12H",clock.instant())).isEmpty();
   assertThat(comparison.report().get("scoredOpportunities")).isEqualTo(0);
  }
+ @Test void finalAndForeignRevisionsCannotHideAvailableProvisionalTrialTruth() {
+  String id=save("mixed-truth",10,false);clock.value=BASE.plus(Duration.ofHours(13));
+  for(var point:forecasts.points(id,"AI")) {
+   Instant target=point.targetPeriod();
+   saveTruth(target,"NEMS_SN_SG","PROVISIONAL",100,target.plusSeconds(60),target.plusSeconds(61),"earlier");
+   saveTruth(target,"NEMS_SN_SG","PROVISIONAL",125,target.plusSeconds(120),target.plusSeconds(121),"latest-eligible");
+   saveTruth(target,"NEMS_SN_SG","FINAL",900,target.plusSeconds(180),target.plusSeconds(181),"final");
+   saveTruth(target,"OTHER_PROVIDER","PROVISIONAL",999,target.plusSeconds(240),target.plusSeconds(241),"foreign");
+   saveTruth(target,"NEMS_SN_SG","PROVISIONAL",888,clock.instant().plusSeconds(60),clock.instant().plusSeconds(61),"future-publication");
+   saveTruth(target,"NEMS_SN_SG","PROVISIONAL",777,target.plusSeconds(300),clock.instant().plusSeconds(60),"future-receipt");
+  }
+  comparison.evaluate();
+  assertThat(evidence.scoredPrices(comparison.trialId())).hasSize(24).allSatisfy(row ->
+   assertThat(row.path("actual").decimalValue()).isEqualByComparingTo("125"));
+  var scored=evidence.opportunities(comparison.trialId()).stream().filter(row->row.path("household_id").asLong()==home).findFirst().orElseThrow();
+  assertThat(scored.path("outcome").path("AI").path("savingSgd").decimalValue()).isZero();
+  assertThat(scored.path("outcome").path("B3").path("savingSgd").decimalValue()).isZero();
+  for(var revision:scored.path("outcome").path("truthRevisions")) {
+   var status=jdbc.queryForMap("SELECT source,price_status,usep FROM market_price_revision WHERE id=?",revision.path("revision").asLong());
+   assertThat(status.get("source")).isEqualTo("NEMS_SN_SG");assertThat(status.get("price_status")).isEqualTo("PROVISIONAL");
+   assertThat((BigDecimal)status.get("usep")).isEqualByComparingTo("125");
+  }
+ }
+ void saveTruth(Instant target,String source,String status,int price,Instant published,Instant received,String identity) {
+  history.save(new MarketRevision(0,source,target,published,received,BigDecimal.valueOf(price),null,null,status,"EMC_PERIOD"),
+   "MIXED_TRUTH_TEST",identity+target,"{}");
+ }
+ @Test void finalAndForeignPricesAloneDoNotBecomeProvisionalTruth() {
+  String id=save("no-provisional",10,false);clock.value=BASE.plus(Duration.ofHours(13));
+  for(var point:forecasts.points(id,"AI")) {
+   Instant target=point.targetPeriod();
+   saveTruth(target,"NEMS_SN_SG","FINAL",900,target.plusSeconds(180),target.plusSeconds(181),"final-only");
+   saveTruth(target,"OTHER_PROVIDER","PROVISIONAL",999,target.plusSeconds(240),target.plusSeconds(241),"foreign-only");
+  }
+  comparison.evaluate();
+  assertThat(evidence.scoredPrices(comparison.trialId())).isEmpty();
+  assertThat(comparison.report().get("scoredOpportunities")).isEqualTo(0);
+ }
  void calibration(){
   String run="SYNTHETIC_CALIBRATION_ONLY";
   jdbc.update("INSERT INTO forecast_run(id,as_of,generated_at,origin_slot,input_revision,input_snapshot,mode,model_type,model_version,selected_model,quality_flags,stale,status) VALUES(?,?,?,?,?,'[]'::jsonb,'LIVE','AI',?,'AI','[]'::jsonb,false,'AVAILABLE')",
@@ -174,6 +212,20 @@ class LiveSavingsEvidenceTest {
   clock.value=BASE.plus(Duration.ofMinutes(82));freshPrice();save("cold-change",10,true);monitoring.recheck();
   assertThat(evidence.alerts(home,clock.instant())).isEmpty();
   assertThat(evidence.evidence(rec.id()).path("latest_check").path("status").asText()).isEqualTo("COLLECTING_LIVE_RESULTS");
+ }
+ @Test void startCheckStillUsesObservedProvisionalPriceWhenOtherRevisionsAreNewer() throws Exception {
+  calibration();save("mixed-start-original",10,false);var rec=recommendations.findActive(home).getFirst();
+  mvc.perform(post("/api/v1/recommendations/"+rec.id()+"/accept").with(user("owner-"+home).roles("RESIDENT")).with(csrf()))
+   .andExpect(status().isOk());
+  clock.value=BASE.plus(Duration.ofDays(21)).plus(Duration.ofMinutes(112));freshPrice();
+  Instant current=BaselineForecastService.floor(clock.instant());
+  saveTruth(current,"NEMS_SN_SG","FINAL",900,clock.instant().minusSeconds(2),clock.instant().minusSeconds(1),"start-final");
+  saveTruth(current,"OTHER_PROVIDER","PROVISIONAL",999,clock.instant().minusSeconds(1),clock.instant(),"start-foreign");
+  save("mixed-at-start",11,true);monitoring.recheck();
+  var check=evidence.evidence(rec.id()).path("latest_check");
+  assertThat(check.path("estimatedSavingSgd").decimalValue()).isEqualByComparingTo(".0500");
+  assertThat(check.path("status").asText()).isEqualTo("OUTSIDE_PAST_ERROR_RANGE");
+  assertThat(evidence.alerts(home,clock.instant())).hasSize(1);
  }
  @Test void trialModelIsPinnedFallbacksAreNotScoredAsAiAndRestartDoesNotResetWindow() {
   var start=evidence.trial(comparison.trialId()).path("started_at").asText();
