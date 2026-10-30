@@ -69,7 +69,8 @@ public class PythonForecastClient {
                 || !response.path("points").isArray() || response.path("points").size()!=24) {
             throw new IllegalArgumentException("Invalid Python forecast envelope");
         }
-        if (response.path("manifest").path("featureSchemaVersion").asInt()==3) {
+        int featureSchema=response.path("manifest").path("featureSchemaVersion").asInt();
+        if (featureSchema==3 || featureSchema==4) {
             if (!experimental) throw new IllegalArgumentException("Solar AI is experimental only");
             validateSolarEvidence(response.path("inputEvidence"),asOf);
         }

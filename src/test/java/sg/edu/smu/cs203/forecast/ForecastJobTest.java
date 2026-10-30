@@ -5,6 +5,8 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import tools.jackson.databind.ObjectMapper;
 import sg.edu.smu.cs203.market.price.*;
@@ -104,10 +106,13 @@ class ForecastJobTest {
             verify(history,times(2)).asOf(NOW);
         } finally { release.countDown(); job.close(); }
     }
-    @Test void solarRevisionsAreSavedAndChangeRunIdentityWithTheSamePrices() {
+    @ParameterizedTest
+    @ValueSource(ints={3,4})
+    void solarRevisionsAreSavedAndChangeRunIdentityWithTheSamePrices(int featureSchema) {
         when(history.asOf(NOW)).thenReturn(rows());
         when(saved.baselineRanking(NOW,"REPLAY")).thenReturn(List.of());
         var first=PythonForecastClientTest.solarResponse("solar");
+        ((tools.jackson.databind.node.ObjectNode)first.path("manifest")).put("featureSchemaVersion",featureSchema);
         var second=first.deepCopy();
         ((tools.jackson.databind.node.ObjectNode)second.path("inputEvidence")).put("snapshotSha256","b".repeat(64));
         ((tools.jackson.databind.node.ObjectNode)second.path("inputEvidence").path("periods").get(0)).put("solarMw",200);

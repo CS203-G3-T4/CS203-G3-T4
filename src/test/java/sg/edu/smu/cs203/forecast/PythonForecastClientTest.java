@@ -5,6 +5,8 @@ import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import tools.jackson.databind.ObjectMapper;
 import static org.assertj.core.api.Assertions.*;
 import static sg.edu.smu.cs203.forecast.ForecastMathTest.*;
@@ -105,8 +107,11 @@ class PythonForecastClientTest {
                 .put("solarMw",100+i).put("availableAt",NOW.minusSeconds(1).toString());
         return response;
     }
-    @Test void solarForecastRequiresCompleteReceiptStampedAuxiliaryEvidence() {
+    @ParameterizedTest
+    @ValueSource(ints={3,4})
+    void solarForecastRequiresCompleteReceiptStampedAuxiliaryEvidence(int featureSchema) {
         var response=solarResponse("solar");
+        ((tools.jackson.databind.node.ObjectNode)response.path("manifest")).put("featureSchemaVersion",featureSchema);
         PythonForecastClient.validate(response,"solar",NOW,true);
         var missing=response.deepCopy(); missing.remove("inputEvidence");
         assertThatThrownBy(() -> PythonForecastClient.validate(missing,"solar",NOW,true)).isInstanceOf(IllegalArgumentException.class);

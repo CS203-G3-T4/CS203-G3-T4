@@ -94,7 +94,8 @@ public class ForecastJob {
                 for (JsonNode p : response.path("points")) ai.add(p.path("predictedUsep").decimalValue());
                 ranking=List.of(mapper.convertValue(response.path("baselineRanking"),String[].class));
                 modelFlags=List.of(mapper.convertValue(response.path("qualityFlags"),String[].class));
-                if (response.path("manifest").path("featureSchemaVersion").asInt()==3) {
+                int featureSchema=response.path("manifest").path("featureSchemaVersion").asInt();
+                if (featureSchema==3 || featureSchema==4) {
                     // Auxiliary values/receipts are part of the saved input and run identity.
                     snapshot=mapper.writeValueAsString(Map.of("marketInputs",mapper.readTree(snapshot),
                             "solarInputs",response.path("inputEvidence")));
