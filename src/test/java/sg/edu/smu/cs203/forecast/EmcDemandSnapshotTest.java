@@ -14,6 +14,15 @@ import static org.assertj.core.api.Assertions.*;
 class EmcDemandSnapshotTest {
  static final ObjectMapper M=new ObjectMapper();
  static final Instant NOW=Instant.parse("2026-12-31T15:33:00Z");
+ @Test void oneClockInstantDefinesBothValidationAndPersistence(@org.junit.jupiter.api.io.TempDir java.nio.file.Path dir) throws Exception {
+  var clock=org.mockito.Mockito.mock(Clock.class);
+  org.mockito.Mockito.when(clock.instant()).thenReturn(NOW,NOW.plusSeconds(1800));
+  var operations=org.mockito.Mockito.mock(ForecastOperationsRepository.class);
+  org.mockito.Mockito.when(operations.saveNewDemand(org.mockito.ArgumentMatchers.anyList(),org.mockito.ArgumentMatchers.eq(NOW))).thenReturn(24);
+  var file=dir.resolve("snapshot.json");java.nio.file.Files.writeString(file,M.writeValueAsString(snapshot(NOW)));
+  assertThat(new EmcDemandSnapshotImporter(M,operations,clock,file.toString()).importLatest()).isEqualTo(24);
+  org.mockito.Mockito.verify(clock,org.mockito.Mockito.times(1)).instant();
+ }
  static ObjectNode snapshot(Instant now) { return snapshot(now,0); }
  static ObjectNode snapshot(Instant now,int pastPeriods) {
   var root=M.createObjectNode().put("schemaVersion",1);var item=root.putArray("responses").addObject().put("value",12)

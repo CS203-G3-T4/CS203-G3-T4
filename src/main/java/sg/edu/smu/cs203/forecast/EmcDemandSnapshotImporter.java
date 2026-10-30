@@ -32,8 +32,9 @@ public class EmcDemandSnapshotImporter {
         if(Files.size(file)>800_000) throw new IllegalArgumentException("EMC snapshot exceeds limit");
         byte[] bytes=Files.readAllBytes(file);
         if(bytes.length>800_000) throw new IllegalArgumentException("EMC snapshot exceeds limit");
-        var rows=parse(mapper.readTree(bytes),clock.instant());
-        return operations.saveNewDemand(rows,clock.instant());
+        Instant now=clock.instant();
+        var rows=parse(mapper.readTree(bytes),now);
+        return operations.saveNewDemand(rows,now);
     }
     static List<ForecastOperationsRepository.Demand> parse(JsonNode snapshot,Instant now) {
         if(snapshot.path("schemaVersion").asInt()!=1 || !snapshot.path("responses").isArray()

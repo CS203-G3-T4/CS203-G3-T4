@@ -78,7 +78,7 @@ def read_solar_snapshot(path, as_of):
         raise ValueError('Invalid solar snapshot')
     as_of = instant(as_of)
     values = {}; availability = {}; receipts = []; source_updates = []; seen = set()
-    # Seven-day history, then forward panel, then today's completed history.
+    # Panels may overlap, but observed values must agree; ordering is not authority.
     # Today is required when the 72-period chart rolls forward past recent periods.
     for item in sorted(snapshot['responses'], key=lambda r: r['value'], reverse=True):
         value = item['value']
@@ -118,11 +118,15 @@ def read_solar_snapshot(path, as_of):
                 solar = number(gross)-number(net)
                 if solar<0 or number(net)<0:
                     raise ValueError('Invalid negative solar/demand')
-                values[period] = float(solar)
-                availability[period] = received.isoformat()
-            except ValueError:
-                # Explicit gaps stay missing and are rejected if needed below.
-                values.pop(period,None)
+            except ValueError as exc:
+                if period in values:
+                    raise ValueError('Invalid overlapping EMC solar value') from exc
+                # A gap remains missing; it cannot erase another panel's valid value.
+                continue
+            if period in values and values[period] != float(solar):
+                raise ValueError('Conflicting overlapping EMC solar values')
+            values[period] = float(solar)
+            availability[period] = received.isoformat()
         receipts.append(received.isoformat());source_updates.append(instant(updated).isoformat())
     if seen not in ({12,14},{10,12,14}):
         raise ValueError('Missing required EMC panel')

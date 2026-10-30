@@ -32,4 +32,12 @@ The minimum-evidence rule means recording and rechecking can start immediately, 
 
 ## Validation
 
-PostgreSQL tests isolate all synthetic fixtures in unique test schemas. They cover matched truth, immutability after revisions, late-data leakage, fixed model/window, fallback exclusion, warm-up silence, calibrated alert thresholds, deduplication/acknowledgement/reopening, household/admin isolation, custom starts, stale forecasts and current-period actual prices. Pure tests cover daily grouping and negative bounds. V23 expands schema without changing model serving eligibility. Java/PostgreSQL and frontend suite results plus local activation receipts are documented in the PR.
+PostgreSQL tests isolate all synthetic fixtures in unique test schemas. They cover matched truth, immutability after revisions, late-data leakage, fixed model/window, fallback exclusion, warm-up silence, calibrated alert thresholds, deduplication/acknowledgement/reopening, household/admin isolation, custom starts, stale forecasts and current-period actual prices. Pure tests cover daily grouping and negative bounds. V24 expands schema without changing model serving eligibility; V23 is reserved for PR #40's replay migration. Java/PostgreSQL and frontend suite results plus local activation receipts are documented in the PR.
+
+## Migration coordination
+
+PR #40 owns `V23__replay_prices_and_household.sql`; this trial uses `V24__live_comparison_and_savings_ranges.sql`. The disposable PostgreSQL coexistence test applies V1–V22, preserves existing budget data, then applies both V23 and V24 and validates their histories. The replay fixture is test-only, pinned to PR #40 head f7516164; that feature is not copied into the trial's production migrations.
+
+For shared deployment, land PR #41 and PR #40 before this trial and recheck main, migration numbers and full CI. Do not deploy V24 and subsequently try to add the lower V23 with out-of-order migration disabled. No PR was merged automatically.
+
+The private local trial already applied the old V23 trial migration. This source renumbering has not changed its history or running jar. Do not upgrade that instance using ordinary `repair`, deleting tables, resetting its trial, or blindly reapplying this DDL. Its eventual upgrade needs a backed-up, rehearsed history reconciliation or a separate fresh runtime, preserving the original trial for grading. That deployment operation is intentionally outside these source-review fixes; the current live collector/model/trial stays untouched.

@@ -177,3 +177,19 @@ def test_today_source_cannot_hide_stale_or_future_receipts(tmp_path):
     for key,value in [('receivedAt',(now+STEP).isoformat()),('receivedAt',(now-DAY).isoformat()),('url','https://example.com')]:
         data=with_today(now);data['responses'][-1][key]=value
         with pytest.raises(ValueError):read_solar_snapshot(write_snapshot(tmp_path,data),now)
+
+
+@pytest.mark.parametrize('bad_value',['999999','-','NaN'])
+def test_overlapping_panels_cannot_silently_replace_or_erase_valid_history(tmp_path,bad_value):
+    now=instant('2026-01-10T04:02:00+08:00');data=snapshot(now)
+    # The forward panel overlaps the seven-day panel on yesterday's noon period.
+    panel=data['responses'][0]['body']['data']['data'][0]
+    panel['datasets'][1]['data'][0]=bad_value
+    with pytest.raises(ValueError,match='overlapping EMC solar'):
+        read_solar_snapshot(write_snapshot(tmp_path,data),now)
+
+
+def test_equal_overlapping_solar_values_are_accepted(tmp_path):
+    now=instant('2026-01-10T04:02:00+08:00')
+    values,_=read_solar_snapshot(write_snapshot(tmp_path,snapshot(now)),now)
+    assert values[floor(now)-STEP]==solar_value(floor(now)-STEP)
