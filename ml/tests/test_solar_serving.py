@@ -128,6 +128,24 @@ def test_solar_http_serving_requires_opt_in_and_fresh_complete_inputs(tmp_path,m
         assert data['manifest']['productionEligible'] is False
         assert data['inputEvidence']['source']=='EMC_PUBLIC_PROVISIONAL_SOLAR'
         assert 'COMPLETED_PERIOD_PRICE_INPUTS' in data['qualityFlags']
+        raw=snapshot(origin)
+        panel=raw['responses'][0]['body']['data']['data'][0]
+        required={instant(r['periodStart']) for r in data['inputEvidence']['periods']}
+        unused=next(i for i,label in enumerate(panel['labels'])
+                    if label_time(label,origin.astimezone(SGT)) not in required
+                    and label_time(label,origin.astimezone(SGT))+STEP<=floor(origin))
+        panel['datasets'][1]['data'][unused]='99999999'
+        write_snapshot(tmp_path,raw)
+        unchanged=client.post('/forecast',json=payload)
+        assert unchanged.status_code==200
+        assert unchanged.json()['points']==data['points']
+        assert unchanged.json()['inputEvidence']['periods']==data['inputEvidence']['periods']
+        wanted=floor(origin)-STEP
+        required_idx=next(i for i,label in enumerate(panel['labels']) if label_time(label,origin.astimezone(SGT))==wanted)
+        panel['datasets'][1]['data'][required_idx]='-'
+        write_snapshot(tmp_path,raw)
+        rejected=client.post('/forecast',json=payload)
+        assert rejected.status_code==503 and rejected.json()['detail']['code']=='SOLAR_INPUT_UNAVAILABLE'
         solar_path.unlink()
         response=client.post('/forecast',json=payload)
         assert response.status_code==503 and response.json()['detail']['code']=='SOLAR_INPUT_UNAVAILABLE'
@@ -179,14 +197,31 @@ def test_today_source_cannot_hide_stale_or_future_receipts(tmp_path):
         with pytest.raises(ValueError):read_solar_snapshot(write_snapshot(tmp_path,data),now)
 
 
-@pytest.mark.parametrize('bad_value',['999999','-','NaN'])
-def test_overlapping_panels_cannot_silently_replace_or_erase_valid_history(tmp_path,bad_value):
-    now=instant('2026-01-10T04:02:00+08:00');data=snapshot(now)
-    # The forward panel overlaps the seven-day panel on yesterday's noon period.
-    panel=data['responses'][0]['body']['data']['data'][0]
-    panel['datasets'][1]['data'][0]=bad_value
-    with pytest.raises(ValueError,match='overlapping EMC solar'):
+@pytest.mark.parametrize('bad_value',['999999','-','NaN','1'])
+@pytest.mark.parametrize('panel_value',[12,14])
+def test_required_overlaps_cannot_replace_or_hide_bad_values(tmp_path,bad_value,panel_value):
+    now=instant('2026-01-10T13:02:00+08:00');data=snapshot(now)
+    # Yesterday's 12:30 period is required and appears in both source panels.
+    # Corrupt either the first or last panel processed: neither may hide the other.
+    panel=next(r for r in data['responses'] if r['value']==panel_value)['body']['data']['data'][0]
+    wanted=floor(now)-STEP-DAY
+    idx=next(i for i,label in enumerate(panel['labels']) if label_time(label,now.astimezone(SGT))==wanted)
+    panel['datasets'][1]['data'][idx]=bad_value
+    with pytest.raises(ValueError,match='EMC solar value'):
         read_solar_snapshot(write_snapshot(tmp_path,data),now)
+
+
+@pytest.mark.parametrize('bad_value',['999999','-','NaN'])
+def test_unused_historical_disagreements_cannot_veto_or_enter_recipe(tmp_path,bad_value):
+    now=instant('2026-01-10T04:02:00+08:00');data=snapshot(now)
+    expected,evidence=read_solar_snapshot(write_snapshot(tmp_path,data),now)
+    panel=data['responses'][0]['body']['data']['data'][0]
+    unused=label_time(panel['labels'][0],now.astimezone(SGT))
+    assert unused not in expected
+    panel['datasets'][1]['data'][0]=bad_value
+    values,actual=read_solar_snapshot(write_snapshot(tmp_path,data),now)
+    assert values==expected and actual['periods']==evidence['periods']
+    assert set(values)=={floor(now)-STEP-i*STEP for i in range(6)}|{floor(now)-STEP-DAY}
 
 
 def test_equal_overlapping_solar_values_are_accepted(tmp_path):
