@@ -16,9 +16,9 @@ EMC's public [NEMS Prices](https://www.nems.emcsg.com/nems-prices) page supplies
 
 The chart series labelled Solar is stacked above Demand. The adapter subtracts Demand, matching EMC's own tooltip calculation. Using the raw Solar series would supply gross demand instead of solar MW. Numeric precision is retained. Missing or negative required values are rejected rather than replaced with zero; an explicitly reported zero is valid.
 
-Feature schema 3 reproduces the exact 30 research inputs: 19 price/calendar/holiday entries plus 11 solar lags, rolling statistics and changes. It requires six consecutive completed solar periods and the corresponding period yesterday. Both responses must actually have arrived by the forecast's asOf and within ten minutes; the current panel must be no more than forty minutes old. Future/current chart entries are excluded until completed. Periods beyond the source's current update are never used as historical inputs. Year rollover and exact half-hour mapping are checked.
+Feature schema 3 reproduces the exact 30 research inputs: 19 price/calendar/holiday entries plus 11 solar lags, rolling statistics and changes. It requires six consecutive completed solar periods and the corresponding period yesterday. All included responses must actually have arrived by the forecast's asOf and within ten minutes; the current panel must be no more than forty minutes old. Future/current chart entries are excluded until completed. Periods beyond the source's current update are never used as historical inputs. Year rollover and exact half-hour mapping are checked.
 
-The research recipe uses **completed-period prices**. Current-period prices remain visible immediately but are excluded from this model's numerical features to preserve fitting/inference parity. Future expected-demand inputs remain missing, as during fitting; present demand is never relabelled as a future forecast. There are no weather substitutes or solar-imputation shortcuts.
+The research recipe uses **completed-period prices**. Current-period prices remain visible immediately but are excluded from this model's numerical features to preserve fitting/inference parity. The frozen recipe keeps expected-demand features missing, as during fitting, even when the app has captured separate future-demand inputs; present demand is never relabelled as a future forecast. There are no weather substitutes or solar-imputation shortcuts.
 
 Training used revised final archives with assumed period-end availability; live inputs are actually observed provisional public forecasts. Matching semantics and feature construction does not eliminate this distribution difference. Forecasts carry SOLAR_PUBLIC_PROVISIONAL_INPUTS, COMPLETED_PERIOD_PRICE_INPUTS, RETROSPECTIVE_TRAINING and EXPERIMENTAL_AI quality flags.
 
@@ -55,3 +55,10 @@ The private WSL environment and runtime remain under ~/.config/wattly/local-ai-2
 - 61 JavaScript tests passed. Browser evidence is recorded separately after activation.
 
 Compact [solar activation](evidence/2026-10-30-solar-ai/activation.json) and [parity check](evidence/2026-10-30-solar-ai/parity.json). Raw public responses, model binaries, private configuration and screenshots remain in local operator storage outside Git.
+
+
+## 30 October noon-window repair
+
+The 72-period chart may begin at noon and omit completed periods earlier today. The collector now also archives the public today panel (`value=10`, 48 points). The adapter reads seven-day history, then the 72-period panel, then today's history; it still excludes any period not completed by issue time or later than the source update. Every included response retains its real receipt and freshness checks. No archived forward solar value is turned into an observed value merely because time passed. Two-panel snapshots remain readable when sufficient, while new collection uses all three panels. Midday, late-night and New Year boundaries are tested.
+
+Future demand capture is separate from the frozen solar recipe. See [demand integration and verification](../demand-solar-repair-2026-10-30.md). Model weights, manifest pins and the current live trial were preserved.

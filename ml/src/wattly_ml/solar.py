@@ -73,14 +73,15 @@ def read_solar_snapshot(path, as_of):
         raise ValueError('Solar snapshot exceeds limit')
     raw = path.read_bytes()
     snapshot = json.loads(raw)
-    if snapshot.get('schemaVersion')!=1 or len(snapshot.get('responses', []))!=2:
+    if snapshot.get('schemaVersion')!=1 or len(snapshot.get('responses', [])) not in (2,3):
         raise ValueError('Invalid solar snapshot')
     as_of = instant(as_of)
     values = {}; availability = {}; receipts = []; source_updates = []; seen = set()
-    # Daily history first, current 72-period response overrides overlapping revisions.
+    # Seven-day history, then forward panel, then today's completed history.
+    # Today is required when the 72-period chart rolls forward past recent periods.
     for item in sorted(snapshot['responses'], key=lambda r: r['value'], reverse=True):
         value = item['value']
-        if value not in (12,14) or value in seen or item['url']!=BASE_URL+str(value)+'&fromDate=&toDate=':
+        if value not in (10,12,14) or value in seen or item['url']!=BASE_URL+str(value)+'&fromDate=&toDate=':
             raise ValueError('Invalid solar source')
         seen.add(value)
         received = instant(item['receivedAt'])
@@ -91,10 +92,10 @@ def read_solar_snapshot(path, as_of):
             raise ValueError('Unsuccessful EMC response')
         panel = body['data']['data'][0]
         updated = emc_time(panel['lastupdate'])
-        if updated>received or (value==12 and as_of-updated>timedelta(minutes=40)):
+        if updated>received or (value in (10,12) and as_of-updated>timedelta(minutes=40)):
             raise ValueError('Stale or future EMC update')
         labels = panel['labels']
-        if len(labels)!=(72 if value==12 else 336):
+        if len(labels)!=({10:48,12:72,14:336}[value]):
             raise ValueError('Unexpected solar history length')
         datasets = panel['datasets']
         demand = [d['data'] for d in datasets if d['label']=='Demand']
@@ -104,7 +105,7 @@ def read_solar_snapshot(path, as_of):
         periods = [label_time(label,updated) for label in labels]
         if any(b-a!=STEP for a,b in zip(periods,periods[1:])):
             raise ValueError('Duplicate or nonconsecutive EMC periods')
-        if value==12:
+        if value in (10,12):
             current = emc_time(panel['currentdate'].split('-')[0])
             if floor(current)!=floor(updated):
                 raise ValueError('EMC current-period mapping disagrees')
@@ -122,6 +123,8 @@ def read_solar_snapshot(path, as_of):
                 # Explicit gaps stay missing and are rejected if needed below.
                 values.pop(period,None)
         receipts.append(received.isoformat());source_updates.append(instant(updated).isoformat())
+    if seen not in ({12,14},{10,12,14}):
+        raise ValueError('Missing required EMC panel')
     latest = floor(as_of)-STEP
     required = [latest-i*STEP for i in range(6)]+[latest-DAY]
     if any(t not in values for t in required):

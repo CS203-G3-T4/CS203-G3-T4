@@ -138,3 +138,42 @@ def test_solar_http_serving_requires_opt_in_and_fresh_complete_inputs(tmp_path,m
     m=json.loads((model_path/'manifest.json').read_text());m['productionEligible']=True
     (model_path/'manifest.json').write_text(json.dumps(m))
     with pytest.raises(ValueError):load_bundle(model_path)
+
+
+def with_today(now):
+    data=snapshot(now)
+    local=now.astimezone(SGT);today=local.replace(hour=0,minute=0,second=0,microsecond=0)
+    # Real forward panel rolls to today's noon, excluding recent completed periods.
+    forward=data['responses'][0]['body']['data']['data'][0]
+    start=today.replace(hour=12)
+    forward['labels']=[(start+i*STEP).strftime('%d %b %H:%M')+'-'+(start+(i+1)*STEP).strftime('%H:%M') for i in range(72)]
+    forward['datasets'][1]['data']=[str(6000+solar_value(start+i*STEP)) for i in range(72)]
+    item=deepcopy(data['responses'][0]);item['value']=10;item['url']=BASE_URL+'10&fromDate=&toDate='
+    panel=item['body']['data']['data'][0]
+    panel['labels']=[(today+i*STEP).strftime('%d %b %H:%M')+'-'+(today+(i+1)*STEP).strftime('%H:%M') for i in range(48)]
+    panel['datasets'][0]['data']=['6000']*48
+    panel['datasets'][1]['data']=[str(6000+solar_value(today+i*STEP)) for i in range(48)]
+    data['responses'].append(item)
+    return data
+
+
+@pytest.mark.parametrize('text',['2026-10-30T12:03:00+08:00','2026-10-30T23:33:00+08:00','2027-01-01T00:03:00+08:00'])
+def test_today_panel_repairs_forward_rollover_without_using_future_solar(tmp_path,text):
+    now=instant(text);data=with_today(now)
+    values,evidence=read_solar_snapshot(write_snapshot(tmp_path,data),now)
+    latest=floor(now)-STEP
+    assert values[latest]==solar_value(latest) and len(evidence['periods'])==7
+    assert all(instant(p['periodStart'])+STEP<=floor(now) for p in evidence['periods'])
+    assert floor(now) not in values
+    # No contribution from future dispatch targets even when artificially extreme.
+    p=data['responses'][-1]['body']['data']['data'][0]
+    for i,label in enumerate(p['labels']):
+        if label_time(label,now.astimezone(SGT))>=floor(now):p['datasets'][1]['data'][i]='99999999'
+    assert read_solar_snapshot(write_snapshot(tmp_path,data),now)[0]==values
+
+
+def test_today_source_cannot_hide_stale_or_future_receipts(tmp_path):
+    now=instant('2026-10-30T12:03:00+08:00')
+    for key,value in [('receivedAt',(now+STEP).isoformat()),('receivedAt',(now-DAY).isoformat()),('url','https://example.com')]:
+        data=with_today(now);data['responses'][-1][key]=value
+        with pytest.raises(ValueError):read_solar_snapshot(write_snapshot(tmp_path,data),now)

@@ -1,3 +1,5 @@
+> 30 October implementation update: [the existing public future-demand feed is now imported and transferred to inference](demand-solar-repair-2026-10-30.md). The frozen solar model still keeps those features missing to preserve fitting parity. A demand-aware model's real accuracy benefit remains unproved; the historical study below is unchanged.
+
 # F3 final report: forecasting and appliance recommendations
 
 Prepared 29 October 2026 for the project submission (CSDT4-51). This is the F3 report section to include in the team's final submission; it is not a claim that an external submission has occurred.

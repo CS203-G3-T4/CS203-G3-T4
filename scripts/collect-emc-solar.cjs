@@ -11,7 +11,7 @@ async function capture(browser){
  try{
   await page.goto('https://www.nems.emcsg.com/nems-prices',{waitUntil:'networkidle',timeout:35000});
   const responses=[];
-  for(const value of [12,14]){
+  for(const value of [10,12,14]){
    const url=base+value+'&fromDate=&toDate=';
    const response=await page.request.get(url,{timeout:20000});
    if(response.status()!==200)throw Error('EMC returned HTTP '+response.status());
@@ -30,7 +30,7 @@ async function capture(browser){
   if(!fs.existsSync(archive))fs.writeFileSync(archive,content,{flag:'wx'});
   const temp=output+'.tmp-'+process.pid;
   fs.writeFileSync(temp,content);fs.renameSync(temp,output);
-  console.log(JSON.stringify({receivedAt:responses[1].receivedAt,snapshot:identity,status:'COLLECTED'}));
+  console.log(JSON.stringify({receivedAt:responses.at(-1).receivedAt,snapshot:identity,status:'COLLECTED'}));
  }finally{await page.close();}
 }
 (async()=>{
