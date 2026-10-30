@@ -20,11 +20,8 @@ class _NoRedirect(HTTPRedirectHandler):
         return None
 
 
-def post_admin(path, value):
-    """Use the existing shared login/CSRF contract; never weaken server guards."""
-    base = os.environ.get('WATTLY_RUN_API_URL')
-    if not base:
-        return False
+def audit_url(base):
+    """Shared preflight/client transport rule; validates without network access."""
     base = base.rstrip('/')
     parsed = urlsplit(base)
     try:
@@ -35,6 +32,15 @@ def post_admin(path, value):
             or parsed.password or parsed.query or parsed.fragment
             or (parsed.scheme == 'http' and not loopback)):
         raise ValueError('Training audit URL requires HTTPS or loopback HTTP')
+    return base, loopback
+
+
+def post_admin(path, value):
+    """Use the existing shared login/CSRF contract; never weaken server guards."""
+    base = os.environ.get('WATTLY_RUN_API_URL')
+    if not base:
+        return False
+    base, loopback = audit_url(base)
     if path not in ('forecast-training-attempts', 'forecast-baseline-validation', 'forecast-demand', 'forecast-savings-replay'):
         raise ValueError('Unsupported training audit endpoint')
     user, password = os.environ.get('WATTLY_ADMIN_USER'), os.environ.get('WATTLY_ADMIN_PASSWORD')

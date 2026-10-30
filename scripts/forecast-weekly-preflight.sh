@@ -5,12 +5,14 @@ env_file=${1:?Supply the private weekly environment file}
 [[ -r "$env_file" && $(stat -c %a "$env_file") == 600 ]] || { echo 'Weekly environment file must be readable and mode 600' >&2; exit 2; }
 set -a; source "$env_file"; set +a
 : "${WATTLY_PYTHON:?Set the dedicated Python executable}"
+export WATTLY_PREFLIGHT_REPO="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 exec "$WATTLY_PYTHON" - <<'PY'
-import json,os
+import json,os,sys
 from pathlib import Path
 from urllib.request import urlopen
-from urllib.parse import urlsplit
 from datetime import datetime
+sys.path.insert(0,str(Path(os.environ.pop('WATTLY_PREFLIGHT_REPO'))/'ml/src'))
+from wattly_ml.operations import audit_url
 missing=[k for k in ('WATTLY_ML_HOME','COLLECTOR_DATA_DIR','WATTLY_RUN_API_URL','WATTLY_ADMIN_USER','WATTLY_ADMIN_PASSWORD','WATTLY_PROTECTED_START','WATTLY_PROTECTED_END') if not os.environ.get(k)]
 if missing: raise SystemExit('Not ready; configure: '+', '.join(missing))
 if os.environ.get('WATTLY_RUN_AUTH_MODE','session')!='session':
@@ -20,9 +22,7 @@ if start.utcoffset() is None or end.utcoffset() is None or start>=end: raise Sys
 if not (Path(os.environ['COLLECTOR_DATA_DIR'])/'collector.sqlite3').is_file(): raise SystemExit('Collector database missing')
 home=Path(os.environ['WATTLY_ML_HOME'])
 if not home.is_dir() or not os.access(home,os.W_OK): raise SystemExit('Persistent model directory is not writable')
-url=os.environ['WATTLY_RUN_API_URL'].rstrip('/')
-p=urlsplit(url)
-if p.scheme not in ('http','https') or not p.hostname or p.username or p.password or p.query or p.fragment: raise SystemExit('Invalid app URL')
+url,_=audit_url(os.environ['WATTLY_RUN_API_URL'])
 with urlopen(url+'/actuator/health',timeout=5) as response:
     if json.load(response).get('status')!='UP': raise SystemExit('Wattly app is not healthy')
 print('Runtime prerequisites present. Verify a bounded authenticated attempt and data/model eligibility before activation.')
