@@ -53,5 +53,13 @@
   "independentHumanLabelsAvailable": false,
   "ownerK3AuthorizationPreviouslyRecorded": true,
   "jonathanTeamSignoff": "PENDING",
-  "jiraRecommendedStatus": "In Progress"
+  "jiraRecommendedStatus": "Done (owner-accepted statistical scope)",
+  "ownerCompletionDecision": {
+    "date": "2026-10-30",
+    "owner": "Bryan Edison Lee",
+    "acceptedK": 3,
+    "scope": "Statistical spike-rule sensitivity/reporting",
+    "independentHumanValidation": "DEFERRED_NOT_COMPLETED",
+    "jonathanApprovalRecorded": false
+  }
 }

@@ -1,3 +1,5 @@
+> Completion record — 30 October 2026: Bryan requested completion of CSDT4-51 using this final F3 report and the verified matched-case comparison below. The report includes savings, price error, spike metrics and limitations. This completes the F3 report deliverable; incorporation into an external team submission and independent teammate approval are not asserted. Bryan also accepted k=3 for the statistical spike rule; independent human-label validation remains deferred.
+
 > 30 October implementation update: [the existing public future-demand feed is now imported and transferred to inference](demand-solar-repair-2026-10-30.md). The frozen solar model still keeps those features missing to preserve fitting parity. A demand-aware model's real accuracy benefit remains unproved; the historical study below is unchanged.
 
 # F3 final report: forecasting and appliance recommendations
