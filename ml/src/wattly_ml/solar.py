@@ -18,6 +18,7 @@ SOLAR_NAMES = ['solar_latest', 'solar_lag1', 'solar_lag2', 'solar_lag5',
                'solar_mean6', 'solar_std6', 'solar_change1', 'solar_change2',
                'solar_change5', 'solar_minus_yesterday', 'solar_count6']
 SOLAR_POLICY = 'COMPLETED_PRICE_AND_RECEIPT_STAMPED_SOLAR_V1'
+SOLAR_DEMAND_POLICY = 'COMPLETED_PRICE_RECEIPT_SOLAR_AS_ISSUED_DEMAND_V1'
 BASE_URL = 'https://www.nems.emcsg.com/api/DataSync/Get?value='
 MONTHS = {v:i for i,v in enumerate(('Jan','Feb','Mar','Apr','May','Jun',
                                    'Jul','Aug','Sep','Oct','Nov','Dec'),1)}
@@ -136,14 +137,19 @@ def read_solar_snapshot(path, as_of):
                     'availabilityPolicy':'ACTUAL_RECEIPT_NO_BACKDATED_VINTAGES'}
 
 
-def solar_features(history, origin, target):
+def solar_features(history, origin, target, *, demand_aware=False):
     from .features import features
     latest = floor(origin)-STEP
     completed = {t:r for t,r in history.items() if t<=latest}
     if latest not in completed:
         raise ValueError('Latest completed price unavailable')
-    # A plain dictionary also keeps expected-demand features missing, as during fitting.
+    # Schema 3 deliberately keeps demand missing to preserve the frozen recipe.
+    if demand_aware:
+        from .data import KnownPrices
+        completed = KnownPrices(completed, getattr(history, 'demand_forecasts', ()))
     base = features(completed, origin, target, schema_version=2)
+    if demand_aware and not base[18]:
+        raise ValueError('Target demand forecast unavailable at issue time')
     solar = history.solar_values
     required = [latest-i*STEP for i in range(6)]+[latest-DAY]
     if any(t not in solar or not math.isfinite(solar[t]) or solar[t]<0 for t in required):

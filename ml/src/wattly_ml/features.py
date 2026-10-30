@@ -34,7 +34,7 @@ def holiday_feature(origin, target):
 
 
 def feature_names(version):
-    if version == 3:
+    if version in (3, 4):
         from .solar import SOLAR_NAMES
         return ACTIVE_FEATURES + SOLAR_NAMES
     if version not in (1,2):
@@ -43,9 +43,9 @@ def feature_names(version):
 
 
 def features(history, origin, target, *, schema_version=1):
-    if schema_version == 3:
+    if schema_version in (3, 4):
         from .solar import solar_features
-        return solar_features(history,origin,target)
+        return solar_features(history,origin,target, demand_aware=schema_version == 4)
     boundary = floor(origin)
     prices = {p: r["usep"] for p, r in history.items() if p <= origin}
     def get(period):
