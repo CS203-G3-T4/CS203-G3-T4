@@ -295,3 +295,7 @@ scheduling instant defines the Singapore-midnight default validation end and UTC
 version timestamp; validation/training overrides remain explicit. `scheduledAt`
 is recorded separately from actual execution `trainingDate`/provenance timestamps.
 Historical replay origins/cutoffs and training-only transformations are unchanged.
+
+## 29 October delivery handoff
+
+See [the delivery decision](delivery-2026-10-29.md) and [final F3 report](../final-report-f3.md). The weekly operational client now uses the existing shared login and CSRF flow by default. Run scripts/forecast-weekly-preflight.sh with the private environment file before installing. WSL units are prepared and verified but intentionally inactive; no production runtime or credentials were guessed. Existing research artifacts remain unapproved.

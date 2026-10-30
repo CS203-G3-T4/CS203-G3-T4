@@ -1,0 +1,29 @@
+{
+  "java": {
+    "tests": 350,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "fullPython": "Original broad suite exceeded 180s; not repeated. Focused changed-path checks run below.",
+  "python": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0",
+    "tests": "19",
+    "time": "2.593",
+    "timestamp": "2026-10-29T23:47:48.832536+08:00",
+    "hostname": "DESKTOP-R7C065I"
+  },
+  "realSpringSessionAudit": {
+    "localBasicEnabled": false,
+    "csrfEnabled": true,
+    "failedAttemptPersisted": true,
+    "championRetained": true,
+    "realSourceUntouched": true
+  },
+  "residentDenied": true,
+  "status": "PASS",
+  "disposableProcessesStopped": true
+}
