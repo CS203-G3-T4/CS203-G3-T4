@@ -7,25 +7,81 @@ import os
 from pathlib import Path
 import signal
 import tempfile
-from urllib.request import Request, urlopen
+from urllib.request import Request, build_opener, HTTPCookieProcessor, HTTPRedirectHandler
+from urllib.error import HTTPError
+from urllib.parse import urlencode, urlsplit
+from http.cookiejar import CookieJar
+import ipaddress
 import uuid
 
 
+class _NoRedirect(HTTPRedirectHandler):
+    def redirect_request(self, request, fp, code, msg, headers, newurl):
+        return None
+
+
+def audit_url(base):
+    """Shared preflight/client transport rule; validates without network access."""
+    base = base.rstrip('/')
+    parsed = urlsplit(base)
+    try:
+        loopback = parsed.hostname == 'localhost' or ipaddress.ip_address(parsed.hostname).is_loopback
+    except ValueError:
+        loopback = False
+    if (parsed.scheme not in ('http', 'https') or not parsed.hostname or parsed.username
+            or parsed.password or parsed.query or parsed.fragment
+            or (parsed.scheme == 'http' and not loopback)):
+        raise ValueError('Training audit URL requires HTTPS or loopback HTTP')
+    return base, loopback
+
+
 def post_admin(path, value):
+    """Use the existing shared login/CSRF contract; never weaken server guards."""
     base = os.environ.get('WATTLY_RUN_API_URL')
     if not base:
         return False
+    base, loopback = audit_url(base)
+    if path not in ('forecast-training-attempts', 'forecast-baseline-validation', 'forecast-demand', 'forecast-savings-replay'):
+        raise ValueError('Unsupported training audit endpoint')
     user, password = os.environ.get('WATTLY_ADMIN_USER'), os.environ.get('WATTLY_ADMIN_PASSWORD')
     if not user or not password:
         raise ValueError('Admin credentials required for training-run persistence')
-    token = base64.b64encode((user+':'+password).encode()).decode()
-    request = Request(base.rstrip('/')+'/api/v1/admin/'+path,
+    mode = os.environ.get('WATTLY_RUN_AUTH_MODE', 'session')
+    if mode not in ('session', 'local-basic') or (mode == 'local-basic' and not loopback):
+        raise ValueError('Use session authentication; local-basic is restricted to loopback demos')
+    opener = build_opener(HTTPCookieProcessor(CookieJar()), _NoRedirect())
+
+    def csrf():
+        with opener.open(Request(base+'/api/v1/csrf'), timeout=10) as response:
+            token = json.load(response)
+        if token.get('headerName') != 'X-XSRF-TOKEN' or not isinstance(token.get('token'), str) or not token['token']:
+            raise ValueError('Invalid training audit CSRF response')
+        return {token['headerName']: token['token']}
+
+    headers = csrf()
+    if mode == 'session':
+        login = Request(base+'/login', data=urlencode({'username':user, 'password':password}).encode(),
+                        headers={**headers, 'Content-Type':'application/x-www-form-urlencoded'})
+        try:
+            with opener.open(login, timeout=10) as response:
+                if response.status != 200:
+                    raise ValueError('Training audit login failed')
+        except HTTPError as exc:
+            # Spring redirects after login. Do not follow it or forward credentials.
+            location = exc.headers.get('Location', '')
+            if exc.code not in (302, 303) or not location or 'error' in urlsplit(location).query:
+                raise ValueError('Training audit login failed') from None
+        headers = csrf()  # Successful authentication rotates the CSRF token.
+    else:
+        token = base64.b64encode((user+':'+password).encode()).decode()
+        headers['Authorization'] = 'Basic '+token
+    request = Request(base+'/api/v1/admin/'+path,
                       data=json.dumps(value, allow_nan=False).encode(),
-                      headers={'Content-Type':'application/json', 'Authorization':'Basic '+token})
-    with urlopen(request, timeout=10) as response:
+                      headers={**headers, 'Content-Type':'application/json'})
+    with opener.open(request, timeout=10) as response:
         if response.status != 200:
             raise OSError('Training audit API did not acknowledge the record')
-        return json.loads(response.read())
+        return json.load(response)
 
 
 class TrainingAttempt:
