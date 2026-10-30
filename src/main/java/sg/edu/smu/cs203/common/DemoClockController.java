@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.ResponseStatus;
-import sg.edu.smu.cs203.market.price.ReplayPriceService;
 
 @RestController
 public class DemoClockController {
@@ -27,13 +26,10 @@ public class DemoClockController {
     private static final ZoneId SINGAPORE = ZoneId.of("Asia/Singapore");
 
     private final DemoClock clock;
-    private final ReplayPriceService replayPrices;
     private final DemoReplayRefreshService replayRefresh;
 
-    public DemoClockController(DemoClock clock, ReplayPriceService replayPrices,
-                               DemoReplayRefreshService replayRefresh) {
+    public DemoClockController(DemoClock clock, DemoReplayRefreshService replayRefresh) {
         this.clock = clock;
-        this.replayPrices = replayPrices;
         this.replayRefresh = replayRefresh;
     }
 
@@ -47,12 +43,15 @@ public class DemoClockController {
     @PostMapping("/api/v1/demo/start")
     public ClockStatus start(@Valid @RequestBody StartRequest request) {
         Instant start = request.date().atTime(request.time()).atZone(SINGAPORE).toInstant();
-        replayPrices.loadDay(request.date());
-        clock.startAt(start);
+        DemoClock.Snapshot previous = clock.snapshot();
         try {
-            replayRefresh.start();
+            replayRefresh.start(request.date(), start);
         } catch (RuntimeException exception) {
-            clock.stop();
+            if (previous.running()) {
+                clock.startAt(previous.instant());
+            } else {
+                clock.stop();
+            }
             throw exception;
         }
         return clockStatus();

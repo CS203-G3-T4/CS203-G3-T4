@@ -26,7 +26,7 @@ public class ForecastAccuracyService {
             FROM forecast_point p JOIN forecast_run f ON f.id=p.run_id
             LEFT JOIN forecast_evaluation e ON e.run_id=p.run_id AND e.model_identifier=p.model_identifier
                 AND e.horizon=p.horizon AND e.truth_policy=? AND e.evaluated_at<=?
-            WHERE f.mode=? AND f.as_of>=? AND f.as_of<=? AND f.generated_at<=? AND p.horizon=?
+            WHERE f.mode=? AND f.is_demo=FALSE AND f.as_of>=? AND f.as_of<=? AND f.generated_at<=? AND p.horizon=?
                 AND p.target_period+interval '30 minutes'<=?
             ORDER BY f.as_of,f.id,p.model_identifier
             """,(r,n)->new Sample(r.getString("id"),r.getTimestamp("as_of").toInstant(),r.getTimestamp("target_period").toInstant(),

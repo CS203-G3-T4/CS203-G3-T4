@@ -76,6 +76,8 @@ the existing schema and initialize new databases.
 - `GET /api/v1/market-prices/feed-status` reports the most recent poll result (`SUCCESS`, `STALE_SOURCE`, `FAILURE`, or `NEVER_POLLED`).
 - `GET /api/v1/admin/feed-status` (admin) reports NEMS feed health: last poll, last successful sync, consecutive failed polls, uptime % and fallback count for the current month, the open incident and the 10 most recent incidents.
 - `GET /api/v1/admin/feed-outage` and `PUT /api/v1/admin/feed-outage` with `{"enabled": true|false}` (admin, CSRF token required) turn a simulated NEMS outage on or off for demos and tests (CSDT4-26). While it is on, every poll fails without calling NEMS, so the latest price is served as `STALE`. Each change triggers one poll immediately, so the dashboard's stale banner appears or clears on its next refresh, without a restart. While it is on, no new recommendations are made either, even from the demo forecast. The switch is held in memory and is always off after a restart.
+- `GET /api/v1/admin/overview` (admin) returns platform-wide household, savings and forecast-accuracy figures (CSDT4-55).
+- `GET /api/v1/admin/households/summary` (admin) returns per-household plan, monthly savings and budget status (CSDT4-55).
 - `GET /actuator/health` reports application and database health.
 - `/swagger-ui.html` displays the API documentation; `/v3/api-docs` returns the OpenAPI document.
 
@@ -204,6 +206,16 @@ savings, and recommendation confidence use replay prices only up to simulated
 now. Live price ingestion continues on wall-clock time and writes to the normal
 market tables. Stopping demo mode immediately returns clock-based features to
 real Singapore time.
+
+The demo clock is shared by business services. Therefore, any household,
+appliance, budget, or weather record created or updated during replay receives
+the simulated timestamp; those existing timestamps are not rewritten when the
+demo stops. Automatic recommendation recomputation is paused during replay, and
+the forecast page reads the replay forecast while demo mode is active. Replay
+forecast runs are marked as demo data and excluded from normal forecast accuracy
+and baseline ranking; after demo mode stops, normal forecast runs are shown
+again. The replay refresh itself updates only the dedicated replay household's
+suggestions.
 
 ## F3: forecaster and baseline evaluator
 

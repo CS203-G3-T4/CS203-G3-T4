@@ -14,6 +14,9 @@ public final class DemoClock extends Clock {
 
     private static final ZoneId SINGAPORE = ZoneId.of("Asia/Singapore");
 
+    public record Snapshot(boolean running, Instant instant) {
+    }
+
     private final Clock realClock;
     private final AtomicReference<Instant> simulatedNow;
     private final ZoneId zone;
@@ -73,5 +76,12 @@ public final class DemoClock extends Clock {
 
     public boolean isRunning() {
         return simulatedNow.get() != null;
+    }
+
+    public Snapshot snapshot() {
+        Instant simulated = simulatedNow.get();
+        return simulated == null
+                ? new Snapshot(false, realClock.instant())
+                : new Snapshot(true, simulated);
     }
 }

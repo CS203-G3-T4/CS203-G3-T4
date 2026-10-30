@@ -152,6 +152,20 @@ class ForecastPersistenceTest {
             assertThat(jdbc.queryForObject("select usep_sgd_per_mwh from market_price where source='NEMS_SN_SG'",BigDecimal.class))
                     .isEqualByComparingTo("-12.3457");
         } finally { java.nio.file.Files.deleteIfExists(file); }
+        Instant demoAsOf = NOW.plusSeconds(30);
+        List<ForecastTypes.Point> demoPoints = java.util.stream.IntStream.range(0,24)
+                .mapToObj(index -> new ForecastTypes.Point(index+1,
+                        BaselineForecastService.targets(demoAsOf).get(index),BigDecimal.TEN,null,null))
+                .toList();
+        var demoRun = new ForecastTypes.Run("demo-persistence-run",demoAsOf,demoAsOf,"demo-input","REPLAY",
+                "BASELINE","B1-v1","B1",null,List.of(),false,"AVAILABLE",demoPoints);
+        assertThat(saved.save(demoRun,"[]",java.util.Map.of("B1",demoPoints),null,true)).isTrue();
+        assertThat(saved.latest("REPLAY",demoAsOf).orElseThrow().id()).isNotEqualTo(demoRun.id());
+        assertThat(saved.latest("REPLAY",demoAsOf,true).orElseThrow().id()).isEqualTo(demoRun.id());
+        assertThat(jdbc.queryForObject("""
+                SELECT count(*) FROM forecast_evaluation e JOIN forecast_run f ON f.id=e.run_id
+                WHERE f.id=?
+                """,Integer.class,demoRun.id())).isZero();
         if (System.getenv("WATTLY_PYTHON_SMOKE_EXECUTABLE")!=null) smokePythonProcess();
     }
 

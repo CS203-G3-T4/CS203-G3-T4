@@ -10,7 +10,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.time.Clock;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.time.ZoneId;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,7 +28,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import sg.edu.smu.cs203.market.EnergyMarketServiceApplication;
 import sg.edu.smu.cs203.security.CsrfTokenController;
 import sg.edu.smu.cs203.security.SecurityConfiguration;
-import sg.edu.smu.cs203.market.price.ReplayPriceService;
 
 @WebMvcTest(DemoClockController.class)
 @ContextConfiguration(classes = EnergyMarketServiceApplication.class)
@@ -43,14 +41,13 @@ class DemoClockControllerTest {
     @Autowired
     private DemoClock demoClock;
     @Autowired
-    private ReplayPriceService replayPrices;
-    @Autowired
     private DemoReplayRefreshService replayRefresh;
 
     @BeforeEach
     void resetClockAndMocks() {
         demoClock.stop();
-        Mockito.reset(replayPrices, replayRefresh);
+        Mockito.reset(replayRefresh);
+        stubSuccessfulStart();
     }
 
     @Test
@@ -156,15 +153,16 @@ class DemoClockControllerTest {
                         .content("{\"periods\":1}"))
                 .andExpect(status().isOk());
 
-        Mockito.verify(replayPrices).loadDay(LocalDate.parse("2026-09-26"));
-        Mockito.verify(replayRefresh).start();
+        Mockito.verify(replayRefresh).start(
+                org.mockito.ArgumentMatchers.eq(java.time.LocalDate.parse("2026-09-26")),
+                org.mockito.ArgumentMatchers.eq(Instant.parse("2026-09-26T00:00:00Z")));
         Mockito.verify(replayRefresh).refresh();
     }
 
     @Test
     void failedRefreshDoesNotLeaveTheClockAtAnUnrefreshedTime() throws Exception {
         Mockito.doThrow(new IllegalStateException("refresh failed"))
-                .when(replayRefresh).start();
+                .when(replayRefresh).start(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
         mvc.perform(post("/api/v1/demo/start")
                         .with(user("admin").roles("ADMIN")).with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -174,6 +172,7 @@ class DemoClockControllerTest {
                 .andExpect(jsonPath("$.running").value(false));
 
         Mockito.reset(replayRefresh);
+        stubSuccessfulStart();
         mvc.perform(post("/api/v1/demo/start")
                         .with(user("admin").roles("ADMIN")).with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -190,17 +189,36 @@ class DemoClockControllerTest {
                 .andExpect(jsonPath("$.currentTime").value("2026-09-26T00:00:00Z"));
     }
 
+    @Test
+    void failedStartRestoresTheAlreadyRunningDemoTime() throws Exception {
+        demoClock.startAt(Instant.parse("2026-09-25T10:30:00Z"));
+        Mockito.doThrow(new IllegalStateException("refresh failed"))
+                .when(replayRefresh).start(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
+
+        mvc.perform(post("/api/v1/demo/start")
+                        .with(user("admin").roles("ADMIN")).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"date\":\"2026-09-26\",\"time\":\"08:00\"}"))
+                .andExpect(status().isBadRequest());
+
+        mvc.perform(get("/api/v1/demo/state").with(user("admin").roles("ADMIN")))
+                .andExpect(jsonPath("$.running").value(true))
+                .andExpect(jsonPath("$.currentTime").value("2026-09-25T10:30:00Z"));
+    }
+
+    private void stubSuccessfulStart() {
+        Mockito.doAnswer(invocation -> {
+            demoClock.startAt(invocation.getArgument(1));
+            return null;
+        }).when(replayRefresh).start(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
+    }
+
     @TestConfiguration
     static class ClockConfiguration {
         @Bean
         DemoClock demoClock() {
             return new DemoClock(Clock.fixed(
                     Instant.parse("2026-10-24T08:00:00Z"), ZoneId.of("Asia/Singapore")));
-        }
-
-        @Bean
-        ReplayPriceService replayPriceService() {
-            return Mockito.mock(ReplayPriceService.class);
         }
 
         @Bean
