@@ -73,6 +73,7 @@ public class ForecastJob {
         var independentRanking=operations.ranking(asOf,service.mode());
         String input=hash(snapshot+(independentRanking.isEmpty()?"":"|validated-baselines:"+mapper.writeValueAsString(independentRanking)));
         String requestId=hash(service.mode()+"|"+BaselineForecastService.floor(asOf)+"|"+input);
+        String runIdentity=requestId;
         boolean stale=service.stale(rows,asOf);
         boolean verified=service.mappingVerified(rows);
         List<String> flags=new ArrayList<>();
@@ -93,6 +94,14 @@ public class ForecastJob {
                 for (JsonNode p : response.path("points")) ai.add(p.path("predictedUsep").decimalValue());
                 ranking=List.of(mapper.convertValue(response.path("baselineRanking"),String[].class));
                 modelFlags=List.of(mapper.convertValue(response.path("qualityFlags"),String[].class));
+                int featureSchema=response.path("manifest").path("featureSchemaVersion").asInt();
+                if (featureSchema==3 || featureSchema==4) {
+                    // Auxiliary values/receipts are part of the saved input and run identity.
+                    snapshot=mapper.writeValueAsString(Map.of("marketInputs",mapper.readTree(snapshot),
+                            "solarInputs",response.path("inputEvidence")));
+                    input=hash(input+"|solar:"+mapper.writeValueAsString(response.path("inputEvidence")));
+                    runIdentity=hash(requestId+"|"+input);
+                }
                 predictions.put("AI",ai); model=response.path("manifest");
             } catch (RuntimeException exc) {
                 ranking=savedRanking;
@@ -119,7 +128,7 @@ public class ForecastJob {
             String selected=model!=null ? "AI" : ranking.stream().filter(candidates::containsKey).findFirst().orElse("NONE");
             String version=model!=null ? model.path("version").asText() : selected.equals("NONE") ? "none-v1" : selected+"-v1";
             if (selected.equals("NONE") && !stale) reason="INSUFFICIENT_HISTORY";
-            Run run=new Run(hash(requestId+"|"+version),asOf,clock.instant(),input,service.mode(),
+            Run run=new Run(hash(runIdentity+"|"+version),asOf,clock.instant(),input,service.mode(),
                     selected.equals("AI") ? "AI" : selected.equals("NONE") ? "NONE" : "BASELINE",version,selected,
                     selected.equals("AI") ? null : reason,List.copyOf(runFlags),stale,selected.equals("NONE") ? "UNAVAILABLE" : "AVAILABLE",
                     candidates.getOrDefault(selected,List.of()));

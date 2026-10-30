@@ -46,7 +46,7 @@ test('saved endpoint response renders 24 rows, provenance, stale, empty and outa
   assert.equal(nodes['forecast-points'].children.length, 24);
   assert.equal(nodes['forecast-table'].hidden, false);
   assert.ok(nodes['forecast-metadata'].textContent.startsWith(
-    view.run.modelType === 'AI' ? 'AI · ' : 'Baseline ' + view.run.selectedModel + ' · '));
+    view.run.modelType === 'AI' ? (view.run.qualityFlags.includes('EXPERIMENTAL_AI') ? 'Experimental AI' : 'AI · ') : 'Baseline ' + view.run.selectedModel + ' · '));
   assert.match(nodes['forecast-metadata'].textContent, /SGT/);
   assert.equal(nodes['forecast-points'].children[0].children.length, 4);
   if (process.env.WATTLY_UI_PROOF) {
@@ -77,6 +77,12 @@ test('saved endpoint response renders 24 rows, provenance, stale, empty and outa
   await vm.runInContext('WattlyForecast.refresh()', context);
   assert.match(nodes['current-assessment'].textContent, /5.00 SGD\/MWh above typical/);
   assert.match(nodes['current-assessment'].textContent, /percentage unavailable.*Price data is stale/);
+  view.run.modelType = 'AI'; view.run.qualityFlags.push('EXPERIMENTAL_AI');
+  await vm.runInContext('WattlyForecast.refresh()', context);
+  assert.match(nodes['forecast-metadata'].textContent, /Experimental AI/);
+  view.run.qualityFlags.push('PRICE_CALENDAR_HOLIDAY_SOLAR');
+  await vm.runInContext('WattlyForecast.refresh()', context);
+  assert.match(nodes['forecast-metadata'].textContent, /solar-assisted/);
   view = { ...view, stale: true };
   await vm.runInContext('WattlyForecast.refresh()', context);
   assert.match(nodes['forecast-status'].textContent, /Stale forecast/);

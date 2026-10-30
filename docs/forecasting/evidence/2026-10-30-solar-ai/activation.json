@@ -1,0 +1,47 @@
+{
+  "status": "ACTIVE_SOLAR_ASSISTED_EXPERIMENTAL_AI",
+  "modelVersion": "solar-183d-20261026-local-v1",
+  "actionable": true,
+  "stale": false,
+  "points": 24,
+  "qualityFlags": [
+    "PRICE_CALENDAR_HOLIDAY_SOLAR",
+    "SOLAR_PUBLIC_PROVISIONAL_INPUTS",
+    "COMPLETED_PERIOD_PRICE_INPUTS",
+    "RETROSPECTIVE_TRAINING",
+    "EXPERIMENTAL_AI"
+  ],
+  "asOf": "2026-10-29T20:34:00.025049Z",
+  "productionEligible": false,
+  "retrainingActivated": false,
+  "newBlindSavingsEvidence": false,
+  "savedInputAudit": {
+    "version": "solar-183d-20261026-local-v1",
+    "state": "EXPERIMENTAL",
+    "productionEligible": false,
+    "solarPeriods": 7,
+    "snapshotSha256": "30963473435f4de50ee38093676b0dc9efb68cd7e7a47df41888ae480140ffae"
+  },
+  "exactSolarSnapshotArchived": true,
+  "weeklyTimerActive": false,
+  "browser": {
+    "status": "PASS",
+    "rows": 24,
+    "metadata": "Experimental AI \u00b7 solar-assisted \u00b7 solar-183d-20261026-local-v1 \u00b7 forecast as of 30 Oct 2026, 4:34 am SGT",
+    "mobileOverflow": false,
+    "pageErrors": [],
+    "recommendationSource": "F3_FORECAST",
+    "recommendationModel": "AI (experimental)",
+    "demoForecast": false
+  },
+  "validation": {
+    "pythonFocusedPassed": 36,
+    "javaFocusedPassed": 13,
+    "postgresPersistencePassed": 1,
+    "frontendPassed": 61
+  },
+  "sourceModelSha256": "5dbb15ad26ae0b3ee93cd41512fd1b3729bf47bfcd896168d4cbd64b3d58bac2",
+  "freeSolarSource": "https://www.nems.emcsg.com/nems-prices",
+  "liveSavingsMeasured": false,
+  "servicesEnabledForBoot": false
+}
