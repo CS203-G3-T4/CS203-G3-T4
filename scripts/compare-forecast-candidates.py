@@ -9,6 +9,8 @@ import argparse
 parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--research-root',type=Path,required=True)
 parser.add_argument('--output',type=Path,required=True,help='New immutable output directory')
+parser.add_argument('--javac',default=shutil.which('javac'),help='Compiler supporting --release 21 (default: PATH)')
+parser.add_argument('--java',default=shutil.which('java'),help='Java 21+ runtime (default: PATH)')
 args=parser.parse_args()
 RESEARCH=args.research_root.resolve()
 DELIVERY=Path(__file__).resolve().parents[1]
@@ -20,6 +22,10 @@ def read(p): return json.loads(p.read_text())
 def sha(p): return hashlib.sha256(p.read_bytes()).hexdigest()
 def write(p,x):
     with p.open('x') as f: json.dump(x,f,indent=2,allow_nan=False);f.write('\n')
+
+def evaluation_opportunities(path):
+    with gzip.open(path,'rt') as stream:
+        return [row for line in stream if (row:=json.loads(line)).get('evaluation') is True]
 def cost(origin,start,minutes,power,prices):
     # Independent time-overlap calculation; never uses future actuals for planning.
     end=start+minutes*60; total=Decimal(0)
@@ -30,6 +36,8 @@ def cost(origin,start,minutes,power,prices):
     return total
 
 def main():
+    if not args.javac or not args.java:
+        parser.error('Set --javac and --java, or put Java tools on PATH')
     OUT.mkdir()  # write-once; no automatic retry
     sources=[SOURCE/'inputs.npz',SOURCE/'cohort.json',SOURCE/'summary.json',SOURCE/'raw/opportunities.jsonl.gz',BLEND/'protocol.json',BLEND/'verification.json',Path(__file__)]
     java=['src/main/java/sg/edu/smu/cs203/household/appliance/TimeWindow.java','src/main/java/sg/edu/smu/cs203/recommendation/PriceForecast.java','src/main/java/sg/edu/smu/cs203/recommendation/CheapestStartCalculator.java']
@@ -50,17 +58,15 @@ def main():
     expected=set(map(int,data['origins'][data['evaluation']]))
     assert set(forecasts)==expected and all(None not in v for v in forecasts.values())
     cohort=read(SOURCE/'cohort.json'); apps={a['id']:a for a in cohort['appliances']}
-    with gzip.open(SOURCE/'raw/opportunities.jsonl.gz','rt') as f:
-        rows=[json.loads(s) for s in f if '"evaluation":true' in s]
-    # Avoid relying on compact JSON whitespace in future source versions.
-    assert len(rows)==12064
+    rows=evaluation_opportunities(SOURCE/'raw/opportunities.jsonl.gz')
+    if not rows:raise ValueError('No evaluation opportunities in the supplied immutable research bundle')
     from datetime import datetime
     plan=read(SOURCE/'plan.json')
     end=int(datetime.fromisoformat(plan['evaluation']['endExclusive']).timestamp())
     rows=[r for r in rows if r['usual']+r['minutes']*60<=end]
     adapter=OUT/'F4Replay.java'; shutil.copyfile(SOURCE/'F4Replay.java',adapter)
     classes=OUT/'classes'; classes.mkdir()
-    subprocess.run(['/usr/lib/jvm/java-25-openjdk-amd64/bin/javac','--release','21','-d',str(classes),*[str(DELIVERY/p) for p in java],str(adapter)],check=True)
+    subprocess.run([args.javac,'--release','21','-d',str(classes),*[str(DELIVERY/p) for p in java],str(adapter)],check=True)
     inp=OUT/'blend-input.tsv'; output=OUT/'blend-output.tsv'
     with inp.open('x') as f:
         for n,r in enumerate(rows):
@@ -69,7 +75,7 @@ def main():
             flags=data['controlPrices'][i]>data['canonicalThresholds'][i]
             f.write('\t'.join([str(n),str(r['origin']),a['powerKw'],str(a['runMinutes']),a['earliest'],a['finish'],a['usual'],','.join(map(str,p)),','.join('1' if v else '0' for v in flags)])+'\n')
     with inp.open('rb') as f,output.open('xb') as o:
-        subprocess.run(['/usr/lib/jvm/java-21-openjdk-amd64/bin/java','-cp',str(classes),'sg.edu.smu.cs203.recommendation.F4Replay'],stdin=f,stdout=o,timeout=180,check=True)
+        subprocess.run([args.java,'-cp',str(classes),'sg.edu.smu.cs203.recommendation.F4Replay'],stdin=f,stdout=o,timeout=180,check=True)
     raw=output.read_text().splitlines(); assert len(raw)==len(rows)
     checks_done=0
     for n,(r,line) in enumerate(zip(rows,raw)):

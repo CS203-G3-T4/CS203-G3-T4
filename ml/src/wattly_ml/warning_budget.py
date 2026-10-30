@@ -97,6 +97,8 @@ def _assess(evidence):
         pooled=totals,pooledExposureUnits=exposure,
         pooledRates={n:{f:str(Fraction(totals[n][f],exposure)) for f in fields} for n in seen},
         worstWeekRateCaps={f:str(v) for f,v in caps.items()},worstWeekViolations=violations,
+        capWindow=dict(start=checked[0]['start'],end=checked[-1]['end'],
+                       interpretation='All completed control weeks available before decisionAt; a retrospective review cap, not an online per-week cap'),
         checks=comparisons,supportAdequate=support,eligibleForFurtherReview=eligible,
         selectedBehavior='RETAIN_EXISTING_BEHAVIOR',productionEligible=False,automaticPromotion=False,
         householdSavingsVerified=False,additionalRequirement='Matched household savings/harm validation and fresh confirmation before adoption',

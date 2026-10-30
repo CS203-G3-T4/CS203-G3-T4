@@ -20,6 +20,8 @@ def test_overall_gain_can_allow_one_worse_week_within_historical_worst():
     assert r['eligibleForFurtherReview']
     assert r['pooled']['candidate']['falseEpisodes']==6
     assert r['worstWeekRateCaps']['falseEpisodes']=='1/25'
+    assert r['capWindow']['end']==evidence()['weeks'][-1]['end']
+    assert 'not an online' in r['capWindow']['interpretation']
     assert r['weekly'][0]['candidate']['falseEpisodes']>r['weekly'][0]['control']['falseEpisodes']
     assert r['currentPriceRule']==dict(minimumSamples=14,k=3.0,spreadFloor=1.0)
     assert not r['productionEligible'] and not r['automaticPromotion']
