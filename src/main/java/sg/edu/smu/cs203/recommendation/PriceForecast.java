@@ -15,7 +15,7 @@ import java.util.List;
  *                  Confidence (CSDT4-39) is then judged on the weeks before that day.
  */
 public record PriceForecast(String source, String model, Instant asOf, List<HalfHourPrice> points,
-                            LocalDate replayDay) {
+                            LocalDate replayDay, String runId, String modelVersion) {
 
     public static final String DEMO = "DEMO_FORECAST";
     public static final String F3 = "F3_FORECAST";
@@ -25,7 +25,11 @@ public record PriceForecast(String source, String model, Instant asOf, List<Half
     }
 
     public PriceForecast(String source, String model, Instant asOf, List<HalfHourPrice> points) {
-        this(source, model, asOf, points, null);
+        this(source, model, asOf, points, null, null, null);
+    }
+
+    public PriceForecast(String source,String model,Instant asOf,List<HalfHourPrice> points,LocalDate replayDay) {
+        this(source,model,asOf,points,replayDay,null,null);
     }
 
     public boolean isDemo() {

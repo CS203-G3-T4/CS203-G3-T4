@@ -1,0 +1,55 @@
+{
+  "trial": {
+    "id": "solar-live-20261030-v1",
+    "policy": {
+      "days": 28,
+      "scope": "Modelled wholesale costs assuming plans followed; not metered household bills",
+      "truth": "FIRST_COMPLETE_PROVISIONAL_AS_OBSERVED",
+      "weight": "runsPerWeek/7",
+      "version": "FIRST_ELIGIBLE_PLAN_V1",
+      "baseline": "B3-v1",
+      "calibration": "90_PERCENT_DAILY_MAX_NORMALIZED_SAVINGS_ERROR_20_COMPLETE_DAYS",
+      "minimumSavingSgd": 0.05,
+      "maximumSuggestions": 3
+    },
+    "ends_at": "2026-11-27T11:48:01.044093+08:00",
+    "started_at": "2026-10-30T11:48:01.044093+08:00",
+    "model_sha256": "e3d96c2dfb4a49a7698e3f9898bac0a896d90bedec8bd0543e637c116c2fe51d",
+    "model_version": "solar-183d-20261026-local-v1"
+  },
+  "firstForecast": {
+    "available": true,
+    "actionable": true,
+    "stale": false,
+    "id": "8c563461d33ed23d2515743c38017564918b9a9e652cab455431d043d8ff3add",
+    "asOf": "2026-10-30T03:49:10.685248Z",
+    "modelType": "AI",
+    "modelVersion": "solar-183d-20261026-local-v1",
+    "fallbackReason": null
+  },
+  "initialCapture": {
+    "frozenOpportunities": 7,
+    "pendingOpportunities": 7,
+    "scoredOpportunities": 0,
+    "captureCoverage": [
+      {
+        "reason": "ELIGIBLE",
+        "count": 1
+      }
+    ]
+  },
+  "localJavaPostgresTests": {
+    "run": 367,
+    "failed": 0,
+    "skipped": 0
+  },
+  "frontendTests": {
+    "run": 66,
+    "failed": 0
+  },
+  "browserChecks": "PASS",
+  "originalResearchBundleSha256": "5dbb15ad26ae0b3ee93cd41512fd1b3729bf47bfcd896168d4cbd64b3d58bac2",
+  "weeklyRetrainingActivated": false,
+  "productionPromotion": false,
+  "note": "One operator-issued genuinely current forecast verified capture after restoring the stopped solar helper. No historical or synthetic calibration imported."
+}

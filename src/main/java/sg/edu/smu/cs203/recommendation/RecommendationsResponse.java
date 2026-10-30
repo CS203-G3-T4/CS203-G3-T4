@@ -2,6 +2,8 @@ package sg.edu.smu.cs203.recommendation;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
+import tools.jackson.databind.JsonNode;
 
 /**
  * A household's open suggestions, best saving first (at most 3), plus the outcome of the latest
@@ -16,5 +18,10 @@ public record RecommendationsResponse(
         boolean demoForecast,
         String message,
         List<RecommendationResponse> recommendations,
-        Instant refreshedAt) {
+        Instant refreshedAt,
+        Map<Long,JsonNode> savingsEvidence) {
+    public RecommendationsResponse(long householdId,String forecastSource,String forecastModel,boolean demoForecast,
+            String message,List<RecommendationResponse> recommendations,Instant refreshedAt) {
+        this(householdId,forecastSource,forecastModel,demoForecast,message,recommendations,refreshedAt,Map.of());
+    }
 }

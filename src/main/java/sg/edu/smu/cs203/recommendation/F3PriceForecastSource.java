@@ -37,6 +37,7 @@ public class F3PriceForecastSource implements PriceForecastSource {
         if (points.isEmpty()) {
             return Lookup.unavailable("F3's forecast has no prices");
         }
-        return Lookup.of(new PriceForecast(PriceForecast.F3, (run.qualityFlags().contains("EXPERIMENTAL_AI") ? "AI (experimental)" : run.selectedModel()), run.asOf(), points));
+        return Lookup.of(new PriceForecast(PriceForecast.F3, (run.qualityFlags().contains("EXPERIMENTAL_AI") ? "AI (experimental)" : run.selectedModel()), run.asOf(), points,
+                null,run.id(),run.modelVersion()));
     }
 }
