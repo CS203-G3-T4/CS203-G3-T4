@@ -125,7 +125,8 @@ const WattlyRecommendationsPage = {};
       return;
     }
     const data = result.data;
-    const recs = data.recommendations || [];
+    if (Page.loadAlerts) Page.loadAlerts();
+    const recs = WattlyRecommendations.withSavingsEvidence(data);
     const nowMs = Date.now();
     if (tab !== 'ACTIVE') {
       el('recommendation-source').hidden = true;
@@ -153,7 +154,8 @@ const WattlyRecommendationsPage = {};
 
   // Read saved results only. Leave an in-progress resident decision untouched.
   Page.refreshAutomatically = async function () {
-    if (automaticallyRefreshing || current !== 'ACTIVE' || document.hidden ||
+    if (!document.hidden && current !== 'ACTIVE') { await Page.loadAlerts(); return; }
+    if (automaticallyRefreshing || document.hidden ||
         (document.activeElement && document.activeElement.matches('input, select, textarea')) ||
         document.querySelector('.rec-actions button:disabled') ||
         Array.from(document.querySelectorAll('.rec-actions input')).some(function (input) {
@@ -192,6 +194,30 @@ const WattlyRecommendationsPage = {};
       banner.textContent = 'This household has a fixed-rate plan, so shifting use will not lower its electricity rate.';
     }
   }
+
+  let alertsVersion = 0;
+  Page.loadAlerts = async function () {
+    const node = el('savings-alerts');
+    if (!node) return;
+    const version = ++alertsVersion;
+    const home = Wattly.householdId();
+    const response = await Wattly.api('GET', '/api/v1/households/' + encodeURIComponent(home) + '/recommendation-alerts');
+    if (version !== alertsVersion || home !== Wattly.householdId()) return;
+    if (!response.ok) { node.hidden = true; node.replaceChildren(); return; }
+    node.hidden = !response.data.length;
+    node.replaceChildren();
+    response.data.forEach(function (alert) {
+      const item = document.createElement('div'), text = document.createElement('p'), button = document.createElement('button');
+      item.className = 'banner info'; text.textContent = alert.message + ' Checked ' + WattlyRecommendations.localTime(alert.updated_at) + ' SGT.';
+      button.type = 'button'; button.className = 'btn-ghost'; button.textContent = 'Got it';
+      button.addEventListener('click', async function () {
+        button.disabled = true;
+        const result = await Wattly.api('POST', '/api/v1/households/' + encodeURIComponent(home) + '/recommendation-alerts/' + alert.id + '/acknowledge');
+        if (result.ok) await Page.loadAlerts(); else button.disabled = false;
+      });
+      item.appendChild(text); item.appendChild(button); node.appendChild(item);
+    });
+  };
 
   Page.start = function () {
     const tablist = el('rec-tabs');

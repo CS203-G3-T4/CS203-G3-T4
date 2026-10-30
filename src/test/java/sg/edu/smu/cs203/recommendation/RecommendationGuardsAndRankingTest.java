@@ -248,7 +248,8 @@ class RecommendationGuardsAndRankingTest {
 
     private RecommendationService service(boolean staleFeedBlocksDemo) {
         return new RecommendationService(repository, households, org.mockito.Mockito.mock(
-            sg.edu.smu.cs203.household.HouseholdRecommendationReader.class), forecasts, feed, clock,
+            sg.edu.smu.cs203.household.HouseholdRecommendationReader.class), org.mockito.Mockito.mock(
+            SavingsMonitoringService.class), forecasts, feed, clock,
                 new BigDecimal("0.05"), 3, staleFeedBlocksDemo);
     }
 
