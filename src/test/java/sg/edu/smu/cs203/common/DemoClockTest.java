@@ -21,10 +21,12 @@ class DemoClockTest {
     void usesInjectedRealTimeUntilStartedAndAfterStopped() {
         assertThat(clock.instant()).isEqualTo(REAL_NOW);
         assertThat(clock.isRunning()).isFalse();
+        assertThat(clock.snapshot()).isEqualTo(new DemoClock.Snapshot(false, REAL_NOW));
 
         clock.startAt(START);
         assertThat(clock.instant()).isEqualTo(START);
         assertThat(clock.isRunning()).isTrue();
+        assertThat(clock.snapshot()).isEqualTo(new DemoClock.Snapshot(true, START));
 
         clock.stop();
         assertThat(clock.instant()).isEqualTo(REAL_NOW);
