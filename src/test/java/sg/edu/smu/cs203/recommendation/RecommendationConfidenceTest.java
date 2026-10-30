@@ -40,7 +40,8 @@ class RecommendationConfidenceTest {
     private final HouseholdDirectory households = mock(HouseholdDirectory.class);
     private final PriceForecastSource forecasts = mock(PriceForecastSource.class);
     private final RecommendationService service = new RecommendationService(repository, households, org.mockito.Mockito.mock(
-            sg.edu.smu.cs203.household.HouseholdRecommendationReader.class), forecasts,
+            sg.edu.smu.cs203.household.HouseholdRecommendationReader.class), org.mockito.Mockito.mock(
+            SavingsMonitoringService.class), forecasts,
             mock(PriceFeedStatus.class), Clock.fixed(now, SINGAPORE), new BigDecimal("0.05"), 3, false);
     private final List<Instant> askedAsOf = new ArrayList<>();
 

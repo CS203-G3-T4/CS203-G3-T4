@@ -82,6 +82,7 @@ public class RecommendationService {
     private final RecommendationRepository recommendations;
     private final HouseholdDirectory households;
     private final HouseholdRecommendationReader backgroundHouseholds;
+    private final SavingsMonitoringService savingsMonitoring;
     private final PriceForecastSource forecasts;
     private final PriceFeedStatus feed;
     private final Clock clock;
@@ -94,6 +95,7 @@ public class RecommendationService {
     public RecommendationService(RecommendationRepository recommendations,
                                  HouseholdDirectory households,
                                  HouseholdRecommendationReader backgroundHouseholds,
+                                 SavingsMonitoringService savingsMonitoring,
                                  PriceForecastSource forecasts,
                                  PriceFeedStatus feed,
                                  Clock clock,
@@ -106,6 +108,7 @@ public class RecommendationService {
         this.recommendations = recommendations;
         this.households = households;
         this.backgroundHouseholds = Objects.requireNonNull(backgroundHouseholds);
+        this.savingsMonitoring = Objects.requireNonNull(savingsMonitoring);
         this.forecasts = forecasts;
         this.feed = feed;
         this.clock = clock;
@@ -335,6 +338,7 @@ public class RecommendationService {
                 confidence == null ? null : confidence.cheaperDays(),
                 confidence == null ? null : confidence.daysChecked());
         long id = recommendations.insert(created);
+        savingsMonitoring.remember(id,householdId,appliance,result,forecast);
         recommendations.logEvent(id, RecommendationRepository.CREATED, now, result.bestStart(), false);
     }
 
@@ -384,6 +388,7 @@ public class RecommendationService {
         if (appliance != null) {
             // The run agreed to, for realised savings later (CSDT4-53) even if the appliance is edited.
             recommendations.saveRun(recommendationId, appliance.powerKw(), appliance.runMinutes());
+            savingsMonitoring.accepted(recommendationId,start,appliance.powerKw(),appliance.runMinutes());
         }
         recommendations.logEvent(recommendationId, RecommendationStatus.ACCEPTED.name(), now, start, overridden);
         return RecommendationResponse.from(recommendations.findById(recommendationId).orElseThrow());
@@ -534,7 +539,8 @@ public class RecommendationService {
                 .map(r -> RecommendationResponse.from(r, runMinutes.get(r.applianceId()), realised.get(r.id())))
                 .toList();
         return new RecommendationsResponse(householdId, status.forecastSource(), status.forecastModel(),
-                PriceForecast.DEMO.equals(status.forecastSource()), status.message(), shown, status.refreshedAt());
+                PriceForecast.DEMO.equals(status.forecastSource()), status.message(), shown, status.refreshedAt(),
+                savingsMonitoring.views(householdId,rows));
     }
 
     /** Realised savings for the accepted ones among these rows (CSDT4-53), by recommendation id. */

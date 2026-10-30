@@ -1,0 +1,12 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Live AI comparison · Wattly</title><link rel="stylesheet" href="/css/wattly.css">
+<style>main{max-width:1050px;margin:2rem auto;padding:1rem}table{border-collapse:collapse;width:100%;margin:1rem 0}th,td{padding:.7rem;border-bottom:1px solid #ddd;text-align:left}.table-wrap{overflow:auto}p{line-height:1.6}</style></head>
+<body><main><h1>Live AI versus B3</h1><p id="trial-status" role="status">Loading the fixed live comparison…</p>
+<p>These are modelled wholesale savings if the frozen appliance plans were followed, not metered household bills. Predictions and plans are kept unchanged after issue. No model is promoted automatically.</p>
+<h2>Appliance-run savings</h2><div class="table-wrap"><table><thead><tr><th>Method</th><th>Modelled savings</th><th>Reschedules</th><th>Costlier runs</th><th>Loss on costlier runs</th><th>Range coverage</th></tr></thead><tbody id="live-savings"></tbody></table></div>
+<h2>Price errors on identical pairs</h2><div class="table-wrap"><table><thead><tr><th>Method</th><th>Pairs</th><th>MAE</th><th>RMSE</th><th>Ordinary MAE</th><th>Spike MAE</th><th>False-positive target pairs</th><th>Missed spike target pairs</th></tr></thead><tbody id="live-prices"></tbody></table></div>
+<p>Errors are SGD/MWh. Spike counts are saved forecast/target pairs, not independent spike episodes. Zero scored outcomes means evidence is still pending, not zero error.</p>
+<h2>Coverage and progress</h2><p id="live-coverage"></p><p id="live-exclusions"></p>
+<p>Savings ranges need at least 20 completed issue days of matching whole-run errors, grouped by run duration and forecast lead. Their 90% target is checked on later outcomes; it is not a guarantee.</p>
+<p><a href="/admin-forecast.html">Forecast accuracy</a> · <a href="/recommendations.html">Recommendations</a></p>
+</main><script src="/js/admin-live-comparison.js"></script></body></html>
