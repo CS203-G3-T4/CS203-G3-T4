@@ -1,0 +1,12 @@
+{
+  "status": "PASS",
+  "modelVersion": "price-only-183d-20261031-local-v1",
+  "metadata": "Experimental AI \u00b7 price-only-183d-20261031-local-v1 \u00b7 forecast as of 31 Oct 2026, 4:49 pm SGT",
+  "points": 24,
+  "fixtureResidentLogin": true,
+  "recommendationSource": "F3_FORECAST",
+  "demoForecast": false,
+  "mobileOverflow": false,
+  "pageErrors": [],
+  "scope": "Real running local app; saved recommendations read only, no acceptance or schedule changes. Actual UI screenshots kept outside Git."
+}
