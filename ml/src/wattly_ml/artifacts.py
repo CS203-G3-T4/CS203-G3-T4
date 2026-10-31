@@ -45,6 +45,12 @@ def load_bundle(path: Path):
     manifest = json.loads((path/"manifest.json").read_text())
     validate_config(manifest["spikeConfig"])
     schema = manifest.get('featureSchemaVersion',1)
+    from .price_only import PRICE_ONLY_POLICY
+    if manifest.get('inputPolicy') == PRICE_ONLY_POLICY or manifest.get('researchRecipe') == 'PRICE_183D':
+        if (schema != 2 or manifest.get('inputPolicy') != PRICE_ONLY_POLICY
+                or manifest.get('productionEligible') is not False
+                or manifest.get('expectedDemandPolicy') != 'ALWAYS_MISSING_AS_TRAINED'):
+            raise ValueError('Invalid experimental price-only input contract')
     if schema in (3, 4):
         from .solar import SOLAR_POLICY, SOLAR_DEMAND_POLICY
         policy = SOLAR_POLICY if schema == 3 else SOLAR_DEMAND_POLICY
