@@ -1,6 +1,7 @@
 package sg.edu.smu.cs203.recommendation;
 
 import java.time.Clock;
+import sg.edu.smu.cs203.common.DemoClock;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,7 +39,17 @@ public class PriceForecastConfiguration {
         return switch (source.trim().toLowerCase()) {
             case "demo" -> DemoPriceForecastSource.fromCatalog(replayCatalog, defaultReplayDay, clock,
                     demoSpikes ? new MarketHistorySpikeThresholds(history.getObject(), assessments.getObject()) : null);
-            case "f3" -> new F3PriceForecastSource(forecastService.getObject());
+            case "f3" -> {
+                PriceForecastSource live = new F3PriceForecastSource(forecastService.getObject());
+                if (clock instanceof DemoClock demoClock) {
+                    PriceForecastSource replay = DemoPriceForecastSource.fromCatalog(
+                            replayCatalog, defaultReplayDay, clock,
+                            demoSpikes ? new MarketHistorySpikeThresholds(history.getObject(), assessments.getObject()) : null);
+                    // F5 replay must use its labelled historical curve even when live F3 is enabled.
+                    yield () -> demoClock.isRunning() ? replay.forecast() : live.forecast();
+                }
+                yield live;
+            }
             default -> throw new IllegalArgumentException(
                     "recommendation.forecast-source must be demo or f3, not '" + source + "'");
         };
