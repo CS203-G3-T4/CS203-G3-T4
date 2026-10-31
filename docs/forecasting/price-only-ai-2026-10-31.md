@@ -1,3 +1,5 @@
+> 1 November follow-up: the [paired price-only savings and safety study](price-only-safety-2026-11-01.md) now provides the current-recipe results. The activation-time claims below are historical; no later policy has been adopted.
+
 # Local price-only AI and separate comparison — 31 October 2026
 
 At the owner's request, local inference now uses

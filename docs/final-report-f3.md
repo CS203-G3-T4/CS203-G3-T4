@@ -1,51 +1,179 @@
-> Completion record — 30 October 2026: Bryan requested completion of CSDT4-51 using this final F3 report and the verified matched-case comparison below. The report includes savings, price error, spike metrics and limitations. This completes the F3 report deliverable; incorporation into an external team submission and independent teammate approval are not asserted. Bryan also accepted k=3 for the statistical spike rule; independent human-label validation remains deferred.
+# F3 final report: price forecasting and appliance recommendations
 
-> 30 October implementation update: [the existing public future-demand feed is now imported and transferred to inference](demand-solar-repair-2026-10-30.md). The frozen solar model still keeps those features missing to preserve fitting parity. A demand-aware model's real accuracy benefit remains unproved; the historical study below is unchanged.
+Updated 1 November 2026 for CSDT4-51. This supersedes the current-model narrative
+of the 29 October report. Earlier solar/blend results remain separately
+identified below and in the original immutable evidence. This document does not
+assert external submission, independent human approval, model promotion or PR
+merge. Task 51's owner-accepted reporting completion remains separate from model
+acceptance and measured user benefit.
 
-# F3 final report: forecasting and appliance recommendations
+## Current implementation and remaining acceptance
 
-Prepared 29 October 2026 for the project submission (CSDT4-51). This is the F3 report section to include in the team's final submission; it is not a claim that an external submission has occurred.
+The local app serves `price-only-183d-20261031-local-v1`: 24 gradient-boosted
+pipelines using completed-price history, calendar and public holidays. Its final
+fit uses 183 days / 8,760 origins before 29 July 2026. It uses neither solar nor
+expected-demand values. Serving is explicitly experimental, loopback-only,
+checksum-pinned and `productionEligible=false`, with automatic baseline fallback.
+Python/FastAPI runs behind the Java ForecastService contract; Java retains
+validation, persistence, recommendation ranking and fallback. Java/Tribuo was
+rejected as a runtime option; ONNX is deferred, not delivered.
 
-The project implements trained AI forecasting, three statistical baselines, chronological evaluation, saved forecasts, Java fallback, appliance recommendations and an admin accuracy view. The AI does not consistently outperform the baseline on household savings. Advance spike prediction remains unreliable. No research model is approved or deployed by this report.
+The model improves ordinary-price error in the examined data, but spike onset
+prediction and consistent appliance savings remain weak. CSDT4-35 explicitly
+requires expected electricity demand, so price-only serving does not complete
+that original criterion. Demand-pipeline subtask 100 is Done on its implemented
+and tested feature-contract scope; real demand-aware fitting/evaluation or an
+explicit team-approved scope change remains a parent-story decision. No scope
+change or Jira transition is made by this report. Solar itself is not named in
+the original story's acceptance criteria. The owner will consult Jonathan about
+the demand/source decision; this update does not activate another feed.
 
-## Identical-case savings comparison
+## Chronological price comparison
 
-The final fixed comparison uses 600 counterfactual appliance runs across eight previously examined weeks, 1 June–26 July 2026. Every method uses the same original start, power, duration, feasible windows, actual prices, frequency weights and refresh opportunities. The unchanged Java F4 calculator uses its S$0.05 minimum predicted saving and top-three household ranking. A first simulated acceptance locks the selected start. One fixed-rate household receives no wholesale timing advice.
+The same eight already examined weeks, 1 June–26 July 2026, provide 2,496 origins
+and 59,904 forecast pairs across the next 24 half-hours. Each weekly PRICE_183D
+fit has all training targets before its test week. The final July bundle is not
+used to predict its own June-July training data. Results assess the rolling
+recipe, not an unchanged serving artifact. B3 is the same target half-hour
+averaged over the previous seven days, selected on an earlier common-pair period.
 
-B3 (the same target half-hour averaged across the previous seven days) was chosen using only earlier common-pair MAE. Both AI candidates retain the same saved solar warning flags: this isolates the numerical forecast change. There is no new training, threshold search or tuning on these outcomes.
+| Mean absolute error | Price-only AI SGD/MWh | B3 SGD/MWh | AI cents/kWh | B3 cents/kWh |
+|---|---:|---:|---:|---:|
+| All prices | 52.8511 | 59.3331 | 5.2851 | 5.9333 |
+| Ordinary prices | 30.7338 | 38.5020 | 3.0734 | 3.8502 |
+| Spike prices | 135.6694 | 137.3349 | 13.5669 | 13.7335 |
 
-| Forecast | Simulated savings SGD | Harmful moves | Total harmful loss SGD | False notification episodes | Weekly wins/losses vs B3 |
+AI reduces overall MAE about 10.9%, ordinary MAE 20.2%, and spike MAE only 1.2%.
+Overall RMSE is 115.3032 vs 120.7325 SGD/MWh. Overall MAE is lower in each of the
+eight development weeks, which does not imply higher household savings each
+week. Ordinary/spike partitions use identical origin-frozen, past-only
+same-half-hour thresholds: 47,278 ordinary and 12,626 spike forecast pairs.
+Overlapping forecast pairs are dependent; these are statistical anomaly labels,
+not independent genuine-event labels. Horizon-specific results are in the linked
+aggregate JSON. B1/B2/B3 implementation and the earlier all-baseline backtest
+remain separate evidence; this update's matched scheduling control is B3.
+
+For a price-linked household using 1 kWh, the ordinary-price MAE translates to
+about 3.07 cents of single-period energy-cost estimation error, not a confidence
+range or a guaranteed saving. Errors between alternative start times may cancel
+or compound. Flat-rate households do not obtain wholesale timing savings.
+
+## Spike warnings
+
+At fixed nominal three-hour lead, price-only AI warns before 38 of 113 complete
+statistical spike episodes, versus 39 for B3. AI detects four only after onset
+and misses 71 entirely; B3 detects one late and misses 73. One of 114 observed
+positive runs is censored and excluded from the event denominator. AI has 194
+false-warning half-hours grouped into 77 runs, versus B3's 312 half-hours in 111
+runs. Half-hour precision is 52.8% vs 38.6%; recall is 41.6% vs 37.5%. An event
+contains adjacent positive periods: a warning targeting a later period can still
+precede onset. Event and half-hour denominators must not be interchanged.
+
+AI reduces nuisance model warnings but does not improve advance event coverage
+here. About 47.2% of its three-hour half-hour warnings are false under the
+statistical label. These are raw model warnings, not delivered personal alerts
+after appliance relevance and savings filtering. They cannot establish the
+owner's proposed 20% false-personal-warning target.
+
+The owner's six-date chart batch is recorded: 29 SPIKE, 188 NORMAL and 71 UNCERTAIN
+out of 288 half-hours. On 217 definite labels, the observed-price k=3 rule has
+12 true positives, 16 false positives, 17 misses and 172 true negatives: 42.9%
+precision and 41.4% recall. This is a convenience subset with some feedback-seen
+labels, not wholly blind validation or an evaluation of the AI's forecast flags.
+Agreement on the genuine price-anomaly definition and team sensitivity remains
+under CSDT4-33. Original owner labels/reasons remain private; this does not reopen
+completed implementation subtasks or silently change k.
+
+## Identical-case appliance savings
+
+Same 600 counterfactual runs, households, original starts, windows, power,
+duration, actual prices, frequency weights and refresh opportunities. The
+unchanged Java F4 calculator uses S$0.05 minimum predicted saving and up to three
+suggestions per household/refresh. First simulated acceptance locks the plan.
+Each model derives flags from its own predicted prices and shared thresholds.
+No solar warning is borrowed by price-only AI. A fixed-rate seed receives no
+wholesale timing advice. These are scenarios, not 600 real customers.
+
+| Forecast | Weighted savings SGD | Moves | Costlier moves | Weighted harmful loss SGD | False/misleading advice cases |
 |---|---:|---:|---:|---:|---:|
-| Saved solar-mean AI | 37.2051 | 97 | 7.6748 | 141 | 4 / 4 |
-| Saved raw-score blend AI | 27.1044 | 106 | 15.4309 | 144 | 3 / 5 |
-| B3 | 31.0476 | 95 | 12.3648 | 146 | reference |
+| Current price-only recipe | 34.0884 | 446 | 104 (23.3%) | 9.8119 | 141 |
+| B3 | 31.0476 | 431 | 95 (22.0%) | 12.3648 | 146 |
 
-Savings/loss totals are frequency weighted (`runsPerWeek/7`); counts are unweighted scenario runs, not independent customers or market events. The mean AI's +S$6.1575 advantage is driven by one week's +S$7.4042; the other seven weeks net negative. The blend loses S$3.9431 to B3 despite lower price error. Retain the existing recommendation behavior and the mean as the research reference. This is not a prospective model-selection success or permission to promote a bundle.
+Savings/loss money is weighted by runsPerWeek/7; counts are unweighted. AI has
+S$3.0409 more total simulated savings, or 9.8% more than B3's savings, not 9.8%
+off an electricity bill. It wins four weeks and loses four. Its last-week
+advantage is S$5.8173; the other seven weeks together lose S$2.7764 to B3. Worst
+individual loss is S$1.3022 vs B3's S$1.9533. This does not establish consistent
+superiority or a lower probability of a harmful move.
 
-## Price error and spike evidence
+## Fixed recommendation-safety experiment
 
-On the same 59,904 forecast pairs, mean AI / blend AI / B3 overall MAE is 52.0227 / 50.0453 / 59.3331 SGD/MWh; ordinary-price MAE is 30.0956 / 24.1927 / 38.5020. Lower MAE does not establish better household scheduling.
+The 1 November study tests six prespecified policies on the same forecasts and
+12,064 refresh opportunities. A S$0.10 floor is applied inside the unchanged Java
+calculator. The agreement check withholds an AI move when B3 predicts no saving
+at that same AI-proposed start. Actuals are used only for scoring. There is no
+threshold grid or new training, and no policy is applied to the live trial.
 
-The preceding unchanged-policy study provides comparable pair-level spike diagnostics for mean AI and B3: true positives 5,145 / 4,621; false positives 4,141 / 7,617; false negatives 7,481 / 8,005. Precision is 55.4% / 37.8%; recall 40.7% / 36.6%. These are repeated forecast-pair outcomes, not independent genuine events or delivered alerts. The blend retains mean warnings in the final comparison, so that component is unchanged.
+| Policy | Weighted savings SGD | Costlier moves | Weighted harmful loss SGD |
+|---|---:|---:|---:|
+| AI S$0.05, current | 34.0884 | 104 | 9.8119 |
+| AI S$0.10 | 29.4200 | 69 | 10.0004 |
+| AI S$0.05 + agreement | 34.0390 | 97 | 9.3460 |
+| AI S$0.10 + agreement | 29.5123 | 62 | 9.2642 |
+| B3 S$0.05 | 31.0476 | 95 | 12.3648 |
+| B3 S$0.10 | 27.0317 | 57 | 10.6000 |
 
-A separate costly-spike research policy warns 13 of 28 complete costly events early, with 786 false-warning origins grouped into 199 episodes. This is a different label/cohort from pair precision and must not be combined with it. No independent genuine-scarcity labels or team-approved sensitivity are established.
+The higher floor reduces bad-move count but gives up savings and, alone,
+slightly increases harmful losses. Agreement-only preserves about 99.86% of
+current savings with seven fewer harmful cases net; it remains a modest
+development tradeoff, winning only four of eight weeks against B3. The combined
+AI policy wins three weeks and loses five against B3 at the same S$0.10 floor.
+Withholding can delay acceptance and introduce new harmful cases: it is not
+equivalent to simply deleting existing bad advice. Do not infer safe or
+consistent recommendations from any of these results. The fixed experiment
+ends here without another search or automatic adoption.
 
-In the bounded appliance-policy study, existing mean-AI recommendations warn 20 of 70 exposed canonical episodes in time to act. The tested conservative rule reduces false notifications from 141 to 12, but savings collapse from S$37.2051 to S$4.2485 and advance detections from 20 to 4; its worst loss increases. Do not adopt it. Appliance overlap already exists in F4 and produces identical decisions.
+All 24,128 existing control refresh decisions reproduce exactly. Exact rational
+time-overlap accounting checks all 3,600 final decisions across six policies.
+The parameterised replay CLI reproduces all six summaries, with checked source
+hashes and identical feasible starts. Private datasets remain outside Git.
 
-## Architecture and readiness
+## Earlier solar and blend evidence
 
-Python/FastAPI is the selected runtime behind the existing ForecastService contract. Java retains validation, persistence, ranking and fallback. Java/Tribuo training was rejected; ONNX serving is deferred and unimplemented. Those are architectural decisions, not delivered alternative implementations.
+The 29 October mean-solar / blend / B3 comparison produced S$37.2051 / S$27.1044 /
+S$31.0476. The solar mean wins four of eight weeks; its gain is concentrated in
+one week. The blend loses money relative to B3 despite lower price error. Those
+earlier AI candidates share saved solar flags to isolate numerical forecast
+changes; that protocol differs from the current price-only own-flag comparison.
+Neither solar's S$37.2051 nor the blend's lower MAE is attributed to the live
+price-only model. Earlier studies and rejected conservative policies remain in
+the original [delivery evidence](forecasting/evidence/2026-10-29-delivery/candidate-comparison.json).
 
-Forecast endpoints, 24-point persistence, the dashboard and admin accuracy functionality are merged. A research blend cannot be relabelled as a production bundle: approved serving requires compatible feature/calendar/dependency identities and validated provenance. The 183-day research candidates do not satisfy a 12-month production-training claim.
+## Live trial, integration and limits
 
-Expected future demand remains a data dependency. The target/published/available demand contract and feature path are implemented, but current-period archived demand is not a future-target forecast and cannot be substituted. Keep CSDT4-35/100 open until a qualifying input is provided or the team explicitly agrees a scope change.
+The separate `price-only-live-20261031-v1` trial runs from 31 October 2026
+16:48:09 to 28 November 2026 16:48:09 SGT. Its fixed model/policy pins remain
+unchanged. The original solar trial and records remain separate. Results are
+simulated wholesale costs assuming plans followed, not metered household bills.
+Savings ranges require the configured 20 complete days of eligible evidence;
+they are unavailable before then. More collected data does not automatically
+retrain or improve the frozen model. Weekly retraining remains preparation-only
+and inactive, as requested.
 
-Weekly retraining preparation is tested in WSL but deliberately inactive at the user's request. Activation requires the persistent app, a dedicated shared-auth ADMIN account, sufficient eligible data and explicit deployment validation. A timer alone is not proof of successful weekly training.
+PR40 is merged. PR48 has been updated with actual main ee11c05 in an isolated
+worktree; that merge changes no source files relative to the preceding PR48
+head. Real replay migrations remain V23-V25, followed by trial V26 and capture
+diagnostics V27. No deployed schema, Spring JAR, model or trial was changed by
+this report. Restored-copy upgrade/restore evidence remains applicable to the
+unchanged SQL; combined-head checks are recorded separately in PR48.
 
-## Limits and next work
+Historical final prices and period-end availability assumptions do not reproduce
+original receipt vintages. The dates have been repeatedly examined, so these
+are development results, not untouched confirmation. Missing periods, fallback
+use, model identity, harmful moves and weekly variation must be reported on later
+data. Do not tune the frozen trial or open protected/demo periods for selection.
+Demand-source/scope and team spike acceptance remain unresolved decisions.
 
-Historical prices are revised final values; original publication/receipt vintages for some inputs are unknown. Household seeds, adherence and frequency are counterfactual. These dates have been repeatedly examined, so results are development evidence, not fresh validation or measured bill savings. The final comparison has ended; do not automatically train or search further candidates.
-
-Preserve timestamped raw inputs and forecasts on genuinely later dates, freeze the candidate before those outcomes, and report missing periods, fallback use, lead times, harmful moves and weekly variability. Existing collector and free-input/shadow timers remain unchanged. Do not open protected/demo periods for tuning.
-
-Evidence: [delivery decision](forecasting/delivery-2026-10-29.md), [compact comparison](forecasting/evidence/2026-10-29-delivery/candidate-comparison.json), [comparison verification](forecasting/evidence/2026-10-29-delivery/candidate-verification.json). Raw datasets, models, full replay calls and private configuration stay outside Git.
+Evidence: [price-only activation](forecasting/price-only-ai-2026-10-31.md),
+[safety method and reproduction](forecasting/price-only-safety-2026-11-01.md),
+[aggregate current-model scoreboard](forecasting/evidence/2026-11-01-price-only/comparison.json).

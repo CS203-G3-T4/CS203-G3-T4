@@ -1,0 +1,48 @@
+{
+  "status": "PASS",
+  "integratedMain": "ee11c05c92d1098d2fcc45275b9b767827911ca0",
+  "priorPr48Head": "186cf6205510fb5b66dea4c404879ea223c7de61",
+  "mergeOfActualMainChangedNoFiles": true,
+  "java": {
+    "tests": 427,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "pythonPassed": 181,
+  "javascriptPassed": 82,
+  "frozenArchive": "37 files rebuilt and verified; unchanged archive hash",
+  "replayMigrationsMatchMergedMain": {
+    "23": "ebaec350574a5d0c8e00c1b863ae17406c563cafa96f20d9ce15351435973ff1",
+    "24": "7401985aa5be4e240c231220007cf19b751fa61cb9cb33d3894b90755dbf9d05",
+    "25": "8e1293ce29aa3410edc127fb6665311785a7566344239c8730c93189596fa98d"
+  },
+  "migrationOrder": "Replay V23-V25, trial V26, diagnostics V27",
+  "isolatedPostgresTestDatabaseRemoved": true,
+  "replay": {
+    "status": "PASS",
+    "genericReplaySixArmSummaryMatches": true,
+    "refusesExistingOutputWithoutModification": true,
+    "scriptCompilesAndHelpWorks": true,
+    "relativeDocumentationLinksChecked": 11,
+    "deliverySecretPatternCheck": "PASS",
+    "boundedComparisons": 6,
+    "newModelFits": 0,
+    "policyChanged": false
+  },
+  "runtimeGuard": {
+    "checkedAt": "2026-10-31T17:11:45.880050+00:00",
+    "status": "PASS",
+    "modelVersion": "price-only-183d-20261031-local-v1",
+    "forecastAsOf": "2026-10-31T17:07:06.081017Z",
+    "actionablePoints": 24,
+    "newTrialPinsAndPolicyUnchanged": true,
+    "oldTrialMetadataUnchanged": true,
+    "liveMigrationHistoryUnchanged": true,
+    "liveSourceWorktreeCleanAndUnchanged": true,
+    "deployed": false,
+    "retrainingActivated": false
+  },
+  "browser": "Not rerun: this update has no UI changes; earlier browser evidence is not represented as a new run.",
+  "ci": "Local evidence only. Published-head GitHub CI is reported in the PR after it completes."
+}
