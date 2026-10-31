@@ -1,3 +1,5 @@
+> Local serving superseded on 31 October 2026 by [price-only AI and its separate comparison](price-only-ai-2026-10-31.md). This document retains the historical solar model/trial evidence.
+
 # Local solar-assisted AI — 30 October 2026
 
 The local app uses `solar-183d-20261026-local-v1`, packaged from the saved `SOLAR_183D` final research bundle. Its 24 gradient-boosted pipelines were fitted on 183 days / 8,760 origins ending before 29 July 2026. Packaging does not fit, select or promote a model. The original research artifact is unchanged.

@@ -1,3 +1,5 @@
+> Current local trial: `price-only-live-20261031-v1`, from 31 October to 28 November 2026. The original solar trial is retained separately; see [price-only activation](forecasting/price-only-ai-2026-10-31.md). Only model/inference configuration changed; the coordinated Java/schema review rollout below remains pending.
+
 # Prospective comparison and start-time savings alerts
 
 This records a new, fixed-model live comparison. It does not rerun or improve the historical research result. The existing local solar-assisted model remains experimental. There is no automatic promotion or retraining.

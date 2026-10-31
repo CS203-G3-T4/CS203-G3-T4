@@ -325,3 +325,9 @@ Before enabling the optional EMC solar/demand collector, read the
 [permission decision](docs/forecasting/emc-collection-permission.md). Public page
 access is not verified permission for automated collection. The review did not
 make a new collection request, deploy repaired code or change the running trial.
+
+
+Local model selection was switched on 31 October to the separately trained
+[price-only AI](docs/forecasting/price-only-ai-2026-10-31.md). Its new AI/B3 comparison
+is separate from the preserved solar trial. Solar and future-demand signals are
+not required by this predictor; the ordinary market-price feed remains required.

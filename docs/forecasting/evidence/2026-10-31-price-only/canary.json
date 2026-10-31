@@ -1,0 +1,19 @@
+{
+  "status": "PASS",
+  "modelVersion": "price-only-183d-20261031-local-v1",
+  "rows": 1342,
+  "predictions": 24,
+  "realHttp": true,
+  "solarFileAbsent": true,
+  "maximumPredictionDifference": 0,
+  "qualityFlags": [
+    "PRICE_CALENDAR_HOLIDAY_ONLY",
+    "COMPLETED_PERIOD_PRICE_INPUTS",
+    "EXPECTED_DEMAND_OMITTED_BY_RECIPE",
+    "RETROSPECTIVE_TRAINING",
+    "EXPERIMENTAL_AI"
+  ],
+  "productionEligible": false,
+  "retrainingPerformed": false,
+  "scope": "Real receipt-stamped inputs, inference parity only; no new outcome scoring or live service change"
+}
