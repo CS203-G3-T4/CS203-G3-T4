@@ -20,7 +20,12 @@ documented in README. Do not start a demo on the prospective comparison instance
 PR 48 must explicitly exclude persisted demo runs in addition to that isolation.
 
 Validation: 384 Java tests, zero failures/errors/skips, including PostgreSQL
-tests against a fresh disposable database, subsequently removed. Native JS tests
-and replay-render/polling regressions passed. Browser screenshots are recorded in
-the final review evidence after the combined integration check. No live instance,
+tests against a fresh disposable database, subsequently removed. 69 native JS tests and replay-render/polling regressions passed. Browser checks
+cover replay, stale, empty, error and resident-forbidden states at desktop/mobile
+widths, with no page errors or page overflow. Screenshots use isolated synthetic
+responses, not a live application or accuracy evidence.
+
+[Verification](evidence/2026-10-31-replay-review/verification.json),
+[desktop](evidence/2026-10-31-replay-review/replay-1280.png),
+[mobile](evidence/2026-10-31-replay-review/replay-390.png). No live instance,
 trial policy, model artifact or real database was changed.
