@@ -30,7 +30,7 @@ class TrialMigrationCoexistenceTest {
                     +"('REPLAY_PRESERVED','2026-10-18T00:00Z','2026-10-18T00:00Z','2026-10-18T00:00Z','fixture','[]','REPLAY','BASELINE','B3-v1','B3','[]',false,'AVAILABLE',true)");
                 var upgrade=Flyway.configure().dataSource(url,user,password).schemas(schema).defaultSchema(schema)
                         .locations("filesystem:"+directory).load();
-                assertThat(upgrade.migrate().migrationsExecuted).isEqualTo(1);upgrade.validate();
+                assertThat(upgrade.migrate().migrationsExecuted).isEqualTo(2);upgrade.validate();
                 try(var rows=sql.executeQuery("SELECT script FROM flyway_schema_history WHERE version='23'")) {
                     assertThat(rows.next()).isTrue();assertThat(rows.getString(1)).isEqualTo("V23__replay_prices_and_household.sql");
                 }

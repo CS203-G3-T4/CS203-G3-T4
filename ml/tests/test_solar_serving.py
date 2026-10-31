@@ -228,3 +228,16 @@ def test_equal_overlapping_solar_values_are_accepted(tmp_path):
     now=instant('2026-01-10T04:02:00+08:00')
     values,_=read_solar_snapshot(write_snapshot(tmp_path,snapshot(now)),now)
     assert values[floor(now)-STEP]==solar_value(floor(now)-STEP)
+
+
+def test_snapshot_limit_matches_collector_and_counts_complete_file(tmp_path):
+    from wattly_ml.solar import read_solar_snapshot
+    from datetime import datetime, timezone
+    p=tmp_path/'too-large.json'
+    p.write_bytes(b' '*800_001)
+    with pytest.raises(ValueError,match='exceeds limit'):
+        read_solar_snapshot(p,datetime(2026,10,30,tzinfo=timezone.utc))
+    # Under the shared limit, parse validation (not the former 512 KB limit) applies.
+    p.write_bytes(b' '*600_000+b'{}')
+    with pytest.raises(ValueError,match='Invalid solar snapshot'):
+        read_solar_snapshot(p,datetime(2026,10,30,tzinfo=timezone.utc))

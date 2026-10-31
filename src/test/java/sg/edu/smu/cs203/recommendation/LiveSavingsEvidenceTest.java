@@ -22,6 +22,8 @@ import sg.edu.smu.cs203.household.appliance.*;
 import sg.edu.smu.cs203.market.EnergyMarketServiceApplication;
 import sg.edu.smu.cs203.market.price.*;
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -63,7 +65,8 @@ class LiveSavingsEvidenceTest {
  @Autowired ForecastRepository forecasts;
  @Autowired RecommendationRepository recommendations;
  @Autowired LiveComparisonService comparison;
- @Autowired LiveEvidenceRepository evidence;
+ @MockitoSpyBean LiveEvidenceRepository evidence;
+ @MockitoSpyBean HouseholdRecommendationReaderService inputs;
  @Autowired SavingsMonitoringService monitoring;
  @Autowired RecommendationService service;
  @Autowired MockMvc mvc;
@@ -72,7 +75,7 @@ class LiveSavingsEvidenceTest {
   SecurityContextHolder.clearContext();clock.value=BASE;
   // Keep cases independent while preserving the frozen trial's activation time and policy.
   jdbc.update("DELETE FROM savings_change_alert");jdbc.update("DELETE FROM recommendation_savings_evidence");
-  jdbc.update("DELETE FROM live_forecast_price");jdbc.update("DELETE FROM live_savings_opportunity");jdbc.update("DELETE FROM live_forecast_issue");
+  jdbc.update("DELETE FROM live_capture_exclusion");jdbc.update("DELETE FROM live_forecast_price");jdbc.update("DELETE FROM live_savings_opportunity");jdbc.update("DELETE FROM live_forecast_issue");
   jdbc.update("DELETE FROM forecast_evaluation");jdbc.update("DELETE FROM forecast_point");jdbc.update("DELETE FROM forecast_run");
   jdbc.update("DELETE FROM recommendation_event");jdbc.update("DELETE FROM recommendation");jdbc.update("DELETE FROM recommendation_refresh");
   jdbc.update("DELETE FROM market_price");jdbc.update("DELETE FROM market_revision_origin");jdbc.update("DELETE FROM market_price_revision");jdbc.update("DELETE FROM ingestion_run");
@@ -199,6 +202,10 @@ class LiveSavingsEvidenceTest {
   assertThat(evidence.alerts(home,clock.instant())).hasSize(1);
   mvc.perform(get("/api/v1/households/"+other+"/recommendation-alerts").with(user("owner-"+home).roles("RESIDENT"))).andExpect(status().isForbidden());
   mvc.perform(post("/api/v1/households/"+other+"/recommendation-alerts/"+alert.path("id").asLong()+"/acknowledge").with(user("owner-"+home).roles("RESIDENT")).with(csrf())).andExpect(status().isForbidden());
+  jdbc.update("INSERT INTO user_account(username,password_hash,role,household_id) VALUES(?,?,?,?)","owner-"+other,"unused-test-hash","RESIDENT",other);
+  mvc.perform(post("/api/v1/households/"+other+"/recommendation-alerts/"+alert.path("id").asLong()+"/acknowledge")
+    .with(user("owner-"+other).roles("RESIDENT")).with(csrf())).andExpect(status().isNotFound());
+  assertThat(jdbc.queryForObject("SELECT acknowledged_at IS NULL FROM savings_change_alert WHERE id=?",Boolean.class,alert.path("id").asLong())).isTrue();
   mvc.perform(post("/api/v1/households/"+home+"/recommendation-alerts/"+alert.path("id").asLong()+"/acknowledge").with(user("owner-"+home).roles("RESIDENT")).with(csrf())).andExpect(status().isOk());
   monitoring.recheck();assertThat(evidence.alerts(home,clock.instant())).isEmpty();
   // Acknowledgement stays quiet until a genuine return inside and new crossing.
@@ -254,4 +261,54 @@ class LiveSavingsEvidenceTest {
   mvc.perform(get("/api/v1/admin/live-forecast-comparison").with(user("admin-test").roles("ADMIN"))).andExpect(status().isOk());
  }
 
+
+ long anotherAppliance(long householdId,String name) {
+  return appliances.insert(new Appliance(null,householdId,name,ApplianceType.TUMBLE_DRYER,BigDecimal.ONE,30,Flexibility.FLEXIBLE,
+   LocalTime.of(9,0),LocalTime.of(20,30),LocalTime.of(19,0),7,true,null,BASE,BASE));
+ }
+ @Test void deletedHouseholdCannotRollbackIssuePricesOrOtherHouseholds() {
+  anotherAppliance(other,"Working dryer");
+  // The real reader has REQUIRED transaction advice; its exception must not poison capture.
+  doThrow(new HouseholdNotFoundException(home)).when(inputs).read(home);
+  save("failed-household",10,false);
+  assertThat(jdbc.queryForObject("SELECT count(*) FROM live_forecast_price WHERE run_id='failed-household'",Integer.class)).isEqualTo(24);
+  assertThat(evidence.opportunities(comparison.trialId())).anyMatch(x->x.path("household_id").asLong()==other);
+  assertThat(jdbc.queryForObject("SELECT count(*) FROM live_capture_exclusion WHERE run_id='failed-household' AND reason='HOUSEHOLD_READ_FAILED' AND household_id=?",Integer.class,home)).isEqualTo(1);
+  assertThat(evidence.captureExclusions(comparison.trialId())).anyMatch(x->"HOUSEHOLD_READ_FAILED".equals(x.get("reason")));
+ }
+ @Test void postgresApplianceWriteFailureRollsBackToSavepointAndKeepsOtherEvidence() {
+  long good=anotherAppliance(home,"Working second dryer");
+  doAnswer(call->{
+   if(((Long)call.getArgument(3))==appliance) jdbc.queryForObject("SELECT 1/0",Integer.class);
+   return call.callRealMethod();
+  }).when(evidence).opportunity(anyString(),anyString(),anyLong(),anyLong(),any(),any(),any(),any(),any(),anyInt(),any(),anyString(),any());
+  save("failed-appliance",10,false);
+  assertThat(jdbc.queryForObject("SELECT count(*) FROM live_forecast_price WHERE run_id='failed-appliance'",Integer.class)).isEqualTo(24);
+  assertThat(evidence.opportunities(comparison.trialId())).anyMatch(x->x.path("appliance_id").asLong()==good);
+  assertThat(evidence.opportunities(comparison.trialId())).noneMatch(x->x.path("appliance_id").asLong()==appliance);
+  assertThat(jdbc.queryForObject("SELECT count(*) FROM live_capture_exclusion WHERE run_id='failed-appliance' AND reason='APPLIANCE_CAPTURE_FAILED' AND appliance_id=?",Integer.class,appliance)).isEqualTo(1);
+ }
+ @Test void persistedReplayFlagExcludesAnOtherwiseEligibleLiveAiRun() {
+  Instant now=clock.instant();var ai=points(now,10,false);var b3=points(now,12,false);
+  var run=new ForecastTypes.Run("demo-ai",now,now,"demo-ai","LIVE","AI",MODEL,"AI",null,List.of(),false,"AVAILABLE",ai);
+  forecasts.save(run,"[]",Map.of("AI",ai,"B3",b3),null,true);
+  assertThat(jdbc.queryForObject("SELECT is_demo FROM forecast_run WHERE id='demo-ai'",Boolean.class)).isTrue();
+  comparison.capture("demo-ai");
+  assertThat(evidence.run("demo-ai",forecasts)).isNull();
+  assertThat(jdbc.queryForObject("SELECT count(*) FROM live_forecast_issue WHERE run_id='demo-ai'",Integer.class)).isZero();
+  assertThat(evidence.opportunities(comparison.trialId())).isEmpty();
+  assertThat(recommendations.findActive(home)).isEmpty();
+ }
+ @Test void reportOrdersWeeksNumericallyBeyondWeekNine() {
+  calibration();
+  var rows=evidence.opportunities(comparison.trialId());
+  for(int i=0;i<rows.size();i++) {
+   long id=rows.get(i).path("id").asLong();
+   if(i>=3)jdbc.update("DELETE FROM live_savings_opportunity WHERE id=?",id);
+   else jdbc.update("UPDATE live_savings_opportunity SET issued_at=? WHERE id=?",Timestamp.from(BASE.plus(Duration.ofDays(i==0?0:i==1?7:63))),id);
+  }
+  var methods=(Map<?,?>)comparison.report().get("methods");
+  var ai=(Map<?,?>)methods.get("AI");
+  assertThat(((Map<?,?>)ai.get("weeklySavingsSgd")).keySet().stream().map(Object::toString).toList()).containsExactly("week-1","week-2","week-10");
+ }
 }

@@ -72,9 +72,11 @@ def read_solar_snapshot(path, as_of):
     Other chart history stays in the raw archive and cannot veto or enter a forecast.
     """
     path = Path(path)
-    if path.stat().st_size>512_000:
+    # Same total UTF-8 snapshot limit as the collector and Java demand importer.
+    with path.open('rb') as stream:
+        raw = stream.read(800_001)
+    if len(raw)>800_000:
         raise ValueError('Solar snapshot exceeds limit')
-    raw = path.read_bytes()
     snapshot = json.loads(raw)
     if snapshot.get('schemaVersion')!=1 or len(snapshot.get('responses', [])) not in (2,3):
         raise ValueError('Invalid solar snapshot')

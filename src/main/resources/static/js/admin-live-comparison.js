@@ -22,6 +22,12 @@ WattlyLiveComparison.refresh = async function () {
   });
   document.getElementById('live-coverage').textContent = data.frozenOpportunities + ' frozen appliance-run opportunities · ' +
     data.scoredOpportunities + ' scored · ' + data.pendingOpportunities + ' waiting for completed runs or actual prices.';
-  document.getElementById('live-exclusions').textContent = 'Forecast capture: ' + data.captureCoverage.map(x => x.reason + ': ' + x.count).join(' · ');
+  document.getElementById('live-exclusions').textContent = 'Forecast capture: ' + data.captureCoverage.map(x => x.reason + ': ' + x.count).join(' · ') +
+    ((data.captureExclusions || []).length ? ' · Household/appliance exclusions: ' + data.captureExclusions.map(x => x.reason + ': ' + x.count).join(' · ') : '');
+  if(data.captureAvailability && data.captureAvailability.captured_runs) {
+    const a=data.captureAvailability;
+    document.getElementById('live-coverage').textContent += ' Eligible AI runs: ' + a.ai_eligible_runs + '/' + a.captured_runs +
+      ' · baseline fallbacks: ' + a.baseline_fallback_runs + '/' + a.captured_runs + '. Counts exclude demo runs; failures to capture a run are not inferred.';
+  }
 };
 WattlyLiveComparison.refresh().catch(() => { document.getElementById('trial-status').textContent = 'Cannot load live evidence.'; });

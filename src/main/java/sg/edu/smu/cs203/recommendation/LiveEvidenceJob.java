@@ -21,7 +21,7 @@ public class LiveEvidenceJob {
     @Order(0)
     @TransactionalEventListener(phase=TransactionPhase.AFTER_COMMIT)
     public void saved(ForecastSaved event) {
-        if(!"LIVE".equals(event.mode())) return;
+        if(event.demo() || !"LIVE".equals(event.mode())) return;
         try {comparison.capture(event.runId());} catch(RuntimeException e) {LOG.error("Live comparison capture failed for {}",event.runId(),e);}
         tick();
     }

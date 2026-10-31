@@ -59,6 +59,29 @@ Compact [solar activation](evidence/2026-10-30-solar-ai/activation.json) and [pa
 
 ## 30 October noon-window repair
 
-The 72-period chart may begin at noon and omit completed periods earlier today. The collector now also archives the public today panel (`value=10`, 48 points). The adapter reads seven-day history, then the 72-period panel, then today's history; it still excludes any period not completed by issue time or later than the source update. Every included response retains its real receipt and freshness checks. No archived forward solar value is turned into an observed value merely because time passed. Two-panel snapshots remain readable when sufficient, while new collection uses all three panels. Midday, late-night and New Year boundaries are tested.
+The 72-period chart may begin at noon and omit completed periods earlier today. The collector now also archives the public today panel (`value=10`, 48 points). The adapter checks only the recipe's seven required completed periods (six recent periods and the matching period yesterday). Every panel containing a required period must supply a valid, exactly agreeing value; panel order is not authority. Conflicts in unused chart history are archived but cannot veto inference. Required-period conflicts or missing values fail closed to B3. No latest-wins or tolerance change has been applied to the frozen recipe; availability and fallback reasons must be reported separately. Every included response retains its real receipt and freshness checks. No archived forward solar value is turned into an observed value merely because time passed. Two-panel snapshots remain readable when sufficient, while new collection uses all three panels. Midday, late-night and New Year boundaries are tested.
 
 Future demand capture is separate from the frozen solar recipe. See [demand integration and verification](../demand-solar-repair-2026-10-30.md). Model weights, manifest pins and the current live trial were preserved.
+
+
+## Snapshot size and retention contract (31 October review)
+
+The collector caps each raw response at 240,000 bytes and the complete UTF-8
+snapshot, including all panels and metadata, at 800,000 bytes. Both Python solar
+and Java demand readers use the same 800,000-byte total limit. Python reads at
+most one byte beyond the limit before rejecting the file. A failed collection
+does not replace the last valid snapshot; readers still reject stale receipts.
+
+Archive identities deliberately include real receipt timestamps: repeated source
+values at distinct receipts are separate observations, not duplicates to discard.
+At five-minute polling there can be 288 snapshots/day; the total-size ceiling is
+230.4 MB/day, or 6.45 GB over 28 days, before compression. These are upper bounds,
+not observed usage. Archive storage must be persistent and monitored. Keep every
+snapshot referenced by an issued forecast/trial, together with receipt provenance,
+through trial completion and human review. There is no automatic deletion or
+rotation in this patch. After review, rotate/compress closed archives only under
+an operator-approved retention decision that preserves referenced hashes and a
+recoverable copy. Do not delete files merely because source values repeat.
+
+See [collection permission decision](emc-collection-permission.md) before enabling
+any collector. Fresh API requests were not part of this repair's tests.

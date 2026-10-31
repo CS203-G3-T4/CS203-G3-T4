@@ -41,3 +41,41 @@ PR #40 at `0c924594` owns `V23__replay_prices_and_household.sql`, `V24__mark_dem
 Delivery is consolidated in PR #48, targeting main. For shared deployment, land PR #40 first, update #48 from main, resolve the Java integration conflicts and recheck the complete source, migration numbers and full CI before merging/deploying #48. Do not deploy V26 and subsequently try to add lower V23–V25 with out-of-order migration disabled. The coexistence test checks SQL compatibility, not a merge of PR40's Java replay feature with the forecasting implementation. No PR was merged automatically.
 
 The private local trial already applied the old V23 trial migration. This source renumbering has not changed its history or running jar. Do not upgrade that instance using ordinary `repair`, deleting tables, resetting its trial, or blindly reapplying this DDL. Its eventual upgrade needs a backed-up, rehearsed history reconciliation to V26 or a separate fresh runtime, preserving the original trial for grading. The earlier V24 reconciliation receipt tested only replay V23 and does not certify the full replay V23–V25 upgrade; it is superseded for rollout planning by this complete migration set. That deployment operation is outside these source-review fixes; the current live collector/model/trial stays untouched.
+
+
+## 31 October integration and capture repair
+
+Merge order remains PR 40 then PR 48. PR 48 now incorporates the reviewed PR 40
+dependency for integration testing, resolves the Java/UI conflicts and tests the
+real V23–V25 migration files rather than copied fixtures. Keep PR 48 Draft until
+PR 40 is merged. If main or the replay head changes, merge the actual main head,
+resolve and rerun CI before requesting review. Do not merge PR 48 first.
+
+V26's trial SQL is unchanged. New V27 only adds capture-exclusion diagnostics; it
+does not change the frozen model, policy, trial window or existing plans. Start a
+demo on a separate application **and database**, never the live trial instance.
+Persisted `is_demo` runs are filtered before trial initialization/capture and at
+the repository read; committed forecast events also carry their demo marker.
+Monitoring and capture/evaluation pause under the demo clock.
+
+An unreadable/deleted household no longer rolls back all price pairs and other
+households. Input reads use isolated read-only transactions; per-appliance
+calculations/writes use savepoints. Failures record bounded reason codes in
+`live_capture_exclusion` without exception text or personal data. The admin report
+shows these separately from forecast eligibility and reports eligible-AI and
+baseline-fallback counts/fractions among captured non-demo runs. These rates do
+not infer missing runs or attribute every generic Python failure to solar.
+
+Solar disagreements on the seven required periods remain fail-closed under the
+frozen input recipe. No tolerance/latest-wins selection was introduced mid-trial.
+Review availability/fallback and exclusions alongside paired outcome metrics.
+
+### Deployment audit
+
+The truth-selection/refresh repairs (`cef4167`) and this review repair have **not
+been deployed by this work**. Deployment time is pending, not 30 October trial
+activation time. Before deploying, record the actual UTC and Singapore timestamp,
+source head, migration versions and collector state here/in the private operator
+log. Preserve the original trial/model/policy; report pre/post-repair segments
+separately where evaluation behavior differs. Never reset the trial or rewrite
+already frozen outcomes to hide a repair boundary.

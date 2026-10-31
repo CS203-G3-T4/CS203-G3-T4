@@ -65,7 +65,7 @@ public class ForecastRepository {
                         """,run.id(),entry.getKey(),p.horizon(),ts(p.targetPeriod()),p.predictedUsep(),p.spikeThreshold(),p.spikeFlag());
             }
         }
-        events.publishEvent(new ForecastSaved(run.id(),run.mode()));
+        events.publishEvent(new ForecastSaved(run.id(),run.mode(),demoRun));
         return true;
     }
     public Optional<Run> latest(String mode,Instant asOf) {

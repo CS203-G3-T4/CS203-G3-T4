@@ -30,12 +30,27 @@ public class LiveEvidenceRepository {
     }
     JsonNode trial(String id) { return rows("SELECT to_jsonb(t)::text FROM live_forecast_trial t WHERE id=?",id).stream().findFirst().orElse(null); }
     ForecastTypes.Run run(String id,sg.edu.smu.cs203.forecast.ForecastRepository forecasts) {
-        var list=rows("SELECT to_jsonb(f)::text FROM forecast_run f WHERE id=?",id);
+        var list=rows("SELECT to_jsonb(f)::text FROM forecast_run f WHERE id=? AND is_demo=FALSE",id);
         if (list.isEmpty()) return null;
         var f=list.getFirst();
         return new ForecastTypes.Run(id,time(f,"as_of"),time(f,"generated_at"),f.path("input_revision").asText(),f.path("mode").asText(),
             f.path("model_type").asText(),f.path("model_version").asText(),f.path("selected_model").asText(),null,List.of(mapper.convertValue(f.path("quality_flags"),String[].class)),f.path("stale").asBoolean(),
             f.path("status").asText(),forecasts.points(id,f.path("selected_model").asText()));
+    }
+    boolean demoRun(String id) {
+        return jdbc.query("SELECT is_demo FROM forecast_run WHERE id=?",(rs,n)->rs.getBoolean(1),id)
+                .stream().findFirst().orElse(false);
+    }
+    void captureExclusion(String run,Long household,Long appliance,String reason,Instant now) {
+        jdbc.update("INSERT INTO live_capture_exclusion(run_id,household_id,appliance_id,reason,recorded_at) VALUES(?,?,?,?,?)",
+                run,household,appliance,reason,ts(now));
+    }
+    List<Map<String,Object>> captureExclusions(String trial) {
+        return jdbc.queryForList("""
+            SELECT e.reason,count(*) AS count,count(DISTINCT e.run_id) AS affected_runs
+            FROM live_capture_exclusion e JOIN live_forecast_issue i ON i.run_id=e.run_id
+            WHERE i.trial_id=? GROUP BY e.reason ORDER BY e.reason
+            """,trial);
     }
     String modelHash(String version) {
         return jdbc.query("SELECT manifest->>'modelSha256' FROM model_run WHERE version=?",(rs,n)->rs.getString(1),version).stream().findFirst().orElse("");
@@ -88,6 +103,17 @@ public class LiveEvidenceRepository {
     }
     List<JsonNode> opportunities(String trial) { return rows("SELECT to_jsonb(o)::text FROM live_savings_opportunity o WHERE trial_id=? ORDER BY issued_at,id",trial); }
     List<JsonNode> scoredPrices(String trial) { return rows("SELECT to_jsonb(p)::text FROM live_forecast_price p JOIN live_forecast_issue i ON i.run_id=p.run_id WHERE i.trial_id=? AND p.actual IS NOT NULL",trial); }
+    Map<String,Object> availability(String trial) {
+        return jdbc.queryForMap("""
+            SELECT count(*) AS captured_runs,count(*) FILTER (WHERE eligible) AS ai_eligible_runs,
+              count(*) FILTER (WHERE reason='AI_UNAVAILABLE_BASELINE_FALLBACK') AS baseline_fallback_runs,
+              CASE WHEN count(*)=0 THEN NULL ELSE
+                round((count(*) FILTER (WHERE eligible))::numeric/count(*),6) END AS ai_eligible_fraction,
+              CASE WHEN count(*)=0 THEN NULL ELSE
+                round((count(*) FILTER (WHERE reason='AI_UNAVAILABLE_BASELINE_FALLBACK'))::numeric/count(*),6) END AS baseline_fallback_fraction
+            FROM live_forecast_issue WHERE trial_id=?
+            """,trial);
+    }
     List<Map<String,Object>> exclusions(String trial) { return jdbc.queryForList("SELECT COALESCE(reason,'ELIGIBLE') AS reason,count(*) AS count FROM live_forecast_issue WHERE trial_id=? GROUP BY reason",trial); }
     void proposal(long rec,long home,PriceForecast forecast,String method,JsonNode value) {
         jdbc.update("""

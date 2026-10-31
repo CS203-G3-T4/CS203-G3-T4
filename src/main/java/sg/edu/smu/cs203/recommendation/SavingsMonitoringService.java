@@ -32,7 +32,7 @@ public class SavingsMonitoringService {
         this.households=households;this.mapper=mapper;this.clock=clock;this.materialChange=materialChange;
     }
     void remember(long rec,long home,ApplianceResponse appliance,CheapestStartCalculator.Result plan,PriceForecast forecast) {
-        if(!comparison.enabled() || forecast.isDemo() || forecast.runId()==null || forecast.modelVersion()==null) return;
+        if(!comparison.enabled() || forecast.isDemo() || forecast.runId()==null || forecast.modelVersion()==null || evidence.demoRun(forecast.runId())) return;
         String method=forecast.modelVersion().equals("B3-v1")?"B3":"AI";
         if(method.equals("AI")&&!forecast.modelVersion().equals(comparison.modelVersion())) return;
         var proposal=snapshot(forecast.asOf(),clock.instant(),plan.usualStart(),plan.bestStart(),appliance.powerKw(),appliance.runMinutes(),forecast.points(),method);
@@ -85,7 +85,7 @@ public class SavingsMonitoringService {
     }
     @Transactional(propagation=Propagation.REQUIRES_NEW)
     public void recheck() {
-        if(!comparison.enabled()) return;
+        if(!comparison.enabled() || clock instanceof sg.edu.smu.cs203.common.DemoClock demo && demo.isRunning()) return;
         Instant now=clock.instant();
         var source=forecasts.forecast();
         for(var row:evidence.acceptedEvidence(now)) {

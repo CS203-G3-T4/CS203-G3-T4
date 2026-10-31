@@ -64,7 +64,7 @@ public class RecommendationRecomputeJob {
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onForecastSaved(ForecastSaved event) {
-        if (!usesF3 || !"LIVE".equals(event.mode())) return;
+        if (event.demo() || !usesF3 || !"LIVE".equals(event.mode())) return;
         try {
             recomputeAll("saved forecast");
         } catch (RuntimeException failure) {
