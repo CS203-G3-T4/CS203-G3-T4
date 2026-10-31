@@ -228,7 +228,6 @@ Wattly.addPresenterBar = function () {
 
   addAction('+30 min', 'btn-ghost btn-sm', '/api/v1/demo/advance', { periods: 1 });
   addAction('+2 h', 'btn-ghost btn-sm', '/api/v1/demo/advance', { periods: 4 });
-  addAction('Reset', 'btn-ghost btn-sm', '/api/v1/demo/stop', {});
   addAction('Stop', 'btn-danger btn-sm', '/api/v1/demo/stop', {});
   bar.appendChild(info);
   bar.appendChild(actions);
@@ -237,6 +236,8 @@ Wattly.addPresenterBar = function () {
   let lastTime = null;
   let lastRunning = null;
   let polling = false;
+  let forbidden = false;
+  let timer = null;
 
   function render(data, refreshPageOnChange) {
     const changed = lastRunning !== null && (
@@ -251,7 +252,7 @@ Wattly.addPresenterBar = function () {
         dateStyle: 'full',
         timeStyle: 'short'
       }).format(new Date(data.currentTime));
-      clock.textContent = 'Simulated time: ' + displayTime + ' SGT';
+      clock.textContent = 'Simulated time: ' + displayTime + ' SGT · historical replay, not a model prediction';
       buttons.forEach(function (button) { button.disabled = false; });
     }
     if (refreshPageOnChange && changed) {
@@ -260,7 +261,7 @@ Wattly.addPresenterBar = function () {
   }
 
   async function refresh() {
-    if (polling) {
+    if (polling || forbidden) {
       return;
     }
     polling = true;
@@ -269,6 +270,8 @@ Wattly.addPresenterBar = function () {
       if (!result.ok) {
         if (result.status === 401 || result.status === 403) {
           bar.hidden = true;
+          forbidden = true;
+          window.clearInterval(timer);
         } else if (!bar.hidden) {
           message.textContent = 'Demo clock status is unavailable.';
         }
@@ -285,8 +288,8 @@ Wattly.addPresenterBar = function () {
     }
   }
 
+  timer = window.setInterval(refresh, 1000);
   refresh();
-  window.setInterval(refresh, 1000);
 };
 
 Wattly.addPresenterBar();

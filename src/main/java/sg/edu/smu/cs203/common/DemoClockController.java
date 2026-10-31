@@ -43,48 +43,50 @@ public class DemoClockController {
     @PostMapping("/api/v1/demo/start")
     public ClockStatus start(@Valid @RequestBody StartRequest request) {
         Instant start = request.date().atTime(request.time()).atZone(SINGAPORE).toInstant();
-        DemoClock.Snapshot previous = clock.snapshot();
-        try {
+        return clock.transition(() -> {
             replayRefresh.start(request.date(), start);
-        } catch (RuntimeException exception) {
-            if (previous.running()) {
-                clock.startAt(previous.instant());
-            } else {
-                clock.stop();
-            }
-            throw exception;
-        }
-        return clockStatus();
+            return clockStatus();
+        });
     }
 
     @PostMapping("/api/v1/demo/advance")
     public ClockStatus advance(@Valid @RequestBody AdvanceRequest request) {
-        Instant previous = clock.instant();
-        clock.advance(Duration.ofMinutes(30L * request.periods()));
-        try {
+        return clock.transition(() -> {
+            DemoClock.Snapshot previous=clock.snapshot();
+            if(!previous.running()) throw new IllegalArgumentException("Cannot advance when the demo clock is stopped");
+            Duration step=Duration.ofMinutes(30L * request.periods());
+            Instant next=previous.instant().plus(step);
+            if(!previous.instant().atZone(SINGAPORE).toLocalDate().equals(next.atZone(SINGAPORE).toLocalDate()))
+                throw new IllegalArgumentException("Cannot advance beyond the loaded replay day; start another day instead");
+            clock.advance(step);
             replayRefresh.refresh();
-        } catch (RuntimeException exception) {
-            clock.startAt(previous);
-            throw exception;
-        }
-        return clockStatus();
+            return clockStatus();
+        });
     }
 
     @PostMapping("/api/v1/demo/stop")
     public ClockStatus stop() {
-        clock.stop();
-        return clockStatus();
+        return clock.transition(() -> {
+            clock.stop();
+            return clockStatus();
+        });
     }
 
     private ClockStatus clockStatus() {
         return new ClockStatus(clock.isRunning(), clock.instant(), clock.getZone().getId());
     }
 
-    @ExceptionHandler({IllegalArgumentException.class, IllegalStateException.class,
+    @ExceptionHandler({IllegalArgumentException.class,
             DateTimeException.class, ArithmeticException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Map<String, String> invalidClockOperation(RuntimeException exception) {
         return Map.of("error", exception.getMessage());
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public Map<String, String> unavailableReplay(IllegalStateException exception) {
+        return Map.of("error", "Replay demo is unavailable; check the server configuration");
     }
 
     public record ClockStatus(boolean running, Instant currentTime, String zone) {

@@ -12,12 +12,13 @@ WattlyForecast.render = function (view, assessment) {
     metadata.textContent = view.reason ? view.reason.replaceAll('_', ' ').toLowerCase() : '';
   } else {
     const run = view.run;
-    status.textContent = view.stale ? 'Stale forecast — do not use it to schedule appliances.' :
+    const replay = run.modelType === 'DEMO' || run.qualityFlags.includes('DEMO_REPLAY');
+    status.textContent = replay ? 'Historical replay — actual past prices, not a model prediction.' : view.stale ? 'Stale forecast — do not use it to schedule appliances.' :
       view.actionable ? 'Next 12 hours' : 'Forecast preview — market interval alignment awaits verification.';
     const formatted = new Intl.DateTimeFormat('en-SG', {
       timeZone: 'Asia/Singapore', dateStyle: 'medium', timeStyle: 'short'
     });
-    metadata.textContent = (run.modelType === 'AI' ? 'AI' : 'Baseline ' + run.selectedModel) +
+    metadata.textContent = (replay ? 'Replay data' : run.modelType === 'AI' ? 'AI' : 'Baseline ' + run.selectedModel) +
       ' · ' + run.modelVersion + ' · forecast as of ' + formatted.format(new Date(run.asOf)) + ' SGT' +
       (['PYTHON_UNAVAILABLE_OR_INVALID', 'MODEL_MANIFEST_CONFLICT'].includes(run.fallbackReason) ? ' · AI unavailable; baseline fallback' : '') +
       (run.qualityFlags.includes('BASELINE_RANKING_UNRANKED') ? ' · baseline order not yet validated' : '');
@@ -72,7 +73,7 @@ WattlyForecast.refresh = async function () {
     const view=results[0].data;
     WattlyPriceChart.draw(chart,[
       {name:'Actual',color:'#176346',points:actuals.map(p=>({time:p.periodStart,value:Number(p.usep)}))},
-      {name:view.stale?'Stale forecast':'Forecast',color:'#2a78d6',points:view.available?view.run.points.map(p=>({time:p.targetPeriod,value:Number(p.predictedUsep),spike:p.spikeFlag===true})):[]}
+      {name:view.run && view.run.modelType==='DEMO'?'Historical replay':view.stale?'Stale forecast':'Forecast',color:'#2a78d6',points:view.available?view.run.points.map(p=>({time:p.targetPeriod,value:Number(p.predictedUsep),spike:p.spikeFlag===true})):[]}
     ]);
     const rows=document.getElementById('actual-points');
     rows.replaceChildren();
