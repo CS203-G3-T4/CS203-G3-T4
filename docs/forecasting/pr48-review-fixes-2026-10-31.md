@@ -55,12 +55,13 @@ approval. PR 40's 15:20 comments are handled in its separate replay report.
 - **Blindness:** explicitly disclose that the workbook displays the same 28
   same-slot history values as the rule and may anchor reviewers. Hidden algorithm
   outputs and self-attestation do not establish independent ground truth.
-- **Collection terms — unresolved:** the NEMS footer links to EMC terms whose
-  section 3 prohibits automated systematic collection. Permission has not been
-  established; see [decision](emc-collection-permission.md). No fresh automated
-  collection was used for verification, and no permission, paid subscription or
-  communication with EMC was fabricated. Existing runtime/operator decisions are
-  separate from this source patch.
+- **Collection terms — owner confirmation recorded:** the public NEMS terms
+  prohibit automated systematic collection. Bryan subsequently confirmed written
+  permission covering the existing five-minute solar/demand collector; see
+  [decision](emc-collection-permission.md). The agreement itself was not inspected
+  or published by the agent. The collector was left running. No fresh collection
+  was used for repair verification, and no purchase or communication with EMC
+  occurred. This is an owner attestation, not independent verification of a grant.
 - **Scope/branch:** [ticket-to-file routing](pr48-review-routing.md) lists changed
   production/config/script paths. The existing published head branch is retained
   to preserve this PR; the title and new repair commits carry Jira keys. Use the

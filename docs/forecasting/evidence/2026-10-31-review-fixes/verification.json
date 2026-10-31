@@ -180,6 +180,8 @@
   "liveTrialReset": false,
   "retrainingActivated": false,
   "modelOrFrozenPolicyChanged": false,
-  "collectionPermission": "UNRESOLVED",
-  "independentHumanApprovalClaimed": false
+  "collectionPermission": "OWNER_CONFIRMED_WRITTEN_PERMISSION",
+  "independentHumanApprovalClaimed": false,
+  "agreementInspectedByAgent": false,
+  "collectorPaused": false
 }
