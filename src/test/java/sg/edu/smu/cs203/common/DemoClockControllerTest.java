@@ -167,7 +167,7 @@ class DemoClockControllerTest {
                         .with(user("admin").roles("ADMIN")).with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"date\":\"2026-09-26\",\"time\":\"08:00\"}"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isInternalServerError());
         mvc.perform(get("/api/v1/demo/state").with(user("admin").roles("ADMIN")))
                 .andExpect(jsonPath("$.running").value(false));
 
@@ -184,7 +184,7 @@ class DemoClockControllerTest {
                         .with(user("admin").roles("ADMIN")).with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"periods\":2}"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isInternalServerError());
         mvc.perform(get("/api/v1/demo/state").with(user("admin").roles("ADMIN")))
                 .andExpect(jsonPath("$.currentTime").value("2026-09-26T00:00:00Z"));
     }
@@ -199,11 +199,23 @@ class DemoClockControllerTest {
                         .with(user("admin").roles("ADMIN")).with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"date\":\"2026-09-26\",\"time\":\"08:00\"}"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isInternalServerError());
 
         mvc.perform(get("/api/v1/demo/state").with(user("admin").roles("ADMIN")))
                 .andExpect(jsonPath("$.running").value(true))
                 .andExpect(jsonPath("$.currentTime").value("2026-09-25T10:30:00Z"));
+    }
+
+    @Test
+    void rejectsAdvancingPastTheLoadedSingaporeDayWithoutChangingTime() throws Exception {
+        Instant last=Instant.parse("2026-09-26T15:30:00Z");
+        demoClock.startAt(last);
+        mvc.perform(post("/api/v1/demo/advance").with(user("admin").roles("ADMIN")).with(csrf())
+                .contentType(MediaType.APPLICATION_JSON).content("{\"periods\":1}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value(Matchers.containsString("loaded replay day")));
+        org.assertj.core.api.Assertions.assertThat(demoClock.instant()).isEqualTo(last);
+        Mockito.verify(replayRefresh,Mockito.never()).refresh();
     }
 
     private void stubSuccessfulStart() {

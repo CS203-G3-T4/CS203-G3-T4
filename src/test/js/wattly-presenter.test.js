@@ -33,7 +33,7 @@ function response(data, status) {
   };
 }
 
-function load(initialState) {
+function load(initialState, status) {
   const calls = [];
   const intervals = [];
   let state = initialState;
@@ -55,7 +55,7 @@ function load(initialState) {
       const method = options.method;
       calls.push({ method: method, url: url, body: options.body ? JSON.parse(options.body) : undefined });
       if (method === 'GET') {
-        return response(state);
+        return response(state, status);
       }
       if (url.endsWith('/advance')) {
         const periods = JSON.parse(options.body).periods;
@@ -65,14 +65,15 @@ function load(initialState) {
       } else {
         state = { running: false, currentTime: '2026-10-24T08:00:00Z', zone: 'Asia/Singapore' };
       }
-      return response(state);
+      return response(state, status);
     },
     Intl: Intl,
     Date: Date,
     URLSearchParams: URLSearchParams,
     window: {
       location: { search: '', reload: function () { reloads += 1; } },
-      setInterval: function (callback, delay) { intervals.push({ callback: callback, delay: delay }); }
+      setInterval: function (callback, delay) { intervals.push({ callback: callback, delay: delay }); return intervals.length; },
+      clearInterval: function (id) { intervals[id-1].cleared = true; }
     }
   });
   vm.runInContext(source, context);
@@ -119,11 +120,12 @@ test('presenter bar shows the simulated time and advances by the requested inter
   assert.equal(app.reloads(), 2);
 });
 
-test('Reset and Stop both stop demo mode and hide the presenter bar', async () => {
-  for (const label of ['Reset', 'Stop']) {
+test('Stop ends demo mode and there is no duplicate Reset control', async () => {
+  for (const label of ['Stop']) {
     const app = load(ON);
     await settle();
 
+    assert.equal(button(app.bar, 'Reset'), undefined);
     await button(app.bar, label).listeners.click();
 
     assert.deepEqual(app.calls.filter((call) => call.method === 'POST').map((call) => call.url), [
@@ -146,4 +148,14 @@ test('polling reloads on simulated-time changes but not on real-time ticks', asy
   await stopped.intervals[0].callback();
   assert.equal(stopped.bar.hidden, true);
   assert.equal(stopped.reloads(), 0);
+});
+
+test('resident authorization failures stop polling, including already queued callbacks', async () => {
+  for(const status of [401,403]) {
+    const app=load({},status); await settle();
+    assert.equal(app.bar.hidden,true);
+    assert.equal(app.intervals[0].cleared,true);
+    await app.intervals[0].callback(); await app.intervals[0].callback();
+    assert.equal(app.calls.filter(c=>c.url==='/api/v1/demo/state').length,1);
+  }
 });

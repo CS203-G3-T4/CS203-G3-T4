@@ -76,8 +76,8 @@ the existing schema and initialize new databases.
 - `GET /api/v1/market-prices/feed-status` reports the most recent poll result (`SUCCESS`, `STALE_SOURCE`, `FAILURE`, or `NEVER_POLLED`).
 - `GET /api/v1/admin/feed-status` (admin) reports NEMS feed health: last poll, last successful sync, consecutive failed polls, uptime % and fallback count for the current month, the open incident and the 10 most recent incidents.
 - `GET /api/v1/admin/feed-outage` and `PUT /api/v1/admin/feed-outage` with `{"enabled": true|false}` (admin, CSRF token required) turn a simulated NEMS outage on or off for demos and tests (CSDT4-26). While it is on, every poll fails without calling NEMS, so the latest price is served as `STALE`. Each change triggers one poll immediately, so the dashboard's stale banner appears or clears on its next refresh, without a restart. While it is on, no new recommendations are made either, even from the demo forecast. The switch is held in memory and is always off after a restart.
-- `GET /api/v1/admin/overview` (admin) returns platform-wide household, savings and forecast-accuracy figures (CSDT4-55).
-- `GET /api/v1/admin/households/summary` (admin) returns per-household plan, monthly savings and budget status (CSDT4-55).
+- `GET /api/v1/admin/overview` (admin) reports households monitored, price-linked households, realised savings this month and the forecast MAE, together with the household summary rows.
+- `GET /api/v1/admin/households/summary` (admin) returns each household's plan, realised savings this month, budget status and simulated flag.
 - `GET /actuator/health` reports application and database health.
 - `/swagger-ui.html` displays the API documentation; `/v3/api-docs` returns the OpenAPI document.
 
@@ -291,3 +291,19 @@ Forecasting review updates: [V15 database compatibility](docs/forecasting/migrat
 [verified research archives](docs/forecasting/artifacts.md). Check migration lineage
 before upgrading any persistent database; legacy forecast V12/V13 is not automatically
 rewritten or repaired.
+
+### Replay isolation and controls (31 October review)
+
+Run demos on a separate application instance **and a separate database** from the
+prospective live trial. The demo clock is global to the instance: it changes the
+time seen by residents, pauses ordinary recommendations and serves historical
+actual prices as a replay. These are not AI predictions or zero-error evidence.
+Never run a replay on the instance recording the AI-versus-B3 trial.
+
+Start, advance and stop are serialized. A transition stages the clock for the
+transaction's thread and publishes it to other threads only after the replay
+service commits. A failed refresh or commit leaves the published clock unchanged.
+Advance rejects crossing the selected Singapore calendar day with HTTP 400; start
+another day explicitly. Missing server setup is a server error, not a bad request.
+The presenter has one Stop control; restart using the date/time form. Resident
+pages stop checking the admin-only demo state after their first 401/403 response.

@@ -76,4 +76,50 @@ class DemoClockTest {
                 .hasMessageContaining("negative");
         assertThat(clock.instant()).isEqualTo(START);
     }
+
+    @Test
+    void stagesTimeUntilSuccessfulReturnAndDiscardsItOnFailure() throws Exception {
+        var otherZone=clock.withZone(ZoneId.of("UTC"));
+        var pool=java.util.concurrent.Executors.newSingleThreadExecutor();
+        try {
+            clock.transition(() -> {
+                clock.startAt(START);
+                assertThat(otherZone.instant()).isEqualTo(START);
+                try { assertThat(pool.submit(clock::snapshot).get()).isEqualTo(new DemoClock.Snapshot(false,REAL_NOW)); }
+                catch(Exception e) { throw new RuntimeException(e); }
+                return null;
+            });
+            assertThat(clock.instant()).isEqualTo(START);
+            assertThatThrownBy(() -> clock.transition(() -> {
+                clock.advance(Duration.ofMinutes(30));
+                throw new IllegalStateException("transaction commit failed");
+            })).hasMessage("transaction commit failed");
+            assertThat(clock.instant()).isEqualTo(START);
+        } finally { pool.shutdownNow(); }
+    }
+
+    @Test
+    void concurrentAdvanceAndStopCannotRestoreStaleState() throws Exception {
+        clock.startAt(START);
+        var staged=new java.util.concurrent.CountDownLatch(1);
+        var release=new java.util.concurrent.CountDownLatch(1);
+        var stopEntered=new java.util.concurrent.CountDownLatch(1);
+        var pool=java.util.concurrent.Executors.newFixedThreadPool(2);
+        try {
+            var failed=pool.submit(() -> clock.transition(() -> {
+                clock.advance(Duration.ofMinutes(30)); staged.countDown();
+                try { if(!release.await(5,java.util.concurrent.TimeUnit.SECONDS)) throw new AssertionError("release timeout"); }
+                catch(InterruptedException e) { throw new RuntimeException(e); }
+                throw new IllegalStateException("refresh failed");
+            }));
+            assertThat(staged.await(5,java.util.concurrent.TimeUnit.SECONDS)).isTrue();
+            var stopped=pool.submit(() -> { stopEntered.countDown(); return clock.transition(() -> { clock.stop(); return clock.snapshot(); }); });
+            assertThat(stopEntered.await(5,java.util.concurrent.TimeUnit.SECONDS)).isTrue();
+            assertThat(clock.instant()).isEqualTo(START);
+            release.countDown();
+            assertThatThrownBy(() -> failed.get(5,java.util.concurrent.TimeUnit.SECONDS)).hasCauseInstanceOf(IllegalStateException.class);
+            assertThat(stopped.get(5,java.util.concurrent.TimeUnit.SECONDS).running()).isFalse();
+            assertThat(clock.instant()).isEqualTo(REAL_NOW);
+        } finally { release.countDown(); pool.shutdownNow(); }
+    }
 }

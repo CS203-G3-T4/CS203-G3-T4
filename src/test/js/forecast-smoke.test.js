@@ -80,6 +80,10 @@ test('saved endpoint response renders 24 rows, provenance, stale, empty and outa
   view = { ...view, stale: true };
   await vm.runInContext('WattlyForecast.refresh()', context);
   assert.match(nodes['forecast-status'].textContent, /Stale forecast/);
+  view = fixture(); view.run.modelType='DEMO'; view.run.qualityFlags=['DEMO_REPLAY'];
+  await vm.runInContext('WattlyForecast.refresh()', context);
+  assert.match(nodes['forecast-status'].textContent, /Historical replay.*not a model prediction/);
+  assert.match(nodes['forecast-metadata'].textContent, /^Replay data/);
   view = { available: false, reason: 'INSUFFICIENT_HISTORY' };
   await vm.runInContext('WattlyForecast.refresh()', context);
   assert.equal(nodes['forecast-points'].children.length, 0);
