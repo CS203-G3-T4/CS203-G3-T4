@@ -129,6 +129,13 @@ public class RecommendationService {
         this.realisedSavings = realisedSavings;
     }
 
+    /** Clears only the dedicated replay household's decisions before a fresh demo run. */
+    @Transactional
+    public void resetForReplay(long householdId) {
+        recommendations.lockHousehold(householdId);
+        recommendations.resetForReplay(householdId);
+    }
+
     /**
      * What the pages show: the open suggestions (best saving first) and the outcome of the latest
      * background recompute. Never looks at the forecast; suggestions whose start passed expire.

@@ -7,6 +7,7 @@ import java.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -30,7 +31,7 @@ public class MarketIngestionService {
             MarketPriceRepository prices,
             IngestionRunRepository runs,
             MarketObservationRepository observations,
-            Clock clock,
+            @Qualifier("wallClock") Clock clock,
             @Value("${market.feed.stale-after}") Duration staleAfter,
             ApplicationEventPublisher events) {
         this.client = client;

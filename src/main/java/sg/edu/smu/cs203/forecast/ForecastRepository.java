@@ -30,6 +30,11 @@ public class ForecastRepository {
 
     @Transactional
     public boolean save(Run run, String snapshot, Map<String,List<Point>> candidates, JsonNode model) {
+        return save(run,snapshot,candidates,model,false);
+    }
+
+    @Transactional
+    public boolean save(Run run, String snapshot, Map<String,List<Point>> candidates, JsonNode model, boolean demoRun) {
         // Check even on a duplicate run, within the same transaction as its points.
         if (model!=null) {
             String version=model.path("version").asText();
@@ -43,11 +48,11 @@ public class ForecastRepository {
         }
         int inserted=jdbc.update("""
                 INSERT INTO forecast_run(id,as_of,generated_at,origin_slot,input_revision,input_snapshot,mode,model_type,
-                    model_version,selected_model,fallback_reason,quality_flags,stale,status)
-                VALUES (?,?,?,?,?,?::jsonb,?,?,?,?,?,?::jsonb,?,?) ON CONFLICT DO NOTHING
+                    model_version,selected_model,fallback_reason,quality_flags,stale,status,is_demo)
+                VALUES (?,?,?,?,?,?::jsonb,?,?,?,?,?,?::jsonb,?,?,?) ON CONFLICT DO NOTHING
                 """,run.id(),ts(run.asOf()),ts(run.generatedAt()),ts(BaselineForecastService.floor(run.asOf())),
                 run.inputRevision(),snapshot,run.mode(),run.modelType(),run.modelVersion(),run.selectedModel(),
-                run.fallbackReason(),mapper.writeValueAsString(run.qualityFlags()),run.stale(),run.status());
+                run.fallbackReason(),mapper.writeValueAsString(run.qualityFlags()),run.stale(),run.status(),demoRun);
         if (inserted==0) return false;
         for (var entry : candidates.entrySet()) {
             if (entry.getValue().size()!=24) throw new IllegalArgumentException("Incomplete candidate");
@@ -64,14 +69,17 @@ public class ForecastRepository {
         return true;
     }
     public Optional<Run> latest(String mode,Instant asOf) {
+        return latest(mode, asOf, false);
+    }
+    public Optional<Run> latest(String mode,Instant asOf,boolean demoRun) {
         return jdbc.query("""
-                SELECT * FROM forecast_run WHERE mode=? AND as_of<=? AND generated_at<=?
+                SELECT * FROM forecast_run WHERE mode=? AND is_demo=? AND as_of<=? AND generated_at<=?
                 ORDER BY as_of DESC,generated_at DESC,sequence DESC LIMIT 1
                 """,(rs,n) -> new Run(rs.getString("id"),rs.getTimestamp("as_of").toInstant(),
                 rs.getTimestamp("generated_at").toInstant(),rs.getString("input_revision"),rs.getString("mode"),
                 rs.getString("model_type"),rs.getString("model_version"),rs.getString("selected_model"),rs.getString("fallback_reason"),
                 Arrays.asList(mapper.readValue(rs.getString("quality_flags"),String[].class)),rs.getBoolean("stale"),
-                rs.getString("status"),List.of()),mode,ts(asOf),ts(asOf)).stream().findFirst().map(run -> new Run(
+                rs.getString("status"),List.of()),mode,demoRun,ts(asOf),ts(asOf)).stream().findFirst().map(run -> new Run(
                 run.id(),run.asOf(),run.generatedAt(),run.inputRevision(),run.mode(),run.modelType(),run.modelVersion(),
                 run.selectedModel(),run.fallbackReason(),run.qualityFlags(),run.stale(),run.status(),points(run.id(),run.selectedModel())));
     }
@@ -84,6 +92,7 @@ public class ForecastRepository {
         return jdbc.query("""
                 SELECT m.manifest FROM model_run m JOIN forecast_run f ON f.model_version=m.version
                 WHERE m.usable_from<=? AND f.as_of<=? AND f.generated_at<=? AND f.mode=? AND f.model_type='AI'
+                    AND f.is_demo=FALSE
                 ORDER BY f.as_of DESC,f.generated_at DESC,f.sequence DESC LIMIT 1
                 """,(rs,n) -> {
                     JsonNode ranking=mapper.readTree(rs.getString(1)).path("baselineRanking");
@@ -100,7 +109,7 @@ public class ForecastRepository {
                 JOIN LATERAL (SELECT id,usep FROM market_price_revision
                     WHERE period_start=p.target_period AND price_status='PROVISIONAL' AND available_at<=? AND published_at<=?
                     ORDER BY published_at DESC,available_at DESC,id DESC LIMIT 1) a ON true
-                WHERE f.mode=? AND f.as_of<=? AND f.generated_at<=? AND p.target_period+interval '30 minutes'<=?
+                WHERE f.mode=? AND f.is_demo=FALSE AND f.as_of<=? AND f.generated_at<=? AND p.target_period+interval '30 minutes'<=?
                 ON CONFLICT DO NOTHING
                 """,ts(asOf),ts(asOf),ts(asOf),mode,ts(asOf),ts(asOf),ts(asOf));
         jdbc.update("""
@@ -108,7 +117,7 @@ public class ForecastRepository {
                 SELECT p.run_id,p.model_identifier,p.horizon,'FINAL',min(a.id),min(a.usep),?
                 FROM forecast_point p JOIN forecast_run f ON f.id=p.run_id
                 JOIN market_price_revision a ON a.period_start=p.target_period AND a.price_status='FINAL'
-                WHERE f.mode=? AND f.as_of<=? AND f.generated_at<=? AND p.target_period+interval '30 minutes'<=?
+                WHERE f.mode=? AND f.is_demo=FALSE AND f.as_of<=? AND f.generated_at<=? AND p.target_period+interval '30 minutes'<=?
                 GROUP BY p.run_id,p.model_identifier,p.horizon HAVING count(DISTINCT a.usep)=1
                 ON CONFLICT DO NOTHING
                 """,ts(asOf),mode,ts(asOf),ts(asOf),ts(asOf));
@@ -125,7 +134,7 @@ public class ForecastRepository {
                     count(p.spike_threshold) AS "assessedPairs"
                 FROM forecast_evaluation e JOIN forecast_point p USING(run_id,model_identifier,horizon)
                 JOIN forecast_run f ON f.id=p.run_id
-                WHERE f.mode=? AND f.as_of>=? AND f.as_of<=? AND f.generated_at<=? AND e.evaluated_at<=?
+                WHERE f.mode=? AND f.is_demo=FALSE AND f.as_of>=? AND f.as_of<=? AND f.generated_at<=? AND e.evaluated_at<=?
                 GROUP BY p.model_identifier,"modelVersion",p.horizon,e.truth_policy
                 ORDER BY p.model_identifier,"modelVersion",p.horizon,e.truth_policy
                 """,mode,ts(asOf.minus(Duration.ofDays(days))),ts(asOf),ts(asOf),ts(asOf));

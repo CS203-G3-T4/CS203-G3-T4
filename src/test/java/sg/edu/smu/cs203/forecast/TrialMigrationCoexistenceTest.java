@@ -18,9 +18,6 @@ class TrialMigrationCoexistenceTest {
             try(var files=Files.list(Path.of("src/main/resources/db/migration"))) {
                 for(Path file:files.toList())Files.copy(file,directory.resolve(file.getFileName()));
             }
-            Files.copy(Path.of("src/test/resources/review-fixtures/pr40-v23.sql"),directory.resolve("V23__replay_prices_and_household.sql"));
-            Files.copy(Path.of("src/test/resources/review-fixtures/pr40-v24.sql"),directory.resolve("V24__mark_demo_forecast_runs.sql"));
-            Files.copy(Path.of("src/test/resources/review-fixtures/pr40-v25.sql"),directory.resolve("V25__drop_redundant_replay_price_index.sql"));
             var base=Flyway.configure().dataSource(url,user,password).schemas(schema).defaultSchema(schema)
                     .locations("filesystem:"+directory).target("22").load();base.migrate();
             try(var connection=DriverManager.getConnection(url,user,password);var sql=connection.createStatement()) {

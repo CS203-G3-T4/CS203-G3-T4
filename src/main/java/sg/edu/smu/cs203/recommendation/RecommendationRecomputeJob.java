@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
+import sg.edu.smu.cs203.common.DemoClock;
 import sg.edu.smu.cs203.household.HouseholdChanged;
 import sg.edu.smu.cs203.household.HouseholdDirectory;
 import sg.edu.smu.cs203.household.HouseholdNotFoundException;
@@ -23,10 +24,11 @@ import sg.edu.smu.cs203.forecast.ForecastSaved;
  * - on startup, so a fresh app has suggestions straight away
  * - after F3 commits a saved forecast (or a new price when using the demo forecast)
  * - when a household or one of its appliances changes (HouseholdChanged, from F2)
- * - every 30 minutes, which also picks up a new F3 forecast and moves the demo forecast along
+ * - every 30 minutes, which also picks up a new F3 forecast
  *
- * Only real households are recomputed; the 100 simulated households are left alone. One failing
- * household never stops the others, and a failure never breaks the request or poll that caused it.
+ * Only real households are recomputed; the 100 simulated households are left alone. Automatic
+ * recomputation is paused during replay so real residents are not updated at simulated time.
+ * One failing household never stops the others, and a failure never breaks the request or poll.
  */
 @Component
 public class RecommendationRecomputeJob {
@@ -35,14 +37,17 @@ public class RecommendationRecomputeJob {
 
     private final RecommendationService recommendations;
     private final HouseholdDirectory households;
+    private final DemoClock clock;
     private final boolean enabled;
     private final boolean usesF3;
 
     public RecommendationRecomputeJob(RecommendationService recommendations, HouseholdDirectory households,
+                                      DemoClock clock,
                                       @Value("${recommendation.auto-recompute:true}") boolean enabled,
                                       @Value("${recommendation.forecast-source:demo}") String source) {
         this.recommendations = recommendations;
         this.households = households;
+        this.clock = clock;
         this.enabled = enabled;
         this.usesF3 = "f3".equalsIgnoreCase(source.trim());
     }
@@ -79,7 +84,7 @@ public class RecommendationRecomputeJob {
 
     /** Returns how many households were recomputed. */
     public int recomputeAll(String why) {
-        if (!enabled) {
+        if (!enabled || clock.isRunning()) {
             return 0;
         }
         int done = 0;
@@ -92,7 +97,7 @@ public class RecommendationRecomputeJob {
     }
 
     boolean recompute(long householdId, String why) {
-        if (!enabled) {
+        if (!enabled || clock.isRunning()) {
             return false;
         }
         try {

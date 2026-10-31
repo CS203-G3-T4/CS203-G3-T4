@@ -11,12 +11,10 @@ import java.time.ZonedDateTime;
 import java.time.DayOfWeek;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import sg.edu.smu.cs203.household.HouseholdResponse;
@@ -25,8 +23,7 @@ import sg.edu.smu.cs203.household.PlanType;
 import sg.edu.smu.cs203.household.budget.BudgetRepository;
 import sg.edu.smu.cs203.household.load.LoadProfileResponse;
 import sg.edu.smu.cs203.household.load.LoadProfileService;
-import sg.edu.smu.cs203.market.price.MarketHistoryRepository;
-import sg.edu.smu.cs203.market.price.MarketRevision;
+import sg.edu.smu.cs203.market.price.AsOfMarketPrices;
 
 /**
  * CSDT4-41: how much a household has spent on electricity so far this month.
@@ -43,13 +40,12 @@ public class SpendService {
 
     private final HouseholdService households;
     private final LoadProfileService loads;
-    private final MarketHistoryRepository prices;
+    private final AsOfMarketPrices prices;
     private final TariffRepository tariffs;
     private final BudgetRepository budgets;
     private final Clock clock;
 
-    @Autowired
-    public SpendService(HouseholdService households, LoadProfileService loads, MarketHistoryRepository prices,
+    public SpendService(HouseholdService households, LoadProfileService loads, AsOfMarketPrices prices,
                         TariffRepository tariffs, BudgetRepository budgets, Clock clock) {
         this.households = households;
         this.loads = loads;
@@ -224,10 +220,6 @@ public class SpendService {
 
     /** F1's USEP for each half-hour from monthStart, as known at now (latest revision published by then). */
     private Map<Instant, BigDecimal> usep(Instant monthStart, Instant now) {
-        Map<Instant, BigDecimal> byPeriod = new HashMap<>();
-        for (MarketRevision revision : prices.asOf(now, monthStart)) {
-            byPeriod.put(revision.periodStart(), revision.usep());
-        }
-        return byPeriod;
+        return prices.prices(monthStart, now);
     }
 }

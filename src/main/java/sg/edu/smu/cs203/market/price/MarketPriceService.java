@@ -6,9 +6,11 @@ import java.time.Instant;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import sg.edu.smu.cs203.common.DemoClock;
 
 @Service
 public class MarketPriceService {
@@ -17,6 +19,7 @@ public class MarketPriceService {
     private final IngestionRunRepository runs;
     private final Clock clock;
     private final Duration staleAfter;
+    private ReplayPriceService replayPrices;
 
     public MarketPriceService(
             MarketPriceRepository prices,
@@ -29,12 +32,20 @@ public class MarketPriceService {
         this.staleAfter = staleAfter;
     }
 
+    @Autowired(required = false)
+    public void setReplayPrices(ReplayPriceService replayPrices) {
+        this.replayPrices = replayPrices;
+    }
+
     public LatestPriceResponse latest() {
-        MarketPrice price = prices.findLatest().orElseThrow(NoMarketPriceException::new);
         Instant now = clock.instant();
+        boolean replayMode = demoClockRunning();
+        MarketPrice price = replayMode
+                ? replayPrices().latest(now).orElseThrow(NoMarketPriceException::new)
+                : prices.findLatest().orElseThrow(NoMarketPriceException::new);
         boolean recent = !price.sourceUpdatedAt().isAfter(now.plusSeconds(120))
                 && Duration.between(price.sourceUpdatedAt(), now).compareTo(staleAfter) <= 0;
-        boolean lastPollSucceeded = runs.findLatest()
+        boolean lastPollSucceeded = replayMode || runs.findLatest()
                 .map(run -> run.status() == IngestionStatus.SUCCESS)
                 .orElse(false);
         return new LatestPriceResponse(
@@ -54,7 +65,20 @@ public class MarketPriceService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Provide from and to timestamps in ascending order, at most 31 days apart");
         }
-        return prices.findRange(from, to);
+        return demoClockRunning()
+                ? replayPrices().history(from, to, clock.instant())
+                : prices.findRange(from, to);
+    }
+
+    private boolean demoClockRunning() {
+        return clock instanceof DemoClock demoClock && demoClock.isRunning();
+    }
+
+    private ReplayPriceService replayPrices() {
+        if (replayPrices == null) {
+            throw new IllegalStateException("Replay price service is required while demo mode is active");
+        }
+        return replayPrices;
     }
 
     public FeedStatusResponse feedStatus() {

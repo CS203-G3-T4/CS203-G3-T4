@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+import sg.edu.smu.cs203.common.DemoClock;
 import sg.edu.smu.cs203.market.price.*;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -66,15 +67,19 @@ public class ForecastJob {
     }
     /** F5 can invoke after supplying its Clock and canonical history in REPLAY mode. */
     public synchronized void runOnce() {
-        Instant asOf=clock.instant();
+        DemoClock.Snapshot clockSnapshot = clock instanceof DemoClock demoClock
+                ? demoClock.snapshot()
+                : new DemoClock.Snapshot(false, clock.instant());
+        boolean demoRun = clockSnapshot.running();
+        Instant asOf=clockSnapshot.instant();
         List<MarketRevision> rows=history.asOf(asOf);
         var demand=operations.demand(asOf);
         String snapshot=demand.isEmpty() ? mapper.writeValueAsString(rows) : mapper.writeValueAsString(Map.of("priceHistory",rows,"expectedDemand",demand));
         var independentRanking=operations.ranking(asOf,service.mode());
         String input=hash(snapshot+(independentRanking.isEmpty()?"":"|validated-baselines:"+mapper.writeValueAsString(independentRanking)));
-        String requestId=hash(service.mode()+"|"+BaselineForecastService.floor(asOf)+"|"+input);
+        String requestId=hash((demoRun ? "DEMO|" : "")+service.mode()+"|"+BaselineForecastService.floor(asOf)+"|"+input);
         String runIdentity=requestId;
-        boolean stale=service.stale(rows,asOf);
+        boolean stale=service.stale(rows,asOf,demoRun);
         boolean verified=service.mappingVerified(rows);
         List<String> flags=new ArrayList<>();
         if (!verified) flags.add("PERIOD_MAPPING_UNVERIFIED");
@@ -128,12 +133,12 @@ public class ForecastJob {
             String selected=model!=null ? "AI" : ranking.stream().filter(candidates::containsKey).findFirst().orElse("NONE");
             String version=model!=null ? model.path("version").asText() : selected.equals("NONE") ? "none-v1" : selected+"-v1";
             if (selected.equals("NONE") && !stale) reason="INSUFFICIENT_HISTORY";
-            Run run=new Run(hash(runIdentity+"|"+version),asOf,clock.instant(),input,service.mode(),
+            Run run=new Run(hash(runIdentity+"|"+version),asOf,demoRun ? asOf : clock.instant(),input,service.mode(),
                     selected.equals("AI") ? "AI" : selected.equals("NONE") ? "NONE" : "BASELINE",version,selected,
                     selected.equals("AI") ? null : reason,List.copyOf(runFlags),stale,selected.equals("NONE") ? "UNAVAILABLE" : "AVAILABLE",
                     candidates.getOrDefault(selected,List.of()));
             try {
-                repository.save(run,snapshot,candidates,model);
+                repository.save(run,snapshot,candidates,demoRun ? null : model,demoRun);
                 break;
             } catch (ForecastRepository.ModelManifestConflict exc) {
                 if (model==null) throw exc;

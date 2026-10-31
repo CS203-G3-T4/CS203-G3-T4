@@ -20,8 +20,7 @@ import sg.edu.smu.cs203.household.HouseholdResponse;
 import sg.edu.smu.cs203.household.PlanType;
 import sg.edu.smu.cs203.household.spend.TariffComponent;
 import sg.edu.smu.cs203.household.spend.TariffRepository;
-import sg.edu.smu.cs203.market.price.MarketHistoryRepository;
-import sg.edu.smu.cs203.market.price.MarketRevision;
+import sg.edu.smu.cs203.market.price.AsOfMarketPrices;
 
 /**
  * CSDT4-53: realised savings from actual prices for a household's accepted suggestions.
@@ -54,12 +53,12 @@ public class RealisedSavingsService {
 
     private final RecommendationRepository recommendations;
     private final HouseholdDirectory households;
-    private final MarketHistoryRepository prices;
+    private final AsOfMarketPrices prices;
     private final TariffRepository tariffs;
     private final Clock clock;
 
     public RealisedSavingsService(RecommendationRepository recommendations, HouseholdDirectory households,
-                                  MarketHistoryRepository prices, TariffRepository tariffs, Clock clock) {
+                                  AsOfMarketPrices prices, TariffRepository tariffs, Clock clock) {
         this.recommendations = recommendations;
         this.households = households;
         this.prices = prices;
@@ -153,13 +152,6 @@ public class RealisedSavingsService {
 
     /** F1's USEP for each half-hour from `from`, as known at now (latest revision published by then). */
     private Map<Instant, BigDecimal> actualUsep(Instant from, Instant now) {
-        Map<Instant, BigDecimal> byPeriod = new HashMap<>();
-        if (from.isAfter(now)) {
-            return byPeriod;
-        }
-        for (MarketRevision revision : prices.asOf(now, from)) {
-            byPeriod.put(revision.periodStart(), revision.usep());
-        }
-        return byPeriod;
+        return prices.prices(from, now);
     }
 }
