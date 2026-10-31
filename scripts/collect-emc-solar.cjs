@@ -1,6 +1,8 @@
-// Normal public EMC browser session; no login, challenge solver or paid API.
+// Requires operator-verified collection permission; see docs/forecasting/emc-collection-permission.md.
+// Normal browser session; no login or access-control bypass.
 const {chromium}=require('playwright');
 const fs=require('fs'),path=require('path'),crypto=require('crypto');
+const {MAX_RESPONSE_BYTES,serializeSnapshot}=require('./emc-snapshot-limits.cjs');
 const args=process.argv.slice(2), flag=n=>args.includes(n), option=(n,d)=>args.includes(n)?args[args.indexOf(n)+1]:d;
 const output=option('--output',null), interval=Number(option('--interval-seconds','300'));
 if(!output || !Number.isFinite(interval) || interval<120) throw Error('Use --output FILE and interval >=120 seconds');
@@ -16,13 +18,13 @@ async function capture(browser){
    const response=await page.request.get(url,{timeout:20000});
    if(response.status()!==200)throw Error('EMC returned HTTP '+response.status());
    const raw=await response.body();
-   if(raw.length>240000)throw Error('EMC response exceeds limit');
+   if(raw.length>MAX_RESPONSE_BYTES)throw Error('EMC response exceeds limit');
    const receivedAt=new Date().toISOString(), body=JSON.parse(raw.toString('utf8'));
    if(body.success!==true)throw Error('EMC reported unsuccessful response');
    responses.push({value,url,receivedAt,sha256:sha(raw),body});
   }
   const snapshot={schemaVersion:1,responses};
-  const content=JSON.stringify(snapshot), directory=path.dirname(path.resolve(output));
+  const content=serializeSnapshot(snapshot), directory=path.dirname(path.resolve(output));
   fs.mkdirSync(path.join(directory,'archive'),{recursive:true});
   // Archive the exact receipt-stamped snapshot, so the forecast's hash is recoverable.
   const identity=sha(content);

@@ -1,69 +1,185 @@
 {
-  "checkedAt": "2026-10-30T20:21:51.867694+00:00",
-  "reviewedBaseHead": "fb00952bed4afd0d7120e0159f01f48c9078d17b",
-  "scope": "Three review regression repairs; not new model accuracy or savings evidence",
-  "java": {
-    "passed": 389,
-    "failed": 0,
-    "errors": 0,
-    "skipped": 0,
-    "database": "PostgreSQL 17, newly created disposable databases removed after checks",
-    "command": "JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64 ./mvnw -B -ntp -Djvm=/usr/lib/jvm/java-21-openjdk-amd64/bin/java test"
+  "reviewedHeads": {
+    "40": "0c924594360d111e36f502707558d36da1adbefb",
+    "48": "ea61c01e395ca43c966f189c3ca5fc0185a1449c"
   },
-  "python": {
-    "passed": 173,
-    "failed": 0,
-    "skipped": 0,
-    "warnings": 1,
-    "command": "PYTHONPATH=ml/src python -B -m pytest -q -p no:cacheprovider ml/tests"
-  },
-  "frontend": {
-    "passed": 73,
-    "failed": 0,
-    "skipped": 0,
-    "command": "node --test src/test/js/*.test.js"
-  },
-  "regressions": {
-    "javaNewCases": 3,
-    "pythonNewCases": 4,
-    "frontendNewCases": 7,
-    "provisionalSelection": "Filter source/status before choosing revisions; retain receipt/publication cutoffs and missing-data behavior",
-    "refreshRace": "Recheck editing and pending decisions after both asynchronous reads, including error responses",
-    "replayCompatibility": "Pinned original DTO while retaining calculator and source-integrity checks"
-  },
-  "savedComparison": {
-    "matchedCases": 600,
-    "scalarCostChecks": 96512,
-    "allThreeFullMethodSummariesExactlyReproduced": true,
-    "samePreviouslyExaminedCohort": true,
-    "modelsFitted": 0,
-    "protectedOutcomesEvaluated": false,
-    "sourceChecksumsUnchanged": true
+  "local": {
+    "javaPostgres": {
+      "passed": 427,
+      "failed": 0,
+      "skipped": 0,
+      "extraFocusedAfterAccessControlAssertion": 37
+    },
+    "python": {
+      "passed": 174,
+      "failed": 0
+    },
+    "javascript": {
+      "passed": 82,
+      "failed": 0
+    }
   },
   "browser": {
     "status": "PASS",
-    "scope": "Current recommendation page with isolated synthetic API responses; no live app requests or model evidence",
+    "scope": "Real modified HTML/JS in Chromium with isolated synthetic API responses; no live application or EMC requests",
     "cases": [
       {
+        "pr": 40,
         "width": 1280,
-        "editDuringPendingRequestPreserved": true,
-        "idleRefreshStillUpdates": true,
-        "pageErrors": [],
+        "scenario": "demo",
         "horizontalOverflow": false
       },
       {
-        "width": 390,
-        "editDuringPendingRequestPreserved": true,
-        "idleRefreshStillUpdates": true,
-        "pageErrors": [],
+        "pr": 40,
+        "width": 1280,
+        "scenario": "stale",
         "horizontalOverflow": false
+      },
+      {
+        "pr": 40,
+        "width": 1280,
+        "scenario": "empty",
+        "horizontalOverflow": false
+      },
+      {
+        "pr": 40,
+        "width": 1280,
+        "scenario": "error",
+        "horizontalOverflow": false
+      },
+      {
+        "pr": 40,
+        "width": 1280,
+        "scenario": "resident",
+        "horizontalOverflow": false
+      },
+      {
+        "pr": 48,
+        "width": 1280,
+        "scenario": "demo",
+        "horizontalOverflow": false
+      },
+      {
+        "pr": 48,
+        "width": 1280,
+        "scenario": "stale",
+        "horizontalOverflow": false
+      },
+      {
+        "pr": 48,
+        "width": 1280,
+        "scenario": "empty",
+        "horizontalOverflow": false
+      },
+      {
+        "pr": 48,
+        "width": 1280,
+        "scenario": "error",
+        "horizontalOverflow": false
+      },
+      {
+        "pr": 48,
+        "width": 1280,
+        "scenario": "loading"
+      },
+      {
+        "pr": 40,
+        "width": 390,
+        "scenario": "demo",
+        "horizontalOverflow": false
+      },
+      {
+        "pr": 40,
+        "width": 390,
+        "scenario": "stale",
+        "horizontalOverflow": false
+      },
+      {
+        "pr": 40,
+        "width": 390,
+        "scenario": "empty",
+        "horizontalOverflow": false
+      },
+      {
+        "pr": 40,
+        "width": 390,
+        "scenario": "error",
+        "horizontalOverflow": false
+      },
+      {
+        "pr": 40,
+        "width": 390,
+        "scenario": "resident",
+        "horizontalOverflow": false
+      },
+      {
+        "pr": 48,
+        "width": 390,
+        "scenario": "demo",
+        "horizontalOverflow": false
+      },
+      {
+        "pr": 48,
+        "width": 390,
+        "scenario": "stale",
+        "horizontalOverflow": false
+      },
+      {
+        "pr": 48,
+        "width": 390,
+        "scenario": "empty",
+        "horizontalOverflow": false
+      },
+      {
+        "pr": 48,
+        "width": 390,
+        "scenario": "error",
+        "horizontalOverflow": false
+      },
+      {
+        "pr": 48,
+        "width": 390,
+        "scenario": "loading"
       }
     ]
   },
-  "databaseMigrationAdded": false,
+  "restoredCopy": {
+    "status": "FULL_REPLAY_COPY_REHEARSAL_PASSED",
+    "replayHead": "0c924594360d111e36f502707558d36da1adbefb",
+    "replaySqlSha256": {
+      "23": "ebaec350574a5d0c8e00c1b863ae17406c563cafa96f20d9ce15351435973ff1",
+      "24": "7401985aa5be4e240c231220007cf19b751fa61cb9cb33d3894b90755dbf9d05",
+      "25": "8e1293ce29aa3410edc127fb6665311785a7566344239c8730c93189596fa98d"
+    },
+    "trialMigration": "V26",
+    "newDiagnosticsMigration": "V27",
+    "trialSqlUnchanged": true,
+    "copyChecks": [
+      "REHEARSAL_V27_CAPTURE_DIAGNOSTICS_APPLIED_ONCE=true",
+      "REHEARSAL_ORIGINAL_TABLES_PRESERVED=31",
+      "REHEARSAL_TRIAL_METADATA_PRESERVED=true",
+      "REHEARSAL_ALL_REPLAY_MIGRATIONS_V23_V24_V25_APPLIED_ONCE=true",
+      "REHEARSAL_V26_NOT_REEXECUTED=true",
+      "REHEARSAL_FLYWAY_VALIDATE_AND_TWO_NOOP_MIGRATIONS=true",
+      "REHEARSAL_ORDER=old-trial-renumbered-26_then_actual-replay-23-24-25",
+      "REHEARSAL_ROLLBACK_RESTORE_VALID=true"
+    ],
+    "liveHistoryUnchanged": true,
+    "liveTrialUnchanged": true,
+    "liveModelUnchanged": true,
+    "disposableDatabasesRemoved": true,
+    "scope": "Restored copies only; controlled history reconciliation, not a deployment or ordinary Flyway repair"
+  },
+  "frozenArchive": {
+    "passed": true,
+    "files": 37,
+    "sha256": "4d153531160edf9cb77e160cc1107a37e80434b61585c0f9d689af8531c63551"
+  },
+  "newCollectionRequests": false,
   "liveDeployed": false,
-  "trialReset": false,
-  "modelPromoted": false,
-  "weeklyTimerActivated": false,
+  "liveTrialReset": false,
+  "retrainingActivated": false,
+  "modelOrFrozenPolicyChanged": false,
+  "collectionPermission": "UNRESOLVED",
   "independentHumanApprovalClaimed": false
 }

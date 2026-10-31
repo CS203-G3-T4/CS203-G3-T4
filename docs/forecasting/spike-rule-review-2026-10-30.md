@@ -70,3 +70,14 @@ For the last example, the difference from the historical median is about S$0.028
 Before the owner completion decision above, CSDT4-94 was recommended to remain In Progress pending human labels and Jonathan/team agreement. The following steps remain for independent validation rather than the owner-accepted statistical-scope closure: the team should (1) complete an independent price-label review and explicitly accept its coverage/limitations, (2) review measured precision/recall on that labelled coverage without calling rule self-labels genuine validation, and (3) record its sensitivity choice and alert-budget interpretation. The owner has accepted retaining k=3 and authorized closure; this does not assert a decision by the named reviewer. If the team accepts a smaller labelled subset, keep its metrics explicitly scoped to that subset.
 
 The [compact evidence](spike-rule-review-evidence-2026-10-30.json) records reproducibility, zero human labels, tests and pending sign-off. The active solar model, its weights, live trial and weekly retraining state are unchanged.
+
+
+## 31 October review clarification
+
+The workbook hides algorithm outputs, but it shows the same 28 prior same-slot
+prices used by the statistical rule. This can anchor the reviewer to that rule's
+definition. “Blind” here means hidden thresholds/decisions, not an independently
+established definition, independently sampled evidence or verified reviewer
+independence. Prior feedback and partial labels retain their stated limits. The
+scorer now reports fixed-k counts without a `recommendedK` field: owner acceptance
+of k=3 is a separate recorded product decision, not an inference from those counts.

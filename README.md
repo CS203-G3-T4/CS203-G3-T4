@@ -319,3 +319,9 @@ Advance rejects crossing the selected Singapore calendar day with HTTP 400; star
 another day explicitly. Missing server setup is a server error, not a bad request.
 The presenter has one Stop control; restart using the date/time form. Resident
 pages stop checking the admin-only demo state after their first 401/403 response.
+
+
+Before enabling the optional EMC solar/demand collector, read the
+[permission decision](docs/forecasting/emc-collection-permission.md). Public page
+access is not verified permission for automated collection. The review did not
+make a new collection request, deploy repaired code or change the running trial.

@@ -74,7 +74,7 @@ def score(audit,labels=None,decision_at=None):
     if audit.get('auditDigest')!=identity({k:v for k,v in audit.items() if k!='auditDigest'}):raise ValueError('Changed rule audit')
     if not audit.get('cases'):raise ValueError('Empty review cohort')
     base={'schemaVersion':1,'cohortDigest':audit['cohortDigest'],'teamApproved':False,'automaticPromotion':False,
-          'runtimeChanged':False,'recommendedK':3,'physicalScarcityValidated':False}
+          'runtimeChanged':False,'physicalScarcityValidated':False}
     if labels is None:
         return {**base,'status':'AWAITING_INDEPENDENT_LABELS','reviewedTargets':0,'totalTargets':len(audit['cases']),
                 'precision':None,'recall':None,'methods':None}

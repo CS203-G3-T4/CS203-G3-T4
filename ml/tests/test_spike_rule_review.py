@@ -30,12 +30,14 @@ def test_absent_labels_do_not_turn_rule_outputs_into_genuine_precision():
     cohort,audit=fixture();report=score(audit)
     assert report['precision'] is None and report['recall'] is None and report['methods'] is None
     assert not report['teamApproved'] and not report['runtimeChanged'] and not report['automaticPromotion']
+    assert 'recommendedK' not in report
 
 def test_complete_labels_produce_hand_calculated_confusion_counts():
     cohort,audit=fixture();report=score(audit,labels(cohort),DECISION)
     assert report['methods']['3']=={'tp':1,'fp':0,'fn':1,'tn':1,'precision':1.,'recall':.5}
     assert report['methods']['4']['precision'] is None and report['methods']['4']['recall']==0
     assert report['coverage']==1 and not report['teamApproved'] and not report['physicalScarcityValidated']
+    assert 'recommendedK' not in report
 
 def test_partial_and_uncertain_labels_only_produce_explicit_subset_metrics():
     cohort,audit=fixture();review=labels(cohort);review['labels'][1]['label']='UNCERTAIN';review['labels'].pop()
