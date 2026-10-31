@@ -1,0 +1,13 @@
+{
+  "status": "PREPARED_AND_VERIFIED_INACTIVE",
+  "environment": "/home/bryan/.config/wattly/forecast-weekly.delivery.env",
+  "permissions": "0o600",
+  "runtime": "/home/bryan/.local/share/wattly-forecast-delivery",
+  "stagedUnits": "/home/bryan/.local/share/wattly-forecast-delivery/staged-units",
+  "nativeUnitsValid": true,
+  "preflightRejectsIncompleteSetup": true,
+  "noCredentialsConfigured": true,
+  "noLiveApiConfigured": true,
+  "installedOrEnabled": false,
+  "timerState": "LoadState=not-found\nActiveState=inactive\n"
+}

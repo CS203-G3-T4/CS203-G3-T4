@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Forecast accuracy · Wattly admin</title><link rel="stylesheet" href="/css/wattly.css">
-<style>table{border-collapse:collapse;width:100%;margin:16px 0}th,td{text-align:left;padding:8px;border-bottom:1px solid var(--gridline)}caption{text-align:left}h1,p,label,summary{margin-bottom:12px}table{font-size:14px}details{overflow-x:auto}</style></head>
+<style>table{border-collapse:collapse;width:100%;margin:16px 0}th,td{text-align:left;padding:8px;border-bottom:1px solid var(--gridline)}caption{text-align:left}h1,p,label,summary{margin-bottom:12px}table{font-size:14px;min-width:600px}details,.table-wrap{overflow-x:auto}label{display:inline-flex;flex-wrap:wrap;align-items:center;gap:6px;max-width:100%;margin-right:12px}select{max-width:100%}#accuracy-context{overflow-wrap:anywhere}</style></head>
 <body><main style="max-width:1100px;margin:32px auto;padding:16px">
 <h1>Forecast accuracy</h1><p>Last seven days of saved application forecasts. MAE is mean absolute error in SGD/MWh; lower is better.</p>
 <label>Forecast horizon <select id="accuracy-horizon" aria-label="Forecast horizon"></select></label>
@@ -9,7 +9,7 @@
 <p id="accuracy-status" role="status" aria-live="polite">Loading…</p><p id="accuracy-tile"></p><p id="accuracy-context"></p>
 <svg id="accuracy-chart" viewBox="0 0 980 300" role="img" aria-label="Saved forecast versus actual, SGD/MWh" style="width:100%"></svg>
 <label>Chart method and version <select id="accuracy-model"></select></label>
-<table><caption>Identical-pair method comparison</caption><thead><tr><th>Method / versions</th><th>MAE (SGD/MWh)</th><th>Common pairs</th><th>Eligible / saved</th><th>Missing actuals</th></tr></thead><tbody id="accuracy-scores"></tbody></table>
+<div class="table-wrap" role="region" aria-label="Forecast method comparison" tabindex="0"><table><caption>Identical-pair method comparison</caption><thead><tr><th>Method / versions</th><th>MAE (SGD/MWh)</th><th>Common pairs</th><th>Eligible / saved</th><th>Missing actuals</th></tr></thead><tbody id="accuracy-scores"></tbody></table></div>
 <details><summary>Accessible forecast versus actual table</summary><table><thead><tr><th>Origin (SGT)</th><th>Target (SGT)</th><th>Method/version</th><th>Forecast SGD/MWh</th><th>Actual SGD/MWh</th></tr></thead><tbody id="accuracy-points"></tbody></table></details>
-<p><a href="/forecast.html">Resident forecast</a> · <a href="/admin-overview.html">Platform overview</a></p>
+<p><a href="/admin-live-comparison.html">Live AI versus B3 savings</a> · <a href="/admin-overview.html">Platform overview</a> · <a href="/forecast.html">Resident forecast</a></p>
 </main><script src="/js/wattly.js"></script><script src="/js/forecast-chart.js"></script><script src="/js/admin-forecast.js"></script></body></html>

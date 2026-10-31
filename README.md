@@ -219,6 +219,14 @@ suggestions.
 
 ## F3: forecaster and baseline evaluator
 
+[Local experimental AI activation](docs/forecasting/solar-assisted-ai.md) connects an actual
+trained model to the forecast and recommendation pages with explicit labels and fallback.
+This optional local mode does not approve a research bundle or establish live savings.
+
+The [F3 final report](docs/final-report-f3.md) records the final fixed candidate comparison,
+remaining data/review dependencies and the decision to stop open-ended model searching.
+The [delivery handoff](docs/forecasting/delivery-2026-10-29.md) covers runtime verification and inactive WSL weekly preparation.
+
 The [forecast page](/forecast.html) reads saved 24-interval forecasts from Spring.
 F3 adds Java baseline fallback, revision-aware history/imports, PostgreSQL forecast
 runs, and a separate Python training/inference package under `ml/`. Existing F1
@@ -233,6 +241,10 @@ history now covers June 2025–September 2026. The twelve-month model and 56-day
 unseen study are explicitly retrospective; they do not establish what final prices
 or future demand forecasts were available historically. Research artifacts remain
 unapproved. Live Java baselines continue when Python is absent or invalid.
+
+The [spike sensitivity policy](docs/forecasting/spike-sensitivity-policy.md) retains k=3 and
+uses pooled warning budgets with an earlier-control worst-week safeguard for future
+research review. It does not activate a new warning model or alter recommendations.
 
 ### Model runtime decision (CSDT4-34)
 
@@ -307,3 +319,15 @@ Advance rejects crossing the selected Singapore calendar day with HTTP 400; star
 another day explicitly. Missing server setup is a server error, not a bad request.
 The presenter has one Stop control; restart using the date/time form. Resident
 pages stop checking the admin-only demo state after their first 401/403 response.
+
+
+Before enabling the optional EMC solar/demand collector, read the
+[permission decision](docs/forecasting/emc-collection-permission.md). Public page
+access is not verified permission for automated collection. The review did not
+make a new collection request, deploy repaired code or change the running trial.
+
+
+Local model selection was switched on 31 October to the separately trained
+[price-only AI](docs/forecasting/price-only-ai-2026-10-31.md). Its new AI/B3 comparison
+is separate from the preserved solar trial. Solar and future-demand signals are
+not required by this predictor; the ordinary market-price feed remains required.

@@ -116,6 +116,7 @@ class ForecastPersistenceTest {
         assertThat(saved.baselineRanking(NOW,"REPLAY")).containsExactly("B2","B1","B3");
         assertThat(saved.baselineRanking(NOW,"LIVE")).isEmpty();
         assertThat(jdbc.queryForObject("select count(*) from model_run",Integer.class)).isEqualTo(1);
+        assertThat(jdbc.queryForObject("select promotion_state from model_run",String.class)).isEqualTo("APPROVED");
         String originalManifest=jdbc.queryForObject("select manifest::text from model_run",String.class);
         doAnswer(call -> {
             var conflicting=PythonForecastClientTest.syntheticResponse(call.getArgument(0));
@@ -167,6 +168,19 @@ class ForecastPersistenceTest {
                 WHERE f.id=?
                 """,Integer.class,demoRun.id())).isZero();
         if (System.getenv("WATTLY_PYTHON_SMOKE_EXECUTABLE")!=null) smokePythonProcess();
+        doAnswer(call -> {
+            var solar=PythonForecastClientTest.solarResponse(call.getArgument(0));
+            solar.put("modelVersion","solar-persistence-test");
+            ((tools.jackson.databind.node.ObjectNode)solar.path("manifest")).put("version","solar-persistence-test");
+            return solar;
+        }).when(python).forecast(anyString(),any(),anyList());
+        job.runOnce();
+        var solarRun=saved.latest("REPLAY",NOW).orElseThrow();
+        assertThat(solarRun.modelVersion()).isEqualTo("solar-persistence-test");
+        assertThat(jdbc.queryForObject("select promotion_state from model_run where version='solar-persistence-test'",String.class))
+                .isEqualTo("EXPERIMENTAL");
+        assertThat(jdbc.queryForObject("select jsonb_array_length(input_snapshot->'solarInputs'->'periods') from forecast_run where id=?",
+                Integer.class,solarRun.id())).isEqualTo(7);
     }
 
     private void smokeUi(String name) throws Exception {
@@ -208,7 +222,7 @@ class ForecastPersistenceTest {
                 Thread.sleep(100);
             }
             assertThat(ready).as("Synthetic FastAPI startup; see target/forecast-python-smoke.log").isTrue();
-            var realPython=new PythonForecastClient(url,Duration.ofSeconds(5));
+            var realPython=new PythonForecastClient(url,Duration.ofSeconds(5),false);
             doAnswer(call -> realPython.forecast(call.getArgument(0),call.getArgument(1),call.getArgument(2)))
                     .when(python).forecast(anyString(),any(),anyList());
             job.runOnce(); job.runOnce();

@@ -40,6 +40,22 @@ public class ForecastOperationsRepository {
             if (saved.compareTo(row.demandMw())!=0) throw new IllegalArgumentException("Demand vintage changed value");
         }
     }
+    /** Repeated polling retains the first real receipt of an unchanged provider vintage. */
+    @Transactional public int saveNewDemand(List<Demand> rows,Instant now) {
+        if(rows.size()>1440) throw new IllegalArgumentException("Too many demand vintages");
+        jdbc.execute("SELECT pg_advisory_xact_lock(203100)");
+        int added=0;
+        for(var row:rows) {
+            var prior=jdbc.query("SELECT demand_mw FROM expected_demand_revision WHERE target_period=? AND published_at=? AND source=?",
+                (r,n)->r.getBigDecimal(1),ts(row.targetPeriod()),ts(row.publishedAt()),row.source());
+            if(!prior.isEmpty()) {
+                if(prior.stream().anyMatch(value->value.compareTo(row.demandMw())!=0)) throw new IllegalArgumentException("Conflicting EMC demand vintage");
+                continue;
+            }
+            saveDemand(List.of(row),now);added++;
+        }
+        return added;
+    }
     public List<String> ranking(Instant origin,String mode) {
         return jdbc.query("SELECT evidence FROM baseline_validation WHERE mode=? AND usable_from<=? ORDER BY usable_from DESC,id DESC LIMIT 1",
                 (r,n)->List.of(mapper.convertValue(mapper.readTree(r.getString(1)).path("ranking"),String[].class)),mode,ts(origin))

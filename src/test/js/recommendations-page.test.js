@@ -27,7 +27,7 @@ function load(nodes) {
     window: { location: { search: '?household=4', hash: '' } }, URLSearchParams });
   ['wattly.js', 'recommendations.js', 'recommendations-page.js'].forEach((file) =>
     vm.runInContext(fs.readFileSync(path.join(staticDir, file), 'utf8'), context));
-  return { Wattly: vm.runInContext('Wattly', context), Page: vm.runInContext('WattlyRecommendationsPage', context) };
+  return { context, Wattly: vm.runInContext('Wattly', context), Page: vm.runInContext('WattlyRecommendationsPage', context) };
 }
 
 const soon = (minutes) => new Date(Date.now() + minutes * 60000).toISOString();
@@ -35,11 +35,114 @@ const rec = (id, extra) => ({ id, kind: 'SHIFT_START', applianceName: 'Dryer', r
   suggestedStart: soon(300), usualStart: soon(600), deadline: soon(300), status: 'ACTIVE', runMinutes: 60,
   forecastSource: 'DEMO_FORECAST', ...extra });
 
+test('automatic refresh starts once, every minute and when returning to the page', async () => {
+  const { context, Page } = load();
+  const intervals = [], listeners = [], tabs = [];
+  context.window.setInterval = (callback, milliseconds) => intervals.push({ callback, milliseconds });
+  context.document.addEventListener = (event, callback) => listeners.push({ event, callback });
+  context.document.querySelectorAll = () => [];
+  Page.loadTab = async (tab) => tabs.push(tab);
+  Page.startAutoRefresh();
+  Page.startAutoRefresh();
+  assert.equal(intervals.length, 1);
+  assert.equal(intervals[0].milliseconds, 60000);
+  assert.equal(listeners[0].event, 'visibilitychange');
+  await intervals[0].callback();
+  await listeners[0].callback();
+  assert.deepEqual(tabs, ['ACTIVE', 'ACTIVE']);
+});
+
+test('automatic refresh preserves editing and pending decisions and avoids overlapping requests', async () => {
+  const { context, Page } = load();
+  const doc = context.document;
+  doc.querySelectorAll = () => [];
+  let calls = 0, release;
+  Page.loadTab = () => { calls++; return new Promise((resolve) => { release = resolve; }); };
+  doc.hidden = true;
+  await Page.refreshAutomatically();
+  doc.hidden = false;
+  doc.activeElement = { matches: () => true };
+  await Page.refreshAutomatically();
+  doc.activeElement = null;
+  doc.querySelector = () => ({ disabled: true });
+  await Page.refreshAutomatically();
+  doc.querySelector = () => null;
+  doc.querySelectorAll = () => [{ value: '12:30', defaultValue: '13:00' }];
+  await Page.refreshAutomatically();
+  assert.equal(calls, 0);
+  doc.querySelectorAll = () => [];
+  const pending = Page.refreshAutomatically();
+  await Page.refreshAutomatically();
+  assert.equal(calls, 1);
+  release(); await pending;
+});
+
 test('each tab asks the API for its own status', () => {
   const { Page } = load();
 
   assert.equal(Page.tabUrl(4, 'ACCEPTED'), '/api/v1/households/4/recommendations?status=ACCEPTED');
   assert.deepEqual([...Page.TABS], ['ACTIVE', 'ACCEPTED', 'DISMISSED', 'HISTORY']);
+});
+
+for (const stage of ['list', 'chart']) {
+  for (const busy of ['focused input', 'unsaved time', 'pending decision']) {
+    test('automatic refresh preserves ' + busy + ' begun during the ' + stage + ' request', async () => {
+      const nodes = {};
+      ['recommendation-list', 'recommendation-note', 'recommendation-source', 'recommendation-count',
+        'recommendation-savings', 'snoozed-block', 'recommendation-snoozed', 'rec-tabpanel', 'realised-block',
+        'tab-active', 'tab-accepted', 'tab-dismissed', 'tab-history'].forEach(id => {
+          nodes[id] = { textContent: '', innerHTML: '', hidden: false, setAttribute() {} };
+        });
+      const { context, Wattly, Page } = load(nodes);
+      context.document.querySelectorAll = () => [];
+      nodes['recommendation-list'].innerHTML = '<div>Original card and custom start</div>';
+      nodes['recommendation-note'].textContent = 'Original note';
+      const response = { ok: true, data: { recommendations: [], message: 'New results' } };
+      let release;
+      const deferred = new Promise(resolve => { release = resolve; });
+      Wattly.api = stage === 'list' ? () => deferred : async () => response;
+      Page.forecastPoints = stage === 'chart' ? () => deferred : async () => ({});
+      Page.loadAlerts = async () => {};
+
+      const pending = Page.refreshAutomatically();
+      await Promise.resolve();
+      if (busy === 'focused input') context.document.activeElement = { matches: () => true };
+      if (busy === 'unsaved time') context.document.querySelectorAll = () => [{ value: '12:30', defaultValue: '13:00' }];
+      if (busy === 'pending decision') context.document.querySelector = () => ({ disabled: true });
+      release(stage === 'list' ? response : {});
+      await pending;
+      assert.equal(nodes['recommendation-list'].innerHTML, '<div>Original card and custom start</div>');
+      assert.equal(nodes['recommendation-note'].textContent, 'Original note');
+
+      // Deferring a render must not permanently stop subsequent idle refreshes.
+      context.document.activeElement = null;
+      context.document.querySelector = () => null;
+      context.document.querySelectorAll = () => [];
+      Wattly.api = async () => response;
+      Page.forecastPoints = async () => ({});
+      await Page.refreshAutomatically();
+      assert.equal(nodes['recommendation-list'].innerHTML, '');
+      assert.match(nodes['recommendation-note'].textContent, /New results/);
+    });
+  }
+}
+
+test('an automatic error response cannot erase an edit begun while waiting', async () => {
+  const nodes = {};
+  ['recommendation-list', 'recommendation-note', 'recommendation-source', 'snoozed-block', 'rec-tabpanel',
+    'realised-block', 'tab-active', 'tab-accepted', 'tab-dismissed', 'tab-history'].forEach(id => {
+      nodes[id] = { textContent: '', innerHTML: '', hidden: false, setAttribute() {} };
+    });
+  const { context, Wattly, Page } = load(nodes);
+  context.document.querySelectorAll = () => [];
+  nodes['recommendation-list'].innerHTML = 'Unsaved custom start';
+  let release;
+  Wattly.api = () => new Promise(resolve => { release = resolve; });
+  const pending = Page.refreshAutomatically();
+  context.document.activeElement = { matches: () => true };
+  release({ ok: false, data: { detail: 'Temporary error' } });
+  await pending;
+  assert.equal(nodes['recommendation-list'].innerHTML, 'Unsaved custom start');
 });
 
 test('the Active tab separates snoozed suggestions until their time comes', () => {
@@ -113,6 +216,24 @@ test('loading the Active tab shows open cards with charts and the snoozed ones r
   assert.equal(nodes['recommendation-count'].textContent, '1');
   assert.equal(nodes['tab-active'].attrs['aria-selected'], 'true');
   assert.equal(nodes['tab-history'].attrs['aria-selected'], 'false');
+});
+
+test('an older refresh cannot overwrite newer advice on the same tab', async () => {
+  const nodes = {};
+  ['recommendation-list', 'recommendation-note', 'recommendation-source', 'recommendation-count',
+    'recommendation-savings', 'snoozed-block', 'recommendation-snoozed', 'rec-tabpanel', 'realised-block',
+    'tab-active', 'tab-accepted', 'tab-dismissed', 'tab-history'].forEach((id) => {
+      nodes[id] = { textContent: '', innerHTML: '', hidden: false, setAttribute() {} };
+    });
+  const { Wattly, Page } = load(nodes);
+  let resolveOlder;
+  Wattly.api = () => new Promise((resolve) => { resolveOlder = resolve; });
+  const older = Page.loadTab('ACTIVE');
+  Wattly.api = async () => ({ ok: true, data: { recommendations: [], message: 'Newer forecast advice' } });
+  await Page.loadTab('ACTIVE');
+  resolveOlder({ ok: true, data: { recommendations: [], message: 'Older forecast advice' } });
+  await older;
+  assert.match(nodes['recommendation-note'].textContent, /Newer forecast advice/);
 });
 
 test('a decided tab shows read-only cards without charts or buttons', async () => {

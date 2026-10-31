@@ -7,6 +7,7 @@ case ${1:-status} in
     env_file=$(realpath "${2:?Supply a private weekly environment file}")
     if [[ "$1" == render ]]; then unit_dir=${3:?Supply the staging directory for unit verification}; fi
     [[ $(stat -c %a "$env_file") == 600 ]] || { echo 'Use chmod 600 on the weekly environment file' >&2; exit 2; }
+    if [[ "$1" == install ]]; then bash "$repo/scripts/forecast-weekly-preflight.sh" "$env_file"; fi
     set -a; source "$env_file"; set +a
     : "${WATTLY_ML_HOME:?Set the runtime directory in the environment file}"
     mkdir -p "$unit_dir" "$WATTLY_ML_HOME"

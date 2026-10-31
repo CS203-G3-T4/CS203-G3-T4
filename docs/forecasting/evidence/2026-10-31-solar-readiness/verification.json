@@ -1,0 +1,64 @@
+{
+  "purpose": "Functional/input-availability verification, not new accuracy or savings evidence",
+  "source": {
+    "checkedAt": "2026-10-30T18:49:33.420396+00:00",
+    "snapshotSha256": "530962e5a165475ef2c5ff87513f1d318caceac4b4b0afb0850ff48476ea979b",
+    "newAdapterAccepted": true,
+    "requiredPeriods": 7,
+    "allRequiredValuesMatchActiveFrozenRecipe": true,
+    "previousStrictAdapter": {
+      "accepted": false,
+      "reason": "Conflicting overlapping EMC solar values"
+    },
+    "frozenModelSha256": "e3d96c2dfb4a49a7698e3f9898bac0a896d90bedec8bd0543e637c116c2fe51d",
+    "productionPointerExists": false,
+    "liveSourceEdited": false,
+    "liveModelEdited": false,
+    "rawSourceArchive": "Private, unchanged captured bytes; no dataset committed"
+  },
+  "isolatedApp": {
+    "status": "ISOLATED_APP_SMOKE_PASSED",
+    "checkedAt": "2026-10-30T18:48:32.616224+00:00",
+    "scope": "Actual PR48 app and patched Python with current PR40 migration SQL; test-only ADMIN controls outside production source. Not a merge/deployment of PR40 feature code.",
+    "sourceSnapshotSha256": "530962e5a165475ef2c5ff87513f1d318caceac4b4b0afb0850ff48476ea979b",
+    "validPublicSourceServes24AIPoints": true,
+    "unusedHistoryChangesLeaveAll24PointsIdentical": true,
+    "requiredConflictUsesActionableB3": true,
+    "cleanSourceRecoveryServesAI": true,
+    "automaticAdviceRefreshed": true,
+    "trialMetadataPreserved": true,
+    "previouslyScoredOutcomesPreserved": true,
+    "anonymousAndResidentAdminDenied": true,
+    "residentCrossHouseholdDenied": true,
+    "residentAndForecastPagesAccessible": true,
+    "liveServicePidsUnchanged": true,
+    "privateTestMutations": "Unused-history corruption, required-conflict corruption and recovery metadata exist only in the smoke snapshot; no live source or model edit."
+  },
+  "databaseRehearsal": {
+    "status": "REHEARSAL_PASSED_NOT_DEPLOYED",
+    "checkedAt": "2026-10-30T18:48:33.002788+00:00",
+    "actualReplayHead": "0c924594360d111e36f502707558d36da1adbefb",
+    "replaySqlSha256": "ebaec350574a5d0c8e00c1b863ae17406c563cafa96f20d9ce15351435973ff1",
+    "oldTrialSqlExactlyEqualsNewV24": true,
+    "checks": [
+      "REHEARSAL_ORIGINAL_TABLES_PRESERVED=31",
+      "REHEARSAL_TRIAL_METADATA_PRESERVED=true",
+      "REHEARSAL_REPLAY_V23_APPLIED_ONCE=true",
+      "REHEARSAL_V24_NOT_REEXECUTED=true",
+      "REHEARSAL_FLYWAY_VALIDATE_AND_TWO_NOOP_MIGRATIONS=true",
+      "REHEARSAL_ORDER=old-trial-renumbered-24_then_actual-replay-23",
+      "REHEARSAL_ROLLBACK_RESTORE_VALID=true"
+    ],
+    "reconciliationScope": "Restored copy only; controlled history reconciliation, never ordinary repair or blind DDL replay",
+    "liveHistoryUnchanged": true,
+    "liveTrialMetadataUnchanged": true,
+    "frozenModelHashUnchanged": true,
+    "disposableDatabasesRemoved": true
+  },
+  "focusedPythonTestsPassed": 47,
+  "fullSuites": "See exact-head PR CI; the changed implementation was not attributed earlier unchanged-head suite counts",
+  "modelRetrained": false,
+  "liveDeployed": false,
+  "weeklyTimerActivated": false,
+  "humanLabelsIncluded": false
+}

@@ -1,0 +1,77 @@
+{
+  "runtime": {
+    "available": true,
+    "actionable": true,
+    "model": "solar-183d-20261026-local-v1",
+    "asOf": "2026-10-30T04:27:32.237683Z",
+    "qualityFlags": [
+      "PRICE_CALENDAR_HOLIDAY_SOLAR",
+      "SOLAR_PUBLIC_PROVISIONAL_INPUTS",
+      "COMPLETED_PERIOD_PRICE_INPUTS",
+      "RETROSPECTIVE_TRAINING",
+      "EXPERIMENTAL_AI"
+    ]
+  },
+  "data": {
+    "rows": 385,
+    "providerVintages": 16,
+    "firstActualReceipt": "2026-10-30T04:33:36.216+08:00",
+    "lastActualReceipt": "2026-10-30T12:03:28.834+08:00",
+    "latestRun": {
+      "id": "e29a745403fa69a7d7c82be3e73a2867f6284700b184a396e34a7e20616f5a7e",
+      "asOf": "2026-10-30T12:27:32.237683+08:00",
+      "model": "solar-183d-20261026-local-v1",
+      "demandInputs": 24,
+      "solarPeriods": 7,
+      "solarSnapshot": "0667348ae0080035ea8b565a2506d51117e110646748e4d442986ae03eff6e90"
+    },
+    "trial": {
+      "id": "solar-live-20261030-v1",
+      "start": "2026-10-30T11:48:01.044093+08:00",
+      "end": "2026-11-27T11:48:01.044093+08:00",
+      "modelSha": "e3d96c2dfb4a49a7698e3f9898bac0a896d90bedec8bd0543e637c116c2fe51d"
+    },
+    "asOf": "2026-10-30T04:28:43.008400+00:00",
+    "receiptGroupsWithAll12hTargetsMature": 0,
+    "demandModelAccuracyClaim": false,
+    "reason": "No complete 12-hour outcome window yet; a fresh demand-aware accuracy comparison cannot be fitted and evaluated honestly today from these vintages.",
+    "frozenModelHashUnchanged": true
+  },
+  "featureChecks": {
+    "asOf": "2026-10-30T04:27:32.237683+00:00",
+    "capturedDemandHorizons": 24,
+    "demandFeatureHorizonsWithValues": 24,
+    "firstTargetDemandMw": 6567,
+    "lastTargetDemandMw": 7115,
+    "frozenSolarPredictionsUnchanged": true,
+    "checkedPredictions": 24,
+    "demandAwareHttpModelTest": "SYNTHETIC_PLUMBING_ONLY",
+    "realDemandModelAccuracyEvidence": false
+  },
+  "archiveAudit": {
+    "acceptedSnapshots": 91,
+    "excluded": [
+      {
+        "file": "8b85d780db6128321863ace7763c669b68da20251e4383b6c8aee080f559cb8f.json",
+        "reason": "ARCHIVE_FILENAME_HASH_MISMATCH"
+      },
+      {
+        "file": "f83bc1c8ece92f5810957b0528f7f9a0a902fe8d921507e91d7c984073354ca1.json",
+        "reason": "ARCHIVE_FILENAME_HASH_MISMATCH"
+      }
+    ]
+  },
+  "javaPostgresTests": 381,
+  "focusedSolarTests": 16,
+  "browserChecks": {
+    "status": "PASS",
+    "modelVersion": "solar-183d-20261026-local-v1",
+    "asOf": "2026-10-30T04:30:08.698574Z",
+    "actionable": true,
+    "rows": 24,
+    "automaticRecommendationSource": "F3_FORECAST",
+    "manualGenerateRequests": 0,
+    "pageErrors": [],
+    "mobileOverflow": false
+  }
+}
