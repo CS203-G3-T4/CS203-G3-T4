@@ -51,6 +51,15 @@ class RecommendationServiceTest {
             feed, Clock.fixed(now, SINGAPORE), new BigDecimal("0.05"), 3, false);
 
     @Test
+    void replayResetLocksAndClearsOnlyTheSelectedHousehold() {
+        service.resetForReplay(4242L);
+
+        org.mockito.InOrder order = org.mockito.Mockito.inOrder(repository);
+        order.verify(repository).lockHousehold(4242L);
+        order.verify(repository).resetForReplay(4242L);
+    }
+
+    @Test
     void generateSavesAnActiveShiftSuggestionWithItsSavingAndReason() {
         when(households.household(1L)).thenReturn(household(true));
         when(households.flexibleAppliances(1L)).thenReturn(List.of(dryer()));

@@ -69,6 +69,18 @@ class AdminApiAuthorizationTest {
     }
 
     @Test
+    void demoClockPageIsAdminOnly() throws Exception {
+        mvc.perform(get("/admin-demo.html").accept(org.springframework.http.MediaType.TEXT_HTML))
+                .andExpect(status().is3xxRedirection());
+        mvc.perform(get("/admin-demo.html"))
+                .andExpect(status().isForbidden());
+        mvc.perform(get("/admin-demo.html").with(user("resident").roles("RESIDENT")))
+                .andExpect(status().isForbidden());
+        mvc.perform(get("/admin-demo.html").with(user("admin").roles("ADMIN")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void residentRequestsToAdminAndDemoApisReceiveForbidden() throws Exception {
         mvc.perform(get("/api/v1/admin").with(user("resident").roles("RESIDENT")))
                 .andExpect(status().isForbidden());

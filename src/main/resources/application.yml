@@ -73,7 +73,7 @@ forecast:
 # F4 (CSDT4-19/20). Why demo is the default: docs/f4-recommendations.md
 recommendation:
   forecast-source: ${RECOMMENDATION_FORECAST_SOURCE:demo}
-  demo-forecast-file: ${RECOMMENDATION_DEMO_FORECAST_FILE:data/replay/2026-09-26_data(main_day).csv}
+  demo-replay-day: ${RECOMMENDATION_DEMO_REPLAY_DAY:2026-09-26}
   minimum-saving-sgd: ${RECOMMENDATION_MINIMUM_SAVING_SGD:0.05}
   # CSDT4-37: at most this many open suggestions per household, best saving first.
   max-active: ${RECOMMENDATION_MAX_ACTIVE:3}
@@ -85,3 +85,7 @@ recommendation:
   # Mark spikes in the demo forecast with F3's rule (vs the 28 days before the replay day), so
   # "avoid this time" warnings can be shown (CSDT4-38). Needs that history in the database.
   demo-spikes: ${RECOMMENDATION_DEMO_SPIKES:true}
+
+demo:
+  replay:
+    files: ${DEMO_REPLAY_FILES:data/replay/2026-09-25_data(backup_day).csv,data/replay/2026-09-26_data(main_day).csv}

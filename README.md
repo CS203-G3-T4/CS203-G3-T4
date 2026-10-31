@@ -75,9 +75,9 @@ the existing schema and initialize new databases.
 - `GET /api/v1/market-prices?from=2026-09-23T00:00:00Z&to=2026-09-24T00:00:00Z` returns historical intervals. The range is at most 31 days.
 - `GET /api/v1/market-prices/feed-status` reports the most recent poll result (`SUCCESS`, `STALE_SOURCE`, `FAILURE`, or `NEVER_POLLED`).
 - `GET /api/v1/admin/feed-status` (admin) reports NEMS feed health: last poll, last successful sync, consecutive failed polls, uptime % and fallback count for the current month, the open incident and the 10 most recent incidents.
+- `GET /api/v1/admin/feed-outage` and `PUT /api/v1/admin/feed-outage` with `{"enabled": true|false}` (admin, CSRF token required) turn a simulated NEMS outage on or off for demos and tests (CSDT4-26). While it is on, every poll fails without calling NEMS, so the latest price is served as `STALE`. Each change triggers one poll immediately, so the dashboard's stale banner appears or clears on its next refresh, without a restart. While it is on, no new recommendations are made either, even from the demo forecast. The switch is held in memory and is always off after a restart.
 - `GET /api/v1/admin/overview` (admin) reports households monitored, price-linked households, realised savings this month and the forecast MAE, together with the household summary rows.
 - `GET /api/v1/admin/households/summary` (admin) returns each household's plan, realised savings this month, budget status and simulated flag.
-- `GET /api/v1/admin/feed-outage` and `PUT /api/v1/admin/feed-outage` with `{"enabled": true|false}` (admin, CSRF token required) turn a simulated NEMS outage on or off for demos and tests (CSDT4-26). While it is on, every poll fails without calling NEMS, so the latest price is served as `STALE`. Each change triggers one poll immediately, so the dashboard's stale banner appears or clears on its next refresh, without a restart. While it is on, no new recommendations are made either, even from the demo forecast. The switch is held in memory and is always off after a restart.
 - `GET /actuator/health` reports application and database health.
 - `/swagger-ui.html` displays the API documentation; `/v3/api-docs` returns the OpenAPI document.
 
@@ -185,8 +185,9 @@ for Singapore local date/time, `LocalDate.now(clock)` for Singapore dates, and
 instants; do not replace them with local date/time values.
 
 Never call a no-argument `now()`, `System.currentTimeMillis()`, or create another
-system Clock in business code. `TimeConfig` is the single source of system time,
-so a future DemoClock can replace it without changing services. Tests should
+system Clock in business code. `TimeConfig` provides the shared `DemoClock` as a
+`Clock`: it uses real Singapore time normally and a controllable instant when
+demo mode is started. Existing services continue to inject `Clock`. Tests should
 inject `Clock.fixed(instant, ZoneId.of("Asia/Singapore"))` when time affects behavior.
 
 The main-code review on 26 September 2026 found that the price and weather
@@ -194,6 +195,27 @@ services use the injected Clock and no direct system-time calls remain outside
 `TimeConfig`. The [PR checklist](.github/pull_request_template.md) applies this
 rule to future changes. Feature-lead acknowledgements are tracked in the
 [CSDT4-21 acceptance checklist](docs/jira-alignment.md#shared-clock-adoption-csdt4-21).
+
+Admins can control this clock at `/admin-demo.html`. Starting a replay loads the
+selected date from the configured replay catalog; advancing moves simulated time
+in half-hour periods and refreshes the forecast and dedicated replay household's
+suggestions. Starting a new replay clears only that dedicated household's prior
+recommendations and decisions so the same demo sequence can be repeated.
+During replay, current/history prices, price-linked spend, realised
+savings, and recommendation confidence use replay prices only up to simulated
+now. Live price ingestion continues on wall-clock time and writes to the normal
+market tables. Stopping demo mode immediately returns clock-based features to
+real Singapore time.
+
+The demo clock is shared by business services. Therefore, any household,
+appliance, budget, or weather record created or updated during replay receives
+the simulated timestamp; those existing timestamps are not rewritten when the
+demo stops. Automatic recommendation recomputation is paused during replay, and
+the forecast page reads the replay forecast while demo mode is active. Replay
+forecast runs are marked as demo data and excluded from normal forecast accuracy
+and baseline ranking; after demo mode stops, normal forecast runs are shown
+again. The replay refresh itself updates only the dedicated replay household's
+suggestions.
 
 ## F3: forecaster and baseline evaluator
 
@@ -281,3 +303,19 @@ Forecasting review updates: [V15 database compatibility](docs/forecasting/migrat
 [verified research archives](docs/forecasting/artifacts.md). Check migration lineage
 before upgrading any persistent database; legacy forecast V12/V13 is not automatically
 rewritten or repaired.
+
+### Replay isolation and controls (31 October review)
+
+Run demos on a separate application instance **and a separate database** from the
+prospective live trial. The demo clock is global to the instance: it changes the
+time seen by residents, pauses ordinary recommendations and serves historical
+actual prices as a replay. These are not AI predictions or zero-error evidence.
+Never run a replay on the instance recording the AI-versus-B3 trial.
+
+Start, advance and stop are serialized. A transition stages the clock for the
+transaction's thread and publishes it to other threads only after the replay
+service commits. A failed refresh or commit leaves the published clock unchanged.
+Advance rejects crossing the selected Singapore calendar day with HTTP 400; start
+another day explicitly. Missing server setup is a server error, not a bad request.
+The presenter has one Stop control; restart using the date/time form. Resident
+pages stop checking the admin-only demo state after their first 401/403 response.
