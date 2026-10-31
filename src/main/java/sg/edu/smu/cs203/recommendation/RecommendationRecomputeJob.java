@@ -8,6 +8,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import sg.edu.smu.cs203.common.DemoClock;
 import sg.edu.smu.cs203.household.HouseholdChanged;
 import sg.edu.smu.cs203.household.HouseholdDirectory;
 import sg.edu.smu.cs203.household.HouseholdNotFoundException;
@@ -20,10 +21,11 @@ import sg.edu.smu.cs203.market.price.MarketObservationSaved;
  * - on startup, so a fresh app has suggestions straight away
  * - when F1 saves a new price (MarketObservationSaved)
  * - when a household or one of its appliances changes (HouseholdChanged, from F2)
- * - every 30 minutes, which also picks up a new F3 forecast and moves the demo forecast along
+ * - every 30 minutes, which also picks up a new F3 forecast
  *
- * Only real households are recomputed; the 100 simulated households are left alone. One failing
- * household never stops the others, and a failure never breaks the request or poll that caused it.
+ * Only real households are recomputed; the 100 simulated households are left alone. Automatic
+ * recomputation is paused during replay so real residents are not updated at simulated time.
+ * One failing household never stops the others, and a failure never breaks the request or poll.
  */
 @Component
 public class RecommendationRecomputeJob {
@@ -32,12 +34,15 @@ public class RecommendationRecomputeJob {
 
     private final RecommendationService recommendations;
     private final HouseholdDirectory households;
+    private final DemoClock clock;
     private final boolean enabled;
 
     public RecommendationRecomputeJob(RecommendationService recommendations, HouseholdDirectory households,
+                                      DemoClock clock,
                                       @Value("${recommendation.auto-recompute:true}") boolean enabled) {
         this.recommendations = recommendations;
         this.households = households;
+        this.clock = clock;
         this.enabled = enabled;
     }
 
@@ -63,7 +68,7 @@ public class RecommendationRecomputeJob {
 
     /** Returns how many households were recomputed. */
     public int recomputeAll(String why) {
-        if (!enabled) {
+        if (!enabled || clock.isRunning()) {
             return 0;
         }
         int done = 0;
@@ -76,7 +81,7 @@ public class RecommendationRecomputeJob {
     }
 
     boolean recompute(long householdId, String why) {
-        if (!enabled) {
+        if (!enabled || clock.isRunning()) {
             return false;
         }
         try {

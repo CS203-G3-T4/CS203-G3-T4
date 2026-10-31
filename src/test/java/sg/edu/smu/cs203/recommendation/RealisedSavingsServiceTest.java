@@ -17,20 +17,19 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
+import sg.edu.smu.cs203.common.DemoClock;
 import sg.edu.smu.cs203.household.DwellingType;
 import sg.edu.smu.cs203.household.HouseholdDirectory;
 import sg.edu.smu.cs203.household.HouseholdResponse;
 import sg.edu.smu.cs203.household.PlanType;
 import sg.edu.smu.cs203.household.spend.TariffComponent.Unit;
 import sg.edu.smu.cs203.household.spend.TariffRepository;
-import sg.edu.smu.cs203.market.price.MarketHistoryRepository;
-import sg.edu.smu.cs203.market.price.MarketRevision;
+import sg.edu.smu.cs203.market.price.AsOfMarketPrices;
 
 /** CSDT4-53: this week and this month come from a fixed Clock; actual prices are known and fixed. */
 class RealisedSavingsServiceTest {
@@ -40,7 +39,7 @@ class RealisedSavingsServiceTest {
 
     private final RecommendationRepository recommendations = mock(RecommendationRepository.class);
     private final HouseholdDirectory households = mock(HouseholdDirectory.class);
-    private final MarketHistoryRepository prices = mock(MarketHistoryRepository.class);
+    private final AsOfMarketPrices prices = mock(AsOfMarketPrices.class);
     private final TariffRepository tariffs = mock(TariffRepository.class);
     private final RealisedSavingsService service = new RealisedSavingsService(recommendations, households, prices,
             tariffs, Clock.fixed(NOW, ZoneId.of("Asia/Singapore")));
@@ -58,9 +57,11 @@ class RealisedSavingsServiceTest {
         Instant monday = sg("2026-10-12T00:00");
         Instant nextMonday = sg("2026-10-19T00:00");
         when(recommendations.findAcceptedRuns(1L, monday, nextMonday)).thenReturn(List.of(yesterday, tonight));
-        when(prices.asOf(NOW, sg("2026-10-14T13:00"))).thenReturn(List.of(
-                price("2026-10-14T13:00", "120"), price("2026-10-14T13:30", "100"),
-                price("2026-10-14T19:00", "300"), price("2026-10-14T19:30", "260")));
+        when(prices.prices(sg("2026-10-14T13:00"), NOW)).thenReturn(java.util.Map.of(
+                sg("2026-10-14T13:00"), new BigDecimal("120"),
+                sg("2026-10-14T13:30"), new BigDecimal("100"),
+                sg("2026-10-14T19:00"), new BigDecimal("300"),
+                sg("2026-10-14T19:30"), new BigDecimal("260")));
         when(tariffs.forPeriod(PlanType.PRICE_LINKED, LocalDate.of(2026, 10, 14), LocalDate.of(2026, 10, 15)))
                 .thenReturn(List.of(charge("NETWORK", Unit.SGD_PER_KWH, "0.0500", null, null),
                         charge("EVENING", Unit.SGD_PER_KWH, "0.0200", "17:00", "23:00"),
@@ -103,7 +104,27 @@ class RealisedSavingsServiceTest {
         assertThat(month.items()).isEmpty();
         assertThat(month.notes()).containsExactly(RealisedSavingsService.FOLLOWED_NOTE,
                 RealisedSavingsService.PRICE_LINKED_NOTE);
-        verify(prices, never()).asOf(any(), any());
+        verify(prices, never()).prices(any(), any());
+    }
+
+    @Test
+    void realisedSavingsUsesReplayPricesWhileTheDemoClockIsRunning() {
+        priceLinked();
+        Instant monday = sg("2026-10-12T00:00");
+        Instant nextMonday = sg("2026-10-19T00:00");
+        when(recommendations.findAcceptedRuns(1L, monday, nextMonday)).thenReturn(List.of(yesterday));
+        when(prices.prices(sg("2026-10-14T13:00"), NOW)).thenReturn(java.util.Map.of(
+                sg("2026-10-14T13:00"), new BigDecimal("120"),
+                sg("2026-10-14T13:30"), new BigDecimal("100"),
+                sg("2026-10-14T19:00"), new BigDecimal("300"),
+                sg("2026-10-14T19:30"), new BigDecimal("260")));
+        DemoClock clock = new DemoClock(Clock.fixed(NOW, ZoneId.of("Asia/Singapore")));
+        clock.startAt(NOW);
+        RealisedSavingsService replayService = new RealisedSavingsService(recommendations, households, prices,
+                tariffs, clock);
+        replayService.savings(1L, SavingsPeriod.WEEK);
+
+        verify(prices).prices(sg("2026-10-14T13:00"), NOW);
     }
 
     @Test
@@ -117,16 +138,18 @@ class RealisedSavingsServiceTest {
         assertThat(week.totalSavedSgd()).isEqualByComparingTo("0.00");
         assertThat(week.items().getFirst().usualCostSgd()).isEqualByComparingTo("0.59");
         assertThat(week.notes()).contains(RealisedSavingsService.FIXED_RATE_NOTE);
-        verify(prices, never()).asOf(any(), any());
+        verify(prices, never()).prices(any(), any());
     }
 
     @Test
     void cardsGetTheRealisedSavingOnlyOnceItIsKnown() {
         priceLinked();
         when(recommendations.findAcceptedRuns(1L, List.of(5L, 6L))).thenReturn(List.of(yesterday, tonight));
-        when(prices.asOf(eq(NOW), any())).thenReturn(new ArrayList<>(List.of(
-                price("2026-10-14T13:00", "120"), price("2026-10-14T13:30", "100"),
-                price("2026-10-14T19:00", "300"), price("2026-10-14T19:30", "260"))));
+        when(prices.prices(any(), eq(NOW))).thenReturn(java.util.Map.of(
+                sg("2026-10-14T13:00"), new BigDecimal("120"),
+                sg("2026-10-14T13:30"), new BigDecimal("100"),
+                sg("2026-10-14T19:00"), new BigDecimal("300"),
+                sg("2026-10-14T19:30"), new BigDecimal("260")));
         when(tariffs.forPeriod(any(), any(), any())).thenReturn(List.of());
 
         Map<Long, BigDecimal> saved = service.realisedSavings(1L, List.of(5L, 6L));
@@ -154,9 +177,4 @@ class RealisedSavingsServiceTest {
                 null, exposed, exposed ? "Price-linked (USEP)" : "Not exposed (fixed rate)", false, null);
     }
 
-    private static MarketRevision price(String localPeriod, String usep) {
-        Instant period = sg(localPeriod);
-        return new MarketRevision(1L, "EMC", period, period, period, new BigDecimal(usep), null, null, "FINAL",
-                "VERIFIED");
-    }
 }

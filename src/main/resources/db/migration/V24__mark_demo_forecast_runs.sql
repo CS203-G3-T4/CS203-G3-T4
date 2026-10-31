@@ -1,0 +1,2 @@
+ALTER TABLE forecast_run
+    ADD COLUMN is_demo BOOLEAN NOT NULL DEFAULT FALSE;

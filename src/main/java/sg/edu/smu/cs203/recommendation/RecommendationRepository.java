@@ -117,6 +117,11 @@ public class RecommendationRepository {
                 status.message());
     }
 
+    public void resetForReplay(long householdId) {
+        jdbc.update("DELETE FROM recommendation WHERE household_id = ?", householdId);
+        jdbc.update("DELETE FROM recommendation_refresh WHERE household_id = ?", householdId);
+    }
+
     public Optional<RefreshStatus> findRefresh(long householdId) {
         return jdbc.query("""
                 SELECT refreshed_at, forecast_source, forecast_model, message
