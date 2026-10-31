@@ -1,4 +1,4 @@
-> 1 November follow-up: the [paired price-only savings and safety study](price-only-safety-2026-11-01.md) now provides the current-recipe results. The activation-time claims below are historical; no later policy has been adopted.
+> 1 November follow-up: the [current F3 report](../final-report-f3.md) records the completed price-only savings and safety comparison. The activation-time claims below remain historical; no later policy has been adopted.
 
 # Local price-only AI and separate comparison — 31 October 2026
 
