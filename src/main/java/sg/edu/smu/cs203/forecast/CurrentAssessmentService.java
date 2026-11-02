@@ -67,39 +67,33 @@ public class CurrentAssessmentService {
             if (replayPrices == null) {
                 throw new IllegalStateException("Replay price service is required while demo mode is active");
             }
-            var replay = replayPrices.latest(asOf);
-            if (replay.isEmpty()) {
-                return new Assessment(false,true,null,null,null,null,null,"UNAVAILABLE",0,28,"NO_PRICE");
-            }
-            var price = replay.get();
-            Reference ref=reference(rows,price.intervalStart(),asOf);
-            if (!ref.available()) {
-                return new Assessment(false,false,price.usepSgdPerMwh(),null,null,null,null,
-                        "UNAVAILABLE",ref.sampleCount(),28,"INSUFFICIENT_REFERENCE_HISTORY");
-            }
-            BigDecimal delta=price.usepSgdPerMwh().subtract(ref.typical());
-            BigDecimal pct=ref.typical().signum()>0 ? delta.multiply(BigDecimal.valueOf(100))
-                    .divide(ref.typical(),4,RoundingMode.HALF_UP) : null;
-            String classification=price.usepSgdPerMwh().compareTo(ref.threshold())>0 ? "SPIKE"
-                    : delta.compareTo(ref.spread().multiply(band))>0 ? "EXPENSIVE"
-                    : delta.compareTo(ref.spread().multiply(band).negate())<0 ? "CHEAP" : "NORMAL";
-            return new Assessment(true,false,price.usepSgdPerMwh(),ref.typical(),delta,pct,
-                    ref.threshold(),classification,ref.sampleCount(),28,null);
+            var replay=replayPrices.latest(asOf);
+            if (replay.isEmpty()) return unavailable(null,null,true,0,"NO_PRICE");
+            var price=replay.get();
+            return assess(rows,price.intervalStart(),price.usepSgdPerMwh(),asOf,false);
         }
-        if (rows.isEmpty()) return new Assessment(false,true,null,null,null,null,null,"UNAVAILABLE",0,28,"NO_PRICE");
+        if (rows.isEmpty()) return unavailable(null,null,true,0,"NO_PRICE");
         MarketRevision current=rows.getLast();
-        boolean stale=forecasts.stale(rows,asOf);
-        Reference ref=reference(rows,current.periodStart(),asOf);
-        if (!ref.available()) return new Assessment(false,stale,current.usep(),null,null,null,null,
-                "UNAVAILABLE",ref.sampleCount(),28,"INSUFFICIENT_REFERENCE_HISTORY");
-        BigDecimal delta=current.usep().subtract(ref.typical());
+        return assess(rows,current.periodStart(),current.usep(),asOf,forecasts.stale(rows,asOf));
+    }
+    private Assessment assess(List<MarketRevision> rows,Instant period,BigDecimal price,Instant asOf,boolean stale) {
+        // Preserve the recorded price, but never attach a confident label to
+        // stale/unverified inputs. The reference rule itself remains unchanged.
+        if (stale) return unavailable(period,price,true,0,"STALE_PRICE");
+        if (!forecasts.mappingVerified(rows)) return unavailable(period,price,false,0,"PERIOD_MAPPING_UNVERIFIED");
+        Reference ref=reference(rows,period,asOf);
+        if (!ref.available()) return unavailable(period,price,false,ref.sampleCount(),"INSUFFICIENT_REFERENCE_HISTORY");
+        BigDecimal delta=price.subtract(ref.typical());
         BigDecimal pct=ref.typical().signum()>0 ? delta.multiply(BigDecimal.valueOf(100))
                 .divide(ref.typical(),4,RoundingMode.HALF_UP) : null;
-        String classification=current.usep().compareTo(ref.threshold())>0 ? "SPIKE"
+        String classification=price.compareTo(ref.threshold())>0 ? "SPIKE"
                 : delta.compareTo(ref.spread().multiply(band))>0 ? "EXPENSIVE"
                 : delta.compareTo(ref.spread().multiply(band).negate())<0 ? "CHEAP" : "NORMAL";
-        return new Assessment(true,stale,current.usep(),ref.typical(),delta,pct,ref.threshold(),classification,
-                ref.sampleCount(),28,forecasts.mappingVerified(rows) ? null : "PERIOD_MAPPING_UNVERIFIED");
+        return new Assessment(true,false,price,ref.typical(),delta,pct,ref.threshold(),classification,
+                ref.sampleCount(),28,null,period);
+    }
+    private static Assessment unavailable(Instant period,BigDecimal price,boolean stale,int samples,String reason) {
+        return new Assessment(false,stale,price,null,null,null,null,"UNAVAILABLE",samples,28,reason,period);
     }
     private static BigDecimal median(List<BigDecimal> values) {
         List<BigDecimal> sorted=values.stream().sorted().toList();

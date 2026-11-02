@@ -16,5 +16,5 @@ public final class ForecastTypes {
                             int sampleCount, int windowDays) {}
     public record Assessment(boolean available, boolean stale, BigDecimal actualPrice, BigDecimal typical,
                              BigDecimal deviation, BigDecimal deviationPercent, BigDecimal spikeThreshold,
-                             String classification, int sampleCount, int windowDays, String reason) {}
+                             String classification, int sampleCount, int windowDays, String reason, Instant periodStart) {}
 }
