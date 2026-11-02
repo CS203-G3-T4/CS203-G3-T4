@@ -18,6 +18,17 @@ from wattly_ml.timebase import STEP,instant
 from test_price_only_weekly import prepared
 
 
+def verify_units(stage, tmp_path):
+    # CI has systemd tools but no logged-in user manager or runtime directory.
+    # verify is offline: give it a private runtime without contacting a session.
+    directory=tmp_path/'verify-runtime';directory.mkdir(mode=0o700,exist_ok=True)
+    env={**os.environ,'XDG_RUNTIME_DIR':str(directory)}
+    env.pop('DBUS_SESSION_BUS_ADDRESS',None)
+    return subprocess.run(['systemd-analyze','--user','verify',
+        str(stage/'wattly-price-only-weekly.service'),str(stage/'wattly-price-only-weekly.timer')],
+        env=env,capture_output=True,text=True)
+
+
 @contextmanager
 def audit_server():
     records=[]
@@ -202,7 +213,7 @@ def test_render_verifies_disabled_units_and_cannot_install(configured,tmp_path,m
     p=configured;env=tmp_path/'private.env';env.write_text('WATTLY_RUN_API_URL=http://127.0.0.1:1\n');env.chmod(0o600)
     stage=tmp_path/'staged-units';repo=Path(__file__).resolve().parents[2]
     assert runtime.render(p['config'],env,stage,sys.executable,repo)=={'rendered':True,'installed':False,'enabled':False}
-    checked=subprocess.run(['systemd-analyze','--user','verify',str(stage/'wattly-price-only-weekly.service'),str(stage/'wattly-price-only-weekly.timer')],capture_output=True,text=True)
+    checked=verify_units(stage,tmp_path)
     assert checked.returncode==0,checked.stderr
     text=(stage/'wattly-price-only-weekly.service').read_text()
     assert 'ProtectSystem=strict' in text and 'CPUQuota=100%' in text and '47min' in text
@@ -265,5 +276,5 @@ def test_rendered_service_runs_guard_before_the_worker(configured,tmp_path):
     assert 'ProtectHome=read-only' in text and 'PrivateUsers=true' in text
     assert 'ExecStartPre="'+sys.executable+'"' in text
     assert 'Environment="WATTLY_PYTHON='+sys.executable+'"' in text
-    check=subprocess.run(['systemd-analyze','--user','verify',str(stage/'wattly-price-only-weekly.service'),str(stage/'wattly-price-only-weekly.timer')],capture_output=True,text=True)
+    check=verify_units(stage,tmp_path)
     assert check.returncode==0,check.stderr

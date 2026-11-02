@@ -195,3 +195,45 @@ passed. Python source hashes stayed fixed throughout the final run. The earlier
 256-test run preceded the three new filesystem-guard regressions; it is not added
 to the final total. No GitHub CI or deployment result is claimed for this local
 commit. The restricted real-session audit and actual collector preflight passed.
+
+
+## Deployment handoff — 3 November 2026
+
+The weekly worker is a **candidate-only job**. It can be deployed separately
+from the active forecast app without replacing its model or changing the fixed
+trial. Local release preparation pins the source commit, a dedicated Python3.12
+environment, dependency versions, private configuration and staged unit hashes.
+No generated datasets, release archives, credentials or host-specific paths
+belong in Git. Release verification must use the pinned checkout, not a mutable
+development worktree. The unit-verification tests provide a private runtime
+directory and need no logged-in user manager, including on GitHub CI.
+
+Before activation the operator must have successful CI and required review for
+the published head, an owner-only environment with a valid shared ADMIN account,
+and a passing read-only login/admin check. Do not copy database credentials or
+enable the legacy Basic-auth filter to make the worker authenticate. Do not put
+passwords in a command line, terminal history, PR or chat. Configure them directly
+in the private environment on the deployment host.
+
+Verify the pinned source/dependency/configuration/unit hashes, actual collector
+read-only access and effective source/model read-only isolation before installing
+the staged units. Installation must refuse existing units rather than overwrite
+another worker. Start only the timer after separate activation authorization;
+do not manually start the training service as an authentication test. Enabling a
+persistent timer can immediately catch up an elapsed occurrence, so confirm its
+next trigger with the actual host clock and record the activation time.
+
+Check service state and its terminal audit after the first scheduled attempt.
+REJECTED is an expected completed comparison: retain the current model. FAILED
+or a pending audit requires inspection and explicit audit sync, never another
+same-week fit. Turning the timer off stops future ticks; also stop an in-flight
+worker if necessary, then reconcile its existing audit. Retain outputs and the
+database record. No rollback action restores an old live database or resets a
+trial. The experimental adoption sandbox is not permission to replace serving.
+
+The single real-data rehearsal candidate was rejected (MAE12.57 vs current7.37
+cents/kWh on4,800 common pairs); the available cutoff had1,042 of8,760 possible
+training origins. Running the scheduler does not remove this data limitation or
+guarantee improved accuracy. No additional real fit or search is part of this
+deployment preparation. The reserved8November spike score is not read, scored
+early or extended by this handoff, and the frozen live trial remains unchanged.
