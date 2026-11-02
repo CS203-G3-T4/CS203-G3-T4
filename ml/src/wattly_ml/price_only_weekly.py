@@ -158,7 +158,7 @@ def comparison(records):
     return summary
 
 
-def run(dataset, champion_path, champion_sha, output, cutoff, end, as_of, *, protected=None, mapping_evidence=None):
+def run(dataset, champion_path, champion_sha, output, cutoff, end, as_of, *, protected=None, mapping_evidence=None, version="weekly-price-only-candidate"):
     dataset, champion_path, output = map(lambda p:Path(p).resolve(), (dataset,champion_path,output))
     cutoff, end, as_of = map(instant, (cutoff,end,as_of))
     # Validate before loading trusted joblib or writing an audit directory.
@@ -212,7 +212,7 @@ def run(dataset, champion_path, champion_sha, output, cutoff, end, as_of, *, pro
         championVersion=m['version'],championManifestSha256=champion_sha,
         inputHashes=hashes,protectedInterval=[t.isoformat() for t in protected] if protected else None,
         mappingEvidence=mapping_evidence,
-        scheduleEnabled=False,productionEligible=False,automaticPromotion=False,
+        scheduleEnabled=False,productionEligible=False,automaticPromotion=False,candidateVersion=version,
         selection='One clone of the pinned price-only pipelines; no search',
         evaluationKind='RECONSTRUCTED_PAIRED_HISTORY_NOT_A_LIVE_TRIAL',
         declaredSynthetic=all(r.get('source')=='SYNTHETIC' for r in rows))
@@ -226,11 +226,11 @@ def run(dataset, champion_path, champion_sha, output, cutoff, end, as_of, *, pro
         candidate['manifest'].update(sourceChampionManifestSha256=champion_sha,
             sourceDatasetSha256=data_manifest['sha256'],validationStart=cutoff.isoformat(),
             validationEnd=end.isoformat())
-        saved = save_bundle(candidate,output/'candidates','weekly-price-only-candidate')
+        saved = save_bundle(candidate,output/'candidates',version)
         candidate = load_bundle(output/'candidates'/saved['version'])
         records = paired_records(rows,candidate,champion,cutoff,end,as_of)
         summary = comparison(records)
-        summary.update(trainingOrigins=candidate['manifest']['trainingOrigins'],
+        summary.update(candidateVersion=saved['version'],championVersion=m['version'],trainingOrigins=candidate['manifest']['trainingOrigins'],
             expectedTrainingWindowOrigins=183*48-24,
             trainingExclusions=candidate['manifest']['trainingExclusions'],
             trainingCoverage=candidate['manifest']['trainingOrigins']/(183*48-24),
