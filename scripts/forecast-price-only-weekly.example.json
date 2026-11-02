@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "runtime": "/private/separate-price-only-weekly",
+  "collectorDatabase": "/private/collector/collector.sqlite3",
+  "champion": "/private/serving/models/pinned-price-only-version",
+  "championManifestSha256": "REPLACE_WITH_64_HEX_MANIFEST_SHA256",
+  "protectedStart": "2026-07-29T00:00:00+08:00",
+  "protectedEnd": "2026-09-29T00:00:00+08:00",
+  "mappingEvidence": "EMC_RT_20260929_24_PERIODS",
+  "validationDays": 7,
+  "maturityDays": 1
+}

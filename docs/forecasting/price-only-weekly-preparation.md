@@ -115,3 +115,11 @@ test an isolated adoption/rollback handoff for the hash-pinned serving setup.
 Then review the scheduler wiring and operating schedule. The current one-time
 spike study and fixed live trial remain unchanged; the older timer is not enabled.
 Task59 remains preparation-only and In Progress.
+
+## Follow-through implementation
+
+[Inactive runtime and sandbox integration](price-only-weekly-runtime.md) now
+provides fresh SQLite acquisition, weekly claims, existing API audit delivery
+and retry, staged units and a real HTTP adoption/rollback rehearsal. This
+supersedes the earlier list of missing integration code; it does not supersede
+the activation, data-coverage or acceptance boundaries. No service was activated.
