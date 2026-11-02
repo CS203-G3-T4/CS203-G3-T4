@@ -235,3 +235,35 @@ def test_scheduled_wrapper_passes_explicit_clock_without_training(configured,tmp
     assert args[:3]==['-m','wattly_ml.weekly_runtime','run']
     assert instant(args[args.index('--as-of')+1])
     assert not Path(p['cfg']['runtime']).exists()
+
+
+def test_deployment_guard_rejects_missing_effective_read_only_isolation(configured):
+    p=configured;root=Path(p['cfg']['runtime']);root.mkdir()
+    with pytest.raises(ValueError,match='isolation is not enforced'):
+        runtime.filesystem_guard(p['config'])
+    assert not list(root.iterdir())
+
+
+def test_deployment_guard_only_accepts_read_only_sources_and_writable_runtime(configured,monkeypatch):
+    from types import SimpleNamespace
+    p=configured;root=Path(p['cfg']['runtime']);root.mkdir()
+    monkeypatch.setattr(runtime.os,'statvfs',lambda path:SimpleNamespace(f_flag=0 if Path(path).resolve()==root else os.ST_RDONLY))
+    assert runtime.filesystem_guard(p['config'])=={'ready':True,'sourceMountsReadOnly':True,'runtimeWritable':True,'trainingStarted':False}
+    assert not list(root.iterdir())
+    monkeypatch.setattr(runtime.os,'statvfs',lambda path:SimpleNamespace(f_flag=os.ST_RDONLY))
+    with pytest.raises(ValueError,match='output runtime is read-only'):
+        runtime.filesystem_guard(p['config'])
+
+
+def test_rendered_service_runs_guard_before_the_worker(configured,tmp_path):
+    p=configured;env=tmp_path/'guard.env';env.write_text('');env.chmod(0o600)
+    stage=tmp_path/'guard-units'
+    runtime.render(p['config'],env,stage,sys.executable,Path(__file__).resolve().parents[2])
+    text=(stage/'wattly-price-only-weekly.service').read_text()
+    assert text.index('ExecStartPre=')<text.index('ExecStart=')
+    assert '-m wattly_ml.weekly_runtime guard --config ' in text and 'Environment="PYTHONPATH=' in text
+    assert 'ProtectHome=read-only' in text and 'PrivateUsers=true' in text
+    assert 'ExecStartPre="'+sys.executable+'"' in text
+    assert 'Environment="WATTLY_PYTHON='+sys.executable+'"' in text
+    check=subprocess.run(['systemd-analyze','--user','verify',str(stage/'wattly-price-only-weekly.service'),str(stage/'wattly-price-only-weekly.timer')],capture_output=True,text=True)
+    assert check.returncode==0,check.stderr

@@ -155,6 +155,25 @@ def sync(config_path, now, *, sender=post_admin):
     return {'synced':count,'refitted':False}
 
 
+def filesystem_guard(config_path):
+    """Fail closed when user-manager mount restrictions were silently ignored.
+
+    Called by ExecStartPre in the SAME configured isolation as the worker. No
+    model loading, API call or training. statvfs observes effective mount flags.
+    """
+    cfg=config(config_path);root=cfg['runtime'];settings=Path(config_path).resolve()
+    if root==settings or root in settings.parents:
+        raise ValueError('Keep weekly configuration outside writable runtime storage')
+    sources=(settings,cfg['collectorDatabase'],cfg['champion']/'manifest.json',cfg['champion']/'models.joblib')
+    if not all(os.statvfs(path).f_flag & os.ST_RDONLY for path in sources):
+        raise ValueError('Read-only filesystem isolation is not enforced; weekly training refused')
+    if os.statvfs(root).f_flag & os.ST_RDONLY:
+        raise ValueError('Weekly output runtime is read-only')
+    with tempfile.NamedTemporaryFile(dir=root,prefix='.write-readiness-') as stream:
+        stream.write(b'READINESS_ONLY');stream.flush();os.fsync(stream.fileno())
+    return {'ready':True,'sourceMountsReadOnly':True,'runtimeWritable':True,'trainingStarted':False}
+
+
 def render(config_path, environment, staging, python, repo):
     cfg=config(config_path)
     environment=Path(environment).resolve(strict=True);staging=Path(staging).resolve();repo=Path(repo).resolve()
@@ -165,8 +184,8 @@ def render(config_path, environment, staging, python, repo):
                 Path('/etc/systemd'),Path('/usr/lib/systemd'),Path('/run/systemd')]
     if any(staging==p or p in staging.parents for p in unit_paths):
         raise ValueError('Render into a separate staging directory, not a systemd directory')
-    def quoted(value):
-        value=str(Path(value).resolve())
+    def quoted(value, *, resolve=True):
+        value=str(Path(value).resolve() if resolve else Path(value).expanduser().absolute())
         if '\n' in value or '\r' in value:raise ValueError('Invalid unit path')
         return json.dumps(value,ensure_ascii=False).replace('%','%%')
     service='''[Unit]
@@ -174,19 +193,25 @@ Description=Wattly price-only weekly shadow training (no adoption)
 After=network.target
 [Service]
 Type=oneshot
+ExecStartPre=%s -m wattly_ml.weekly_runtime guard --config %s
 ExecStart=/usr/bin/bash %s %s %s
 WorkingDirectory=%s
 Environment=%s
+Environment=%s
+Environment=PYTHONDONTWRITEBYTECODE=1
 TimeoutStartSec=47min
 CPUQuota=100%%
 MemoryMax=2G
 UMask=0077
 NoNewPrivileges=true
 PrivateTmp=true
+PrivateUsers=true
+ProtectHome=read-only
 ProtectSystem=strict
 ReadWritePaths=%s
-'''%(quoted(repo/'scripts/forecast-price-only-scheduled.sh'),quoted(environment),quoted(config_path),
-     str(repo).replace('%','%%'),json.dumps('WATTLY_PYTHON='+str(Path(python).resolve())).replace('%','%%'),quoted(cfg['runtime']))
+'''%(quoted(python,resolve=False),quoted(config_path),quoted(repo/'scripts/forecast-price-only-scheduled.sh'),quoted(environment),quoted(config_path),
+     str(repo).replace('%','%%'),json.dumps('WATTLY_PYTHON='+str(Path(python).expanduser().absolute())).replace('%','%%'),
+     json.dumps('PYTHONPATH='+str(repo/'ml/src')).replace('%','%%'),quoted(cfg['runtime']))
     timer='''[Unit]
 Description=Wattly price-only weekly shadow schedule
 [Timer]
@@ -208,11 +233,13 @@ def main():
     for action in ('run','sync'):
         command=sub.add_parser(action);command.add_argument('--config',type=Path,required=True)
         command.add_argument('--as-of',type=instant,required=True)
+    command=sub.add_parser('guard');command.add_argument('--config',type=Path,required=True)
     command=sub.add_parser('render')
     for field in ('config','environment','staging','python','repo'):
         command.add_argument('--'+field,type=Path,required=True)
     args=parser.parse_args()
-    if args.action=='render':result=render(args.config,args.environment,args.staging,args.python,args.repo)
+    if args.action=='guard':result=filesystem_guard(args.config)
+    elif args.action=='render':result=render(args.config,args.environment,args.staging,args.python,args.repo)
     else:result=(run_week if args.action=='run' else sync)(args.config,args.as_of)
     print(json.dumps(result))
     return 2 if result.get('state')=='FAILED' or result.get('auditPending') else 0
