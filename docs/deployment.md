@@ -103,3 +103,14 @@ CSDT4-70 then covers the 24-hour check for missing half-hours.
 - **Data:** Railway's PostgreSQL volume persists across app redeploys. Take a
   `pg_dump` (Postgres service → **Connect** gives the public URL) before risky
   migrations.
+
+
+## Weekly model worker
+
+Deploying the Java service does not install the Python model or weekly trainer.
+The [portable weekly worker](forecasting/weekly-portable-deployment.md) has a
+separate container/one-shot command, PostgreSQL or SQLite read-only acquisition,
+retained output storage, private secrets and deployment checks. It can run on
+the server independently of a developer laptop. Configure one external schedule
+and one durable worker runtime; it is disabled until explicitly enabled.
+The worker only evaluates candidates and does not replace the frozen live model.

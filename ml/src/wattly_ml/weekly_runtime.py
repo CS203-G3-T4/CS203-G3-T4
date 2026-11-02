@@ -27,18 +27,33 @@ def atomic_json(path, value):
 
 def config(path):
     value=json.loads(Path(path).read_text())
-    keys={'schemaVersion','runtime','collectorDatabase','champion','championManifestSha256',
+    keys={'schemaVersion','runtime','champion','championManifestSha256',
           'protectedStart','protectedEnd','mappingEvidence','validationDays','maturityDays'}
-    if set(value)!=keys or type(value['schemaVersion']) is not int or value['schemaVersion']!=1:
+    version=value.get('schemaVersion')
+    if type(version) is not int or version not in (1,2) or set(value)!=keys|({'collectorDatabase'} if version==1 else {'source'}):
         raise ValueError('Invalid weekly configuration fields')
-    for key in ('runtime','collectorDatabase','champion'):
+    if version==2:
+        source=value['source']
+        if not isinstance(source,dict):raise ValueError('Invalid source configuration')
+        if source.get('kind')=='sqlite' and set(source)=={'kind','path'}:
+            source_path=Path(source['path']).expanduser()
+            if not source_path.is_absolute():raise ValueError('Use an absolute SQLite source path')
+            source['path']=source_path.resolve()
+        elif source.get('kind')=='postgres' and set(source)=={'kind','dsnEnvironment','name'}:
+            if source['dsnEnvironment']!='WATTLY_TRAINING_DATABASE_URL' or source['name']!='NEMS_SN_SG':
+                raise ValueError('Use the documented database variable and price source')
+        else:raise ValueError('Invalid source configuration')
+    for key in ('runtime','champion')+ (('collectorDatabase',) if version==1 else ()):
         raw=Path(value[key]).expanduser()
         if not raw.is_absolute() or '\n' in str(raw) or '\r' in str(raw):
             raise ValueError('Use absolute, single-line weekly paths')
         value[key]=raw.resolve()
-    root,collector,champion=(value[k] for k in ('runtime','collectorDatabase','champion'))
+    root,champion=(value[k] for k in ('runtime','champion'))
+    protected=[champion.parent.parent if version==1 else champion.parent]
+    if version==1:protected.append(value['collectorDatabase'].parent)
+    elif value['source']['kind']=='sqlite':protected.append(value['source']['path'].parent)
     # Read-only artifact home and collector directories must not overlap runtime writes.
-    for source in (collector.parent,champion.parent.parent):
+    for source in protected:
         if root==source or root in source.parents or source in root.parents:
             raise ValueError('Weekly runtime overlaps a source/serving directory')
     serving=os.environ.get('WATTLY_ML_HOME')
@@ -108,8 +123,12 @@ def run_week(config_path, now, *, sender=post_admin):
                 except ValueError:pass  # Tests may invoke this function from a worker thread.
             if digest(Path(config_path))!=cfg['_sha256']:
                 raise ValueError('Weekly configuration changed before acquisition')
-            acquired=snapshot(cfg['collectorDatabase'],directory/'snapshots','sqlite')
-            dataset=directory/'dataset';manifest=prepare([acquired],dataset)
+            if cfg['schemaVersion']==1:
+                acquired=snapshot(cfg['collectorDatabase'],directory/'snapshots','sqlite')
+                dataset=directory/'dataset';manifest=prepare([acquired],dataset)
+            else:
+                from .weekly_sources import acquire
+                dataset,manifest=acquire(cfg,directory,cutoff,end,now)
             payload['datasetDigest']=manifest['sha256']
             if digest(cfg['champion']/'manifest.json')!=cfg['championManifestSha256']:
                 raise ValueError('Weekly champion pin changed')
@@ -162,6 +181,7 @@ def filesystem_guard(config_path):
     model loading, API call or training. statvfs observes effective mount flags.
     """
     cfg=config(config_path);root=cfg['runtime'];settings=Path(config_path).resolve()
+    if cfg['schemaVersion']!=1:raise ValueError('Use portable_weekly check for server configuration')
     if root==settings or root in settings.parents:
         raise ValueError('Keep weekly configuration outside writable runtime storage')
     sources=(settings,cfg['collectorDatabase'],cfg['champion']/'manifest.json',cfg['champion']/'models.joblib')
@@ -176,6 +196,7 @@ def filesystem_guard(config_path):
 
 def render(config_path, environment, staging, python, repo):
     cfg=config(config_path)
+    if cfg['schemaVersion']!=1:raise ValueError('Use the portable scheduler command for server configuration')
     environment=Path(environment).resolve(strict=True);staging=Path(staging).resolve();repo=Path(repo).resolve()
     if environment.stat().st_mode & 0o777 != 0o600 or environment.stat().st_uid!=os.getuid():
         raise ValueError('Weekly environment must be owner-only mode 600')
