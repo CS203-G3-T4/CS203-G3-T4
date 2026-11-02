@@ -1,6 +1,6 @@
 # F3 report: current price-only forecasting
 
-Updated 1 November 2026 for CSDT4-51. This report records current application
+Updated 2 November 2026 for CSDT4-51 and review-evidence cleanup. This report records current application
 behaviour and the completed evaluation. It does not assert team approval,
 external submission, production acceptance or measured household-bill savings.
 
@@ -83,15 +83,35 @@ not attributed to price-only AI. Original evidence remains in the
 
 Actual main `ee11c05` (merged PR40) is integrated without conflicts or source
 file changes. Replay migrations V23-V25 precede trial V26 and diagnostics V27.
-Combined-source checks passed: 427 Java/PostgreSQL tests with no failures,
-errors or skips; 181 Python tests; 82 JavaScript tests; and the unchanged
-37-file frozen archive rebuild/verification. A disposable test database was
-removed. No new browser run is claimed because this update changes no UI.
+Validation counts refer to different source states, not conflicting results:
+
+| Source / work | Verified checks |
+|---|---|
+| Earlier integrated-main report (`6129a37`) | 427 Java/PostgreSQL, 181 Python, 82 JavaScript |
+| Replay/mobile fixes (`370928c`), then policy-only `ce38ca6` | 429 Java/PostgreSQL, 181 Python, 82 JavaScript; all five GitHub jobs green |
+| Current offline-grader/review update | Full Python: 205 passed, including 24 new portable-grader tests; 27 original grading fields reproduced exactly; 37-file archive rebuilt/verified unchanged |
+
+The increase from 427 to 429 is the two replay source-switch regressions. The
+increase from 181 to 205 is the portable evaluator's 24 focused cases. Java,
+frontend, migrations and inference code are unchanged by this review update;
+their passing results above are retained rather than described as new local
+runs. The new source head's CI result is tracked on PR48.
+
+The actual integrated journey at `370928c` passed 28 resident/admin desktop/mobile
+Chromium cases against a restored database and the real packaged price-only
+model, including AI/B3 recovery, acceptance, savings rechecks and realised-cost
+consistency. Subsequent read-only checks on the activated app passed the same
+28 page cases with zero browser/server errors. No new browser run is claimed
+for this offline/docs-only follow-up.
 
 The replay reproduced all 24,128 original control refresh decisions and checked
 3,600 final decisions using exact rational time-overlap costs. A parameterised
-reproduction matched all six summaries. Detailed research scripts, outputs,
-private scenario inputs, raw datasets and model bundles stay outside Git.
+reproduction matched all six summaries. Detailed savings research scripts, outputs,
+private scenario inputs, raw datasets and model bundles stay outside Git. The
+separate [portable spike-policy grader](forecasting/spike-policy-reproduction.md)
+and clearly synthetic examples are committed so its calculation can be reviewed
+without database access; authorised private inputs are still needed to reproduce
+the actual live snapshot.
 
 Historical final-price availability and household adherence are assumptions.
 These repeatedly examined dates are development evidence, not untouched
@@ -105,3 +125,27 @@ implementation, not real demand-aware accuracy. CSDT4-33 still needs agreement
 on genuine-spike definition and team sensitivity. Completed implementation
 subtasks and task 51's reporting status are unchanged. Independent latest-head
 review and current GitHub CI remain PR checks, not claims made by this report.
+
+
+## Local deployment and evidence boundary
+
+The reviewed Java app at source `370928c` was activated on **1 November 2026
+06:23:25 SGT (31 October 22:23:25 UTC)**, after a fresh stopped-app backup was
+restored and checked. The explicit trial-V23-to-V26 reconciliation preserved
+original rows in all 31 existing tables, replay V23–V25 executed once, and
+startup applied V27. No database was restored over live data and the original
+solar/price-only trial identities, model/policy pins and accepted starts remained.
+
+Verification at 06:30:17 SGT observed four successful ordinary price polls and
+a new eligible issue appended to `price-only-live-20261031-v1`. The old app plus
+pinned current migrations was rehearsed as the binary rollback path, retaining
+the current database. The review update on 2 November changes no running jar,
+model, collector, trial or timer; its new grader is an offline file consumer.
+The original frozen seven-day shadow validation and its one-time score remain
+unchanged. Pre/post-deployment evaluation segments remain distinguishable.
+
+[Per-ticket source routing](forecasting/pr48-review-routing.md),
+[archive retention decision](forecasting/emc-archive-retention.md), and
+[offline reproduction/input contract](forecasting/spike-policy-reproduction.md)
+record the reviewer follow-up. Retention is documented, with current evidence
+held; no cleanup or new collection permission is implied or activated.

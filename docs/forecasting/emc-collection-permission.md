@@ -26,4 +26,4 @@ New operators/deployments must verify that their use is covered by the actual
 agreement. If scope, frequency, storage or use changes, review the grant again.
 Repair validation used synthetic fixtures and existing private copies; no new
 automated collection requests were made for it. Retain real source/receipt times
-and trial-referenced snapshots under the documented retention decision.
+and trial-referenced snapshots under the [archive retention decision](emc-archive-retention.md).
