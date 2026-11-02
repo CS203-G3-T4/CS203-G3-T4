@@ -36,21 +36,9 @@ WattlyForecast.render = function (view, assessment) {
     });
   }
   const current = document.getElementById('current-assessment');
-  if (!assessment || assessment.actualPrice === null) {
-    current.textContent = 'Current price unavailable.';
-  } else {
-    const deviation = assessment.available && Number.isFinite(assessment.deviationPercent) ?
-      ' · ' + Math.abs(assessment.deviationPercent).toFixed(0) + '% ' +
-      (assessment.deviationPercent < 0 ? 'below' : 'above') + ' typical' :
-      assessment.available && Number.isFinite(assessment.deviation) ?
-        ' · ' + Math.abs(assessment.deviation).toFixed(2) + ' SGD/MWh ' +
-        (assessment.deviation < 0 ? 'below' : 'above') + ' typical (percentage unavailable for zero/negative typical prices)' : '';
-    current.textContent = 'Current price: ' + (Number(assessment.actualPrice) / 10).toFixed(2) + ' cents/kWh. ' +
-      (assessment.available ? (assessment.classification === 'EXPENSIVE' ? 'normal (above typical)' : assessment.classification.toLowerCase()) +
-        deviation + ' against ' + assessment.sampleCount + ' prior days.' :
-        'Spike assessment: Insufficient history (' + assessment.sampleCount + ' reference samples).') +
-      (assessment.stale ? ' Price data is stale.' : '');
-  }
+  const recordedPrice = assessment && Number.isFinite(assessment.actualPrice)
+    ? 'Recorded price: ' + (assessment.actualPrice / 10).toFixed(2) + ' cents/kWh. ' : '';
+  current.textContent = recordedPrice + WattlyAssessment.describe(assessment);
 };
 
 WattlyForecast.refresh = async function () {
