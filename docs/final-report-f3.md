@@ -149,3 +149,12 @@ unchanged. Pre/post-deployment evaluation segments remain distinguishable.
 [offline reproduction/input contract](forecasting/spike-policy-reproduction.md)
 record the reviewer follow-up. Retention is documented, with current evidence
 held; no cleanup or new collection permission is implied or activated.
+
+## Sprint closeout — 2 November 2026
+
+[Acceptance and carryover record](forecasting/sprint-closeout-2026-11-02.md)
+keeps the original expected-demand criterion for task35, as Bryan requested.
+[Captured-run fallback rates](forecasting/forecast-availability-2026-11-02.md)
+report separate solar and price-only cohorts; exact overlap-error attribution
+remains unavailable. These are documentation/read-only audit additions, not a
+new deployment, model promotion, completed future trial or team acceptance.
