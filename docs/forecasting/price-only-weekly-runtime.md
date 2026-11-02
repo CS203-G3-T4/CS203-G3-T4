@@ -150,3 +150,48 @@ This does not count retrospective final archives with unknown historical receipt
 times as genuine operational vintages. Sparse coverage is an outstanding data
 limitation, not proof of a retraining improvement or permission to weaken gates.
 The raw snapshot/dataset and rendered operator files remain private outside Git.
+
+
+## Actual WSL service verification and correction — 2 November
+
+An actual transient user-service probe found that the initial template did not
+make a synthetic source under the home directory read-only. Syntax validation
+alone had passed, so this is a deployment defect discovered by the broader test.
+Explicit `ProtectHome=read-only` and `PrivateUsers=true` now accompany
+`ProtectSystem=strict`; `ReadWritePaths` permits only the separate weekly runtime.
+A second real WSL probe confirmed blocked source writes, successful read-only
+SQLite backup and allowed runtime writes. No source collector/model was modified;
+the failed probes used disposable synthetic files.
+
+The service now runs an `ExecStartPre` filesystem guard. It checks effective
+read-only mount flags for configuration, collector and model files and verifies
+that runtime storage is writable. If the platform ignores the requested
+restrictions, it refuses to start training/API work. The configuration stays
+outside writable runtime storage. This protects against relying on unit settings
+that are syntactically valid but ineffective on a particular host.
+
+The renderer also preserves the dedicated virtual-environment interpreter path
+instead of resolving its executable symlink to system Python. Staged units were
+regenerated and verified; older staged files are labelled superseded. No system
+settings were changed and no periodic unit was installed/enabled.
+
+Actual restricted-service checks additionally verified a read-only hot backup
+of the real local collector, and the weekly audit client authenticated through
+shared Spring login/rotated CSRF and persisted a synthetic audit to a disposable
+PostgreSQL database. The test also covers idempotent completion, terminal mutation
+rejection, resident/bad-login rejection and local Basic remaining disabled. All
+temporary test services/databases were stopped/removed. These are operational
+compatibility tests, not a new real-data fit or production deployment.
+
+The full Java/PostgreSQL and JavaScript suites and frozen archive verification
+pass. Final Python suite results are recorded separately by tested source hash.
+The current model/trial and collector services remain unchanged. Credentials
+remain blank in the prepared environment; activation still requires the separate
+reviewed deployment step. New code is local, not yet published to PR48/CI.
+
+Final deployment-test result: **259 Python tests**, **429 Java/PostgreSQL tests
+with zero skips**, **82 JavaScript tests** and the unchanged37-file frozen archive
+passed. Python source hashes stayed fixed throughout the final run. The earlier
+256-test run preceded the three new filesystem-guard regressions; it is not added
+to the final total. No GitHub CI or deployment result is claimed for this local
+commit. The restricted real-session audit and actual collector preflight passed.
