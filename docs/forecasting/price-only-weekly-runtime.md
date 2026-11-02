@@ -237,3 +237,15 @@ training origins. Running the scheduler does not remove this data limitation or
 guarantee improved accuracy. No additional real fit or search is part of this
 deployment preparation. The reserved8November spike score is not read, scored
 early or extended by this handoff, and the frozen live trial remains unchanged.
+
+
+## Portable server adapter — 3 November 2026
+
+The [portable worker guide](weekly-portable-deployment.md) provides an alternative
+to the host-specific v1 systemd preparation above. A v2 source configuration can
+read the deployed PostgreSQL price-revision table or the existing SQLite archive.
+The same weekly fit/evaluation/audit flow is used. The one-shot entry point takes
+deployment paths and secrets from environment variables or mounted secret files,
+checks the pinned runtime/model, process-locking and source access, and needs no
+WSL/systemd. Its container and provider-scheduler examples are deployment assets,
+not a claim that a server has been activated. No serving promotion is added.
