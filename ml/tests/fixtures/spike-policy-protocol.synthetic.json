@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "policyId": "SAME_SLOT_K3_RELEVANT_WARNING_V1",
+  "fixedAt": "2026-01-02T03:05:00+00:00",
+  "modelVersion": "SYNTHETIC_MODEL",
+  "trialId": "SYNTHETIC_TRIAL",
+  "preliminary": {
+    "issueStart": "2026-01-02T00:00:00+00:00",
+    "issueEndExclusive": "2026-01-02T03:00:00+00:00",
+    "limitation": "SYNTHETIC EXAMPLE ONLY; no real prices, residents, calibration or independent labels."
+  },
+  "prospective": {
+    "issueStart": "2026-01-03T00:00:00+00:00",
+    "issueEndExclusive": "2026-01-10T00:00:00+00:00",
+    "scoreAfter": "2026-01-10T13:00:00+00:00",
+    "scoreCount": 1,
+    "automaticExtension": false
+  },
+  "candidate": {
+    "minimumEstimatedSavingSgd": 0.1,
+    "requireSavedIssueTimeRange": true,
+    "minimumEarlierCompletedDays": 20,
+    "minimumRangeLowerSgdExclusive": 0,
+    "sameFrozenFirstPlans": true,
+    "reranking": false,
+    "warningFlag": "aiWarning"
+  },
+  "primaryTarget": {
+    "maximumFalseWarningEpisodeFraction": 0.2,
+    "minimumCompletedWarningEpisodes": 20,
+    "minimumDistinctAffectedMarketPeriods": 20,
+    "minimumFullyBracketedStatisticalEvents": 20
+  }
+}

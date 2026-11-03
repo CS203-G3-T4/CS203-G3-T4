@@ -18,7 +18,8 @@ WattlyForecast.render = function (view, assessment) {
     const formatted = new Intl.DateTimeFormat('en-SG', {
       timeZone: 'Asia/Singapore', dateStyle: 'medium', timeStyle: 'short'
     });
-    metadata.textContent = (replay ? 'Replay data' : run.modelType === 'AI' ? 'AI' : 'Baseline ' + run.selectedModel) +
+    metadata.textContent = (replay ? 'Replay data' : run.modelType === 'AI' ? (run.qualityFlags.includes('EXPERIMENTAL_AI') ? 'Experimental AI' : 'AI') : 'Baseline ' + run.selectedModel) +
+      (run.qualityFlags.includes('PRICE_CALENDAR_HOLIDAY_SOLAR') ? ' · solar-assisted' : '') +
       ' · ' + run.modelVersion + ' · forecast as of ' + formatted.format(new Date(run.asOf)) + ' SGT' +
       (['PYTHON_UNAVAILABLE_OR_INVALID', 'MODEL_MANIFEST_CONFLICT'].includes(run.fallbackReason) ? ' · AI unavailable; baseline fallback' : '') +
       (run.qualityFlags.includes('BASELINE_RANKING_UNRANKED') ? ' · baseline order not yet validated' : '');
@@ -35,21 +36,9 @@ WattlyForecast.render = function (view, assessment) {
     });
   }
   const current = document.getElementById('current-assessment');
-  if (!assessment || assessment.actualPrice === null) {
-    current.textContent = 'Current price unavailable.';
-  } else {
-    const deviation = assessment.available && Number.isFinite(assessment.deviationPercent) ?
-      ' · ' + Math.abs(assessment.deviationPercent).toFixed(0) + '% ' +
-      (assessment.deviationPercent < 0 ? 'below' : 'above') + ' typical' :
-      assessment.available && Number.isFinite(assessment.deviation) ?
-        ' · ' + Math.abs(assessment.deviation).toFixed(2) + ' SGD/MWh ' +
-        (assessment.deviation < 0 ? 'below' : 'above') + ' typical (percentage unavailable for zero/negative typical prices)' : '';
-    current.textContent = 'Current price: ' + (Number(assessment.actualPrice) / 10).toFixed(2) + ' cents/kWh. ' +
-      (assessment.available ? (assessment.classification === 'EXPENSIVE' ? 'normal (above typical)' : assessment.classification.toLowerCase()) +
-        deviation + ' against ' + assessment.sampleCount + ' prior days.' :
-        'Spike assessment: Insufficient history (' + assessment.sampleCount + ' reference samples).') +
-      (assessment.stale ? ' Price data is stale.' : '');
-  }
+  const recordedPrice = assessment && Number.isFinite(assessment.actualPrice)
+    ? 'Recorded price: ' + (assessment.actualPrice / 10).toFixed(2) + ' cents/kWh. ' : '';
+  current.textContent = recordedPrice + WattlyAssessment.describe(assessment);
 };
 
 WattlyForecast.refresh = async function () {

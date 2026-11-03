@@ -1,0 +1,77 @@
+{
+  "checkedAt": "2026-10-31T06:05:04.782258+00:00",
+  "replayHead": "0c924594360d111e36f502707558d36da1adbefb",
+  "forecastRepairBaseHead": "cef41675a0d4965edfb360c813a02f2e168b404a",
+  "reviewState": {
+    "replayJonathanReview": "COMMENTED on older f751616, not latest-head approval",
+    "forecastReviews": 0,
+    "newDiscussionOrInlineThreads": 0
+  },
+  "javaPostgres": {
+    "replay": {
+      "passed": 381,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "forecastRepair": {
+      "passed": 389,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "runtime": "Java21 tests, javac25 release21",
+    "disposableDatabasesRemoved": true
+  },
+  "migrationRepair": {
+    "oldTrialVersion": 24,
+    "newTrialVersion": 26,
+    "trialSqlUnchanged": true,
+    "allCurrentReplayMigrationsIncluded": [
+      23,
+      24,
+      25
+    ],
+    "combinedUpgradeChecks": [
+      "existing budget preserved",
+      "demo forecast flag preserved",
+      "redundant index removed",
+      "exactly one trial migration",
+      "validation",
+      "two no-op reruns"
+    ]
+  },
+  "restoredCopyRehearsal": {
+    "status": "FULL_REPLAY_COPY_REHEARSAL_PASSED",
+    "replayHead": "0c924594360d111e36f502707558d36da1adbefb",
+    "replaySqlSha256": {
+      "23": "ebaec350574a5d0c8e00c1b863ae17406c563cafa96f20d9ce15351435973ff1",
+      "24": "7401985aa5be4e240c231220007cf19b751fa61cb9cb33d3894b90755dbf9d05",
+      "25": "8e1293ce29aa3410edc127fb6665311785a7566344239c8730c93189596fa98d"
+    },
+    "trialMigration": "V26",
+    "trialSqlUnchanged": true,
+    "copyChecks": [
+      "REHEARSAL_ORIGINAL_TABLES_PRESERVED=31",
+      "REHEARSAL_TRIAL_METADATA_PRESERVED=true",
+      "REHEARSAL_ALL_REPLAY_MIGRATIONS_V23_V24_V25_APPLIED_ONCE=true",
+      "REHEARSAL_V26_NOT_REEXECUTED=true",
+      "REHEARSAL_FLYWAY_VALIDATE_AND_TWO_NOOP_MIGRATIONS=true",
+      "REHEARSAL_ORDER=old-trial-renumbered-26_then_actual-replay-23-24-25",
+      "REHEARSAL_ROLLBACK_RESTORE_VALID=true"
+    ],
+    "liveHistoryUnchanged": true,
+    "liveTrialUnchanged": true,
+    "liveModelUnchanged": true,
+    "disposableDatabasesRemoved": true,
+    "scope": "Restored copies only; controlled history reconciliation, not a deployment or ordinary Flyway repair"
+  },
+  "liveDeployed": false,
+  "teammateSourceEdited": false,
+  "independentApprovalClaimed": false,
+  "limits": [
+    "Combined SQL compatibility, not a completed Java feature merge",
+    "Latest-head CI recorded on PR48",
+    "Merge PR40 first, resolve Java integration conflicts in PR48, rerun checks"
+  ]
+}

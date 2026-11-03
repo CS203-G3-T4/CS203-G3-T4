@@ -102,6 +102,30 @@ class ForecastAcceptancePersistenceTest {
         assertThat(mapper.readTree(audit.body()).path("attempts").size()).isEqualTo(3);
         assertThat(send(http,"GET","/api/v1/admin/forecast-training-attempts",null,false).statusCode()).isEqualTo(403);
         assertThat(send(http,"GET","/api/v1/admin/forecast-training-attempts?limit=0",null,true).statusCode()).isEqualTo(400);
+        // Price-only shadow completion must be durable, immutable and never a serving model.
+        ObjectNode weekly=mapper.createObjectNode();
+        weekly.put("attemptId","PRICE_ONLY_WEEKLY_AUDIT").put("modelVersion","weekly-price-only-2026-W04")
+            .put("trainingDate",NOW.toString()).put("trainingStart",NOW.minus(Duration.ofDays(191)).toString())
+            .put("trainingEnd",NOW.minus(Duration.ofDays(8)).toString()).put("validationEnd",NOW.minus(Duration.ofDays(1)).toString())
+            .put("configSha256","c".repeat(64)).put("datasetDigest","d".repeat(64)).put("state","RUNNING")
+            .put("reason","").put("promotionDecision","NOT_ATTEMPTED_SHADOW_ONLY");
+        weekly.set("scores",mapper.createObjectNode());
+        assertThat(send(http,"POST","/api/v1/admin/forecast-training-attempts",weekly.toString(),true).statusCode()).isEqualTo(200);
+        weekly.put("state","SUCCESS").put("reason","Synthetic shadow result; not a model approval");
+        weekly.set("scores",mapper.valueToTree(Map.of("commonPairs",7488,"candidateVersion","weekly-price-only-2026-W04",
+            "adoptionEligible",false,"candidateMaeNoWorseOnCommonPairs",true,"prospectiveValidation",false,
+            "table",Map.of("AI",Map.of("mae",10,"rmse",15),"CURRENT",Map.of("mae",12,"rmse",16)))));
+        assertThat(send(http,"POST","/api/v1/admin/forecast-training-attempts",weekly.toString(),true).statusCode()).isEqualTo(200);
+        assertThat(send(http,"POST","/api/v1/admin/forecast-training-attempts",weekly.toString(),true).statusCode()).isEqualTo(200);
+        assertThat(jdbc.queryForObject("SELECT promotion_state FROM model_run WHERE attempt_id='PRICE_ONLY_WEEKLY_AUDIT'",String.class))
+            .isEqualTo("TRAINING_ATTEMPT");
+        assertThat(jdbc.queryForObject("SELECT model_version FROM model_run WHERE attempt_id='PRICE_ONLY_WEEKLY_AUDIT'",String.class))
+            .isEqualTo("weekly-price-only-2026-W04");
+        assertThat(jdbc.queryForObject("SELECT scores->>'adoptionEligible' FROM model_run WHERE attempt_id='PRICE_ONLY_WEEKLY_AUDIT'",String.class))
+            .isEqualTo("false");
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM forecast_run WHERE model_version='weekly-price-only-2026-W04'",Integer.class)).isZero();
+        weekly.put("reason","Cannot rewrite a completed shadow result");
+        assertThat(send(http,"POST","/api/v1/admin/forecast-training-attempts",weekly.toString(),true).statusCode()).isEqualTo(400);
         // All methods share the same saved origin; missing actuals must not become zeros or a fair-ranking claim.
         Instant origin=NOW.minus(Duration.ofDays(1));
         var points=BaselineForecastService.targets(origin).stream().map(t->new ForecastTypes.Point(

@@ -1,0 +1,65 @@
+{
+  "sourceDigest": "38ff304dd39ff80fb1b560bdeddb018e5fe8f52cd7b47084e65f894406b225a2",
+  "cohortDigest": "79e34790821d8a6e93d39049c8571c988f9a223a8f22fbe6190f55f14f3748b4",
+  "periods": 4368,
+  "days": 91,
+  "countsReproduceExistingReport": true,
+  "sensitivity": [
+    {
+      "k": 2,
+      "assessedTargets": 4368,
+      "alertTargets": 884,
+      "alertEpisodes": 216,
+      "flaggedHours": 442.0,
+      "flaggedTargetPercent": 20.238095238095237
+    },
+    {
+      "k": 3,
+      "assessedTargets": 4368,
+      "alertTargets": 658,
+      "alertEpisodes": 176,
+      "flaggedHours": 329.0,
+      "flaggedTargetPercent": 15.064102564102564
+    },
+    {
+      "k": 4,
+      "assessedTargets": 4368,
+      "alertTargets": 503,
+      "alertEpisodes": 134,
+      "flaggedHours": 251.5,
+      "flaggedTargetPercent": 11.515567765567766
+    }
+  ],
+  "currentK": 3,
+  "teamApproved": false,
+  "independentLabels": 0,
+  "precision": null,
+  "recall": null,
+  "ruleAuditDigest": "0c01caa59b00a6da57ef829ee634273ad1f5cbeaab553b959d32dfacc9027c6d",
+  "note": "Descriptive revised-final-price audit only; not independent genuine-event validation or new model selection.",
+  "focusedTests": 46,
+  "browserChecks": {
+    "status": "PASS",
+    "realTargets": 4368,
+    "realDays": 91,
+    "realLabelsCreated": 0,
+    "blindPayloadContainsNoRuleDecisions": true,
+    "syntheticExportAndPersistence": true,
+    "pageErrors": [],
+    "mobileOverflow": false
+  },
+  "labelScope": "HUMAN_UNUSUAL_PRICE",
+  "scopeSelectedByOwner": true,
+  "independentHumanLabelsAvailable": false,
+  "ownerK3AuthorizationPreviouslyRecorded": true,
+  "jonathanTeamSignoff": "PENDING",
+  "jiraRecommendedStatus": "Done (owner-accepted statistical scope)",
+  "ownerCompletionDecision": {
+    "date": "2026-10-30",
+    "owner": "Bryan Edison Lee",
+    "acceptedK": 3,
+    "scope": "Statistical spike-rule sensitivity/reporting",
+    "independentHumanValidation": "DEFERRED_NOT_COMPLETED",
+    "jonathanApprovalRecorded": false
+  }
+}

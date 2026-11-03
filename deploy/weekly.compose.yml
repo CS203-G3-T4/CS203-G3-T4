@@ -1,0 +1,31 @@
+# One-shot worker. The host/provider scheduler invokes it once a week.
+# This file installs no timer, starts no loop and exposes no network port.
+services:
+  weekly:
+    build:
+      context: ../ml
+      dockerfile: Dockerfile.weekly
+    image: wattly-weekly:local
+    command: ["run"]
+    init: true
+    restart: "no"
+    read_only: true
+    cpus: 1.0
+    mem_limit: 2g
+    pids_limit: 128
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    tmpfs: ["/tmp:rw,nosuid,nodev,size=268435456"]
+    env_file: ["${WATTLY_WEEKLY_ENV_FILE:?Set the private deployment environment file}"]
+    environment:
+      WATTLY_WEEKLY_HOME: /var/lib/wattly-weekly
+      WATTLY_WEEKLY_CHAMPION: /inputs/models/champion
+      WATTLY_WEEKLY_SOURCE: postgres
+    volumes:
+      - weekly_runtime:/var/lib/wattly-weekly
+      - type: bind
+        source: ${WATTLY_CHAMPION_HOST_PATH:?Set the trusted champion directory}
+        target: /inputs/models/champion
+        read_only: true
+volumes:
+  weekly_runtime:

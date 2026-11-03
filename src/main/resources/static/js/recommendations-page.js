@@ -92,6 +92,8 @@ const WattlyRecommendationsPage = {};
   };
 
   let current = 'ACTIVE';
+  let loadVersion = 0;
+  let automaticallyRefreshing = false;
 
   function el(id) { return document.getElementById(id); }
 
@@ -105,7 +107,12 @@ const WattlyRecommendationsPage = {};
     el('rec-tabpanel').setAttribute('aria-labelledby', 'tab-' + tab.toLowerCase());
   }
 
-  Page.loadTab = async function (tab) {
+  Page.loadTab = async function (tab, options) {
+    const automatic = options && options.automatic;
+    const mayApply = function () {
+      return current === tab && version === loadVersion && (!automatic || !residentBusy());
+    };
+    const version = ++loadVersion;
     current = tab;
     selectTab(tab);
     const list = el('recommendation-list');
@@ -114,7 +121,7 @@ const WattlyRecommendationsPage = {};
     el('realised-block').hidden = true;
     if (tab === 'ACCEPTED') Page.loadSavings();
     const result = await Wattly.api('GET', Page.tabUrl(Wattly.householdId(), tab));
-    if (current !== tab) return; // another tab was picked while this one loaded
+    if (!mayApply()) return;
     if (!result.ok) {
       list.innerHTML = '';
       snoozedBlock.hidden = true;
@@ -122,7 +129,8 @@ const WattlyRecommendationsPage = {};
       return;
     }
     const data = result.data;
-    const recs = data.recommendations || [];
+    if (Page.loadAlerts) Page.loadAlerts();
+    const recs = WattlyRecommendations.withSavingsEvidence(data);
     const nowMs = Date.now();
     if (tab !== 'ACTIVE') {
       el('recommendation-source').hidden = true;
@@ -135,7 +143,7 @@ const WattlyRecommendationsPage = {};
     }
     const split = Page.splitActive(recs, nowMs);
     const points = await Page.forecastPoints(recs);
-    if (current !== tab) return;
+    if (!mayApply()) return;
     el('recommendation-source').hidden = !data.demoForecast;
     WattlyRecommendations.showTotals(split.open);
     note.textContent = WattlyRecommendations.noteText(data, split.open.length);
@@ -146,6 +154,31 @@ const WattlyRecommendationsPage = {};
     el('recommendation-snoozed').innerHTML = split.snoozed.map(function (rec) {
       return WattlyRecommendations.itemHtml(rec, { nowMs: nowMs, readOnly: true });
     }).join('');
+  };
+
+  function residentBusy() {
+    return document.hidden ||
+      (document.activeElement && document.activeElement.matches('input, select, textarea')) ||
+      !!document.querySelector('.rec-actions button:disabled') ||
+      Array.from(document.querySelectorAll('.rec-actions input')).some(function (input) {
+        return input.value !== input.defaultValue;
+      });
+  }
+
+  // Check before requesting and before rendering, including after chart requests.
+  Page.refreshAutomatically = async function () {
+    if (!document.hidden && current !== 'ACTIVE') { await Page.loadAlerts(); return; }
+    if (automaticallyRefreshing || residentBusy()) return;
+    automaticallyRefreshing = true;
+    try { await Page.loadTab('ACTIVE', { automatic: true }); }
+    finally { automaticallyRefreshing = false; }
+  };
+
+  Page.startAutoRefresh = function () {
+    if (Page.autoRefreshStarted) return;
+    Page.autoRefreshStarted = true;
+    window.setInterval(Page.refreshAutomatically, 60000);
+    document.addEventListener('visibilitychange', Page.refreshAutomatically);
   };
 
   function tabFromHash() {
@@ -169,6 +202,30 @@ const WattlyRecommendationsPage = {};
       banner.textContent = 'This household has a fixed-rate plan, so shifting use will not lower its electricity rate.';
     }
   }
+
+  let alertsVersion = 0;
+  Page.loadAlerts = async function () {
+    const node = el('savings-alerts');
+    if (!node) return;
+    const version = ++alertsVersion;
+    const home = Wattly.householdId();
+    const response = await Wattly.api('GET', '/api/v1/households/' + encodeURIComponent(home) + '/recommendation-alerts');
+    if (version !== alertsVersion || home !== Wattly.householdId()) return;
+    if (!response.ok) { node.hidden = true; node.replaceChildren(); return; }
+    node.hidden = !response.data.length;
+    node.replaceChildren();
+    response.data.forEach(function (alert) {
+      const item = document.createElement('div'), text = document.createElement('p'), button = document.createElement('button');
+      item.className = 'banner info'; text.textContent = alert.message + ' Checked ' + WattlyRecommendations.localTime(alert.updated_at) + ' SGT.';
+      button.type = 'button'; button.className = 'btn-ghost'; button.textContent = 'Got it';
+      button.addEventListener('click', async function () {
+        button.disabled = true;
+        const result = await Wattly.api('POST', '/api/v1/households/' + encodeURIComponent(home) + '/recommendation-alerts/' + alert.id + '/acknowledge');
+        if (result.ok) await Page.loadAlerts(); else button.disabled = false;
+      });
+      item.appendChild(text); item.appendChild(button); node.appendChild(item);
+    });
+  };
 
   Page.start = function () {
     const tablist = el('rec-tabs');
@@ -204,6 +261,7 @@ const WattlyRecommendationsPage = {};
       });
     }
     Page.loadTab(tabFromHash());
+    Page.startAutoRefresh();
   };
 
   if (typeof document !== 'undefined' && document.getElementById && document.getElementById('rec-tabs')) {

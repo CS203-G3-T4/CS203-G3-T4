@@ -1,0 +1,28 @@
+{
+  "status": "ACTIVE_LOCAL_EXPERIMENTAL_AI",
+  "appUrl": "http://localhost:8080",
+  "forecastUrl": "http://localhost:8080/forecast.html",
+  "modelVersion": "price-calendar-holiday-demand-v2-20261018",
+  "points": 24,
+  "actionable": true,
+  "stale": false,
+  "qualityFlags": [
+    "PRICE_CALENDAR_HOLIDAY_DEMAND",
+    "EXPECTED_DEMAND_PARTIAL_OR_MISSING",
+    "RETROSPECTIVE_TRAINING",
+    "EXPERIMENTAL_AI"
+  ],
+  "runtime": "/home/bryan/.local/share/wattly-local-ai-20261030",
+  "environment": "/home/bryan/.config/wattly/local-ai-20261030.env",
+  "source": "Actually received current collector data through read-only bridge",
+  "productionEligible": false,
+  "productionPointerCreated": false,
+  "retrainingActivated": false,
+  "units": [
+    "wattly-local-ai-db",
+    "wattly-local-ai-feed",
+    "wattly-local-ai-python",
+    "wattly-local-ai-app"
+  ],
+  "autostartEnabled": false
+}

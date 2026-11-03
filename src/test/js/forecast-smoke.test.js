@@ -23,8 +23,9 @@ function fixture() {
 test('saved endpoint response renders 24 rows, provenance, stale, empty and outage states', async () => {
   const base = process.env.WATTLY_FORECAST_BASE_URL;
   let view = fixture();
-  let assessment = { available: false, actualPrice: 20, sampleCount: 8, stale: false };
+  let assessment = { available: false, actualPrice: 20, sampleCount: 8, stale: false, reason: 'INSUFFICIENT_REFERENCE_HISTORY' };
   let source = fs.readFileSync('src/main/resources/static/js/forecast.js', 'utf8');
+  let assessmentSource = fs.readFileSync('src/main/resources/static/js/current-assessment.js', 'utf8');
   if (base) {
     const response = await fetch(base + '/api/v1/forecast/latest');
     assert.equal(response.status, 200); view = await response.json();
@@ -32,6 +33,7 @@ test('saved endpoint response renders 24 rows, provenance, stale, empty and outa
     const page = await (await fetch(base + '/forecast.html')).text();
     assert.match(page, /id="forecast-points"/);
     source = await (await fetch(base + '/js/forecast.js')).text();
+    assessmentSource = await (await fetch(base + '/js/current-assessment.js')).text();
   }
   const nodes = Object.fromEntries(['forecast-status', 'forecast-metadata', 'forecast-points',
     'forecast-table', 'current-assessment'].map(id => [id, new Element()]));
@@ -41,12 +43,13 @@ test('saved endpoint response renders 24 rows, provenance, stale, empty and outa
     keepHouseholdInLinks: () => {}, api: async (_method, url) => ({ ok: true,
       data: url.endsWith('/latest') ? view : assessment })
   }});
+  vm.runInContext(assessmentSource, context);
   vm.runInContext(source, context);
   await vm.runInContext('WattlyForecast.refresh()', context);
   assert.equal(nodes['forecast-points'].children.length, 24);
   assert.equal(nodes['forecast-table'].hidden, false);
   assert.ok(nodes['forecast-metadata'].textContent.startsWith(
-    view.run.modelType === 'AI' ? 'AI · ' : 'Baseline ' + view.run.selectedModel + ' · '));
+    view.run.modelType === 'AI' ? (view.run.qualityFlags.includes('EXPERIMENTAL_AI') ? 'Experimental AI' : 'AI · ') : 'Baseline ' + view.run.selectedModel + ' · '));
   assert.match(nodes['forecast-metadata'].textContent, /SGT/);
   assert.equal(nodes['forecast-points'].children[0].children.length, 4);
   if (process.env.WATTLY_UI_PROOF) {
@@ -70,13 +73,19 @@ test('saved endpoint response renders 24 rows, provenance, stale, empty and outa
   await vm.runInContext('WattlyForecast.refresh()', context);
   assert.equal(nodes['forecast-points'].children[0].children[3].textContent, 'Below spike threshold');
   assessment = { available:true,actualPrice:83,typical:100,deviation:-17,deviationPercent:-17,
-    classification:'CHEAP',sampleCount:28,stale:false };
+    classification:'CHEAP',sampleCount:28,stale:false,spikeThreshold:103 };
   await vm.runInContext('WattlyForecast.refresh()', context);
   assert.match(nodes['current-assessment'].textContent, /17% below typical/);
   assessment = { ...assessment,actualPrice:5,typical:0,deviation:5,deviationPercent:null,classification:'EXPENSIVE',stale:true };
   await vm.runInContext('WattlyForecast.refresh()', context);
-  assert.match(nodes['current-assessment'].textContent, /5.00 SGD\/MWh above typical/);
-  assert.match(nodes['current-assessment'].textContent, /percentage unavailable.*Price data is stale/);
+  assert.match(nodes['current-assessment'].textContent, /Price assessment unavailable.*stale/);
+  assert.doesNotMatch(nodes['current-assessment'].textContent, /above typical/);
+  view.run.modelType = 'AI'; view.run.qualityFlags.push('EXPERIMENTAL_AI');
+  await vm.runInContext('WattlyForecast.refresh()', context);
+  assert.match(nodes['forecast-metadata'].textContent, /Experimental AI/);
+  view.run.qualityFlags.push('PRICE_CALENDAR_HOLIDAY_SOLAR');
+  await vm.runInContext('WattlyForecast.refresh()', context);
+  assert.match(nodes['forecast-metadata'].textContent, /solar-assisted/);
   view = { ...view, stale: true };
   await vm.runInContext('WattlyForecast.refresh()', context);
   assert.match(nodes['forecast-status'].textContent, /Stale forecast/);

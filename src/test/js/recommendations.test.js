@@ -210,10 +210,10 @@ test('confidence says how often the suggested time was really cheaper, or that h
   const { Recs } = load();
 
   assert.equal(Recs.confidenceText({ ...dryer, confidenceCheaperDays: 23, confidenceDaysChecked: 26, confidencePercent: 88 }),
-    'How sure: 1:00 PM was really cheaper than 7:45 PM on 23 of 26 past days (88%).');
+    'Past-day pattern: 1:00 PM was really cheaper than 7:45 PM on 23 of 26 past days (88%).');
   assert.equal(Recs.confidenceText({ ...dryer, confidencePercent: null }),
-    'How sure: not enough price history yet to check this.');
-  assert.match(Recs.itemHtml({ ...dryer, confidencePercent: null }), /class="rec-confidence">How sure: not enough/);
+    'Past-day pattern: not enough price history yet to check this.');
+  assert.match(Recs.itemHtml({ ...dryer, confidencePercent: null }), /class="rec-confidence">Past-day pattern: not enough/);
   assert.match(Recs.itemHtml(warning, at('2026-09-30T00:10:00Z')), /class="rec-confidence">/);
 });
 
@@ -294,4 +294,24 @@ test('the mini chart marks the usual run in blue and the suggested run in teal, 
   const night = Recs.chartHtml({ ...dryer, suggestedStart: '2026-09-30T15:00:00Z', runMinutes: 30 }, overnight);
   assert.match(night, /<span>12:00 AM tomorrow<\/span>/);
   assert.match(night, /class="rec-bar suggested" x="0" y="52\.0" width="4" height="4\.0"/);
+});
+
+
+test('live savings ranges disclose warm-up and preserve negative lower bounds', () => {
+  const { Recs } = load();
+  const rec = { ...dryer, forecastSource: 'F3_FORECAST' };
+  assert.match(Recs.rangeHtml(rec), /collecting live results \(0\/20 completed days\)/);
+  assert.match(Recs.rangeHtml({ ...rec, savingsEvidence: { range: { available: true, lowerSgd: -.12, upperSgd: .42, completedDays: 22 } } }),
+    /-\$0\.12 to \$0\.42.*90% target, not a guarantee/);
+  assert.equal(Recs.rangeHtml({ ...rec, demoForecast: true }), '');
+  assert.equal(Recs.rangeHtml({ ...rec, realisedSavingSgd: .1 }), '');
+});
+
+test('savings evidence belongs to its matching card and stale evidence is not shown as ready', () => {
+  const { Recs } = load();
+  const data = { recommendations: [dryer, { ...dryer, id: 9 }], savingsEvidence: { 5: { range: { available: false, reason: 'LIVE_ERROR_HISTORY_STALE' } } } };
+  const rows = Recs.withSavingsEvidence(data);
+  assert.match(Recs.rangeHtml({ ...rows[0], forecastSource: 'F3_FORECAST' }), /recent completed live results are missing/);
+  assert.equal(rows[1].savingsEvidence, undefined);
+  assert.equal(dryer.savingsEvidence, undefined);
 });
