@@ -70,17 +70,34 @@ public class LiveEvidenceRepository {
                 power_kw,run_minutes,weight,bucket,prediction) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?::jsonb) ON CONFLICT DO NOTHING
             """,trial,run,home,appliance,ts(issued),ts(usual),ts(ai),ts(b3),kw,minutes,weight,bucket,prediction.toString());
     }
+    // Apply receipt-complete coverage before LIMIT so missing truth cannot fill
+    // every batch. Unscored rows remain eligible when their real receipts arrive.
     List<JsonNode> pendingOpportunities(String trial,Instant now) {
         return rows("""
             SELECT to_jsonb(o)::text FROM live_savings_opportunity o WHERE trial_id=? AND outcome IS NULL
-            AND GREATEST(usual_start,ai_start,b3_start)+run_minutes*interval '1 minute'<=? ORDER BY issued_at LIMIT 2000
-            """,trial,ts(now));
+            AND GREATEST(usual_start,ai_start,b3_start)+run_minutes*interval '1 minute'<=?
+            AND NOT EXISTS (
+              SELECT 1 FROM (VALUES (o.usual_start),(o.ai_start),(o.b3_start)) starts(run_start)
+              CROSS JOIN LATERAL generate_series(
+                date_bin(interval '30 minutes',starts.run_start,TIMESTAMPTZ '1970-01-01 00:00:00+00'),
+                starts.run_start+o.run_minutes*interval '1 minute',interval '30 minutes') periods(period)
+              WHERE periods.period<starts.run_start+o.run_minutes*interval '1 minute'
+                AND NOT EXISTS (
+                  SELECT 1 FROM market_price_revision r
+                  WHERE r.source='NEMS_SN_SG' AND r.price_status='PROVISIONAL'
+                    AND r.period_start=periods.period AND r.published_at<=? AND r.available_at<=?))
+            ORDER BY issued_at,id LIMIT 2000
+            """,trial,ts(now),ts(now),ts(now));
     }
     List<JsonNode> pendingPrices(String trial,Instant now) {
         return rows("""
             SELECT to_jsonb(p)::text FROM live_forecast_price p JOIN live_forecast_issue i ON i.run_id=p.run_id
-            WHERE i.trial_id=? AND p.actual IS NULL AND p.target_period+interval '30 minutes'<=? ORDER BY target_period LIMIT 5000
-            """,trial,ts(now));
+            WHERE i.trial_id=? AND p.actual IS NULL AND p.target_period+interval '30 minutes'<=?
+              AND EXISTS (SELECT 1 FROM market_price_revision r
+                WHERE r.source='NEMS_SN_SG' AND r.price_status='PROVISIONAL'
+                  AND r.period_start=p.target_period AND r.published_at<=? AND r.available_at<=?)
+            ORDER BY target_period,p.run_id,p.horizon LIMIT 5000
+            """,trial,ts(now),ts(now),ts(now));
     }
     void priceTruth(JsonNode row,MarketRevision truth,Instant now) {
         jdbc.update("UPDATE live_forecast_price SET actual=?,truth_revision=?,evaluated_at=? WHERE run_id=? AND horizon=? AND actual IS NULL",
