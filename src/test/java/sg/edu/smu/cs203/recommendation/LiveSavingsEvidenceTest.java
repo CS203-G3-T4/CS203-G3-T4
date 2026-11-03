@@ -131,6 +131,54 @@ class LiveSavingsEvidenceTest {
   assertThat(evidence.calibration(comparison.trialId(),"AI","SHORT:12H",clock.instant())).isEmpty();
   assertThat(comparison.report().get("scoredOpportunities")).isEqualTo(0);
  }
+ @Test void missingTruthBeyondBothBatchLimitsDoesNotStarveLaterCompleteRuns() {
+  // More old missing records than either batch can hold. No operational forecasts
+  // or household configuration are changed to manufacture this retained backlog.
+  jdbc.update("""
+   INSERT INTO forecast_run(id,as_of,generated_at,origin_slot,input_revision,input_snapshot,mode,
+    model_type,model_version,selected_model,quality_flags,stale,status)
+   SELECT 'missing-'||n,?, ?, ?, 'missing-'||n,'[]'::jsonb,'LIVE','AI',?,'AI','[]'::jsonb,false,'AVAILABLE'
+   FROM generate_series(0,208) n
+   """,Timestamp.from(BASE),Timestamp.from(BASE),Timestamp.from(BaselineForecastService.floor(BASE)),MODEL);
+  jdbc.update("""
+   INSERT INTO live_forecast_issue(run_id,trial_id,captured_at,eligible)
+   SELECT 'missing-'||n,?,?,true FROM generate_series(0,208) n
+   """,comparison.trialId(),Timestamp.from(BASE));
+  jdbc.update("""
+   INSERT INTO live_forecast_price(run_id,horizon,target_period,ai,b3,threshold)
+   SELECT 'missing-'||(n/24),n%24+1,?::timestamptz+(n%24+1)*interval '30 minutes',100,100,350
+   FROM generate_series(0,4999) n
+   """,Timestamp.from(BaselineForecastService.floor(BASE)));
+  jdbc.update("""
+   INSERT INTO live_savings_opportunity(trial_id,run_id,household_id,appliance_id,issued_at,usual_start,
+    ai_start,b3_start,power_kw,run_minutes,weight,bucket,prediction)
+   SELECT ?,'missing-0',?,100000+n,?,?, ?, ?,1,30,1,'SHORT:12H','{"AI":0,"B3":0}'::jsonb
+   FROM generate_series(0,1999) n
+   """,comparison.trialId(),home,Timestamp.from(BASE),Timestamp.from(BASE.plusSeconds(6*3600)),
+   Timestamp.from(BASE.plusSeconds(6*3600)),Timestamp.from(BASE.plusSeconds(6*3600)));
+  clock.value=BASE.plus(Duration.ofDays(1));freshPrice();
+  String run=save("complete-after-backlog",10,false);
+  clock.value=clock.value.plus(Duration.ofHours(13));
+  for(var point:forecasts.points(run,"AI")) {
+   Instant t=point.targetPeriod();saveTruth(t,"NEMS_SN_SG","PROVISIONAL",100,t.plusSeconds(60),t.plusSeconds(61),"complete");
+  }
+  comparison.evaluate();
+  assertThat(evidence.scoredPrices(comparison.trialId())).hasSize(24)
+   .allSatisfy(row->assertThat(row.path("run_id").asText()).isEqualTo(run));
+  assertThat(evidence.opportunities(comparison.trialId())).anySatisfy(row->{
+   assertThat(row.path("run_id").asText()).isEqualTo(run);
+   assertThat(row.path("household_id").asLong()).isEqualTo(home);
+   assertThat(row.path("outcome").isObject()).isTrue();
+  });
+  assertThat(jdbc.queryForObject("SELECT count(*) FROM live_forecast_price WHERE actual IS NULL",Integer.class)).isEqualTo(5000);
+  assertThat(jdbc.queryForObject("SELECT count(*) FROM live_savings_opportunity WHERE run_id='missing-0' AND outcome IS NULL",Integer.class)).isEqualTo(2000);
+  // Late receipts still complete the retained backlog; missing is never normal/zero.
+  for(Instant t:BaselineForecastService.targets(BASE))
+   saveTruth(t,"NEMS_SN_SG","PROVISIONAL",100,t.plusSeconds(60),clock.instant(),"late-backlog");
+  comparison.evaluate();
+  assertThat(evidence.scoredPrices(comparison.trialId())).hasSize(5024);
+  assertThat(jdbc.queryForObject("SELECT count(*) FROM live_savings_opportunity WHERE run_id='missing-0' AND outcome IS NULL",Integer.class)).isZero();
+ }
  @Test void finalAndForeignRevisionsCannotHideAvailableProvisionalTrialTruth() {
   String id=save("mixed-truth",10,false);clock.value=BASE.plus(Duration.ofHours(13));
   for(var point:forecasts.points(id,"AI")) {
