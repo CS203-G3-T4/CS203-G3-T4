@@ -9,7 +9,7 @@ import pytest
 from wattly_ml import operations
 
 @contextmanager
-def server(bad_login=False, denied=False):
+def server(bad_login=False, denied=False, read_response=None):
     calls=[]
     class Handler(BaseHTTPRequestHandler):
         def log_message(self,*args): pass
@@ -21,6 +21,11 @@ def server(bad_login=False, denied=False):
             if value is not None:self.wfile.write(json.dumps(value).encode())
         def do_GET(self):
             calls.append(('GET',self.path))
+            if self.path=='/api/v1/admin/forecast-training-attempts?limit=1':
+                assert 'session=admin' in self.headers.get('Cookie','')
+                assert self.headers['X-XSRF-TOKEN']=='after'
+                self.send(403 if denied else 200,{'attempts':[]} if read_response is None else read_response)
+                return
             assert self.path=='/api/v1/csrf'
             logged='session=admin' in self.headers.get('Cookie','')
             self.send(200,{'headerName':'X-XSRF-TOKEN','token':'after' if logged else 'before'},'xsrf=present; Path=/')
@@ -66,6 +71,37 @@ def test_server_role_denial_is_not_bypassed(monkeypatch):
         with pytest.raises(HTTPError) as error:operations.post_admin('forecast-training-attempts',{'state':'FAILED'})
         assert error.value.code==403
         assert len(calls)==4
+
+
+def test_admin_readiness_authenticates_without_audit_writes(monkeypatch):
+    with server() as (base,calls):
+        config(monkeypatch,base)
+        assert operations.check_admin_access()=={'authenticatedAdminRead':True,'auditWritten':False}
+        assert calls==[('GET','/api/v1/csrf'),('POST','/login'),('GET','/api/v1/csrf'),
+                       ('GET','/api/v1/admin/forecast-training-attempts?limit=1')]
+
+
+def test_admin_readiness_bad_login_stops_before_admin_read(monkeypatch):
+    with server(bad_login=True) as (base,calls):
+        config(monkeypatch,base)
+        with pytest.raises(ValueError,match='login failed'):operations.check_admin_access()
+        assert calls==[('GET','/api/v1/csrf'),('POST','/login')]
+
+
+def test_admin_readiness_role_denial_is_not_bypassed(monkeypatch):
+    with server(denied=True) as (base,calls):
+        config(monkeypatch,base)
+        with pytest.raises(HTTPError) as error:operations.check_admin_access()
+        assert error.value.code==403
+        assert not any(method=='POST' and path!='/login' for method,path in calls)
+
+
+@pytest.mark.parametrize('response',[{},[],{'attempts':'not-a-list'}])
+def test_admin_readiness_rejects_unexpected_endpoint_contract(monkeypatch,response):
+    with server(read_response=response) as (base,calls):
+        config(monkeypatch,base)
+        with pytest.raises(ValueError,match='expected response'):operations.check_admin_access()
+        assert not any(method=='POST' and path!='/login' for method,path in calls)
 
 @pytest.mark.parametrize('base',['http://example.com','https://user:password@example.com','https://example.com/?token=x'])
 def test_invalid_credential_transport_rejected_before_connection(monkeypatch,base):
