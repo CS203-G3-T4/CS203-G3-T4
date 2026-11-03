@@ -236,8 +236,10 @@ def evaluate(issues, prices, protocol, as_of, experiment, frozen_path):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('action',choices=['fit','evaluate'])
-    for name in ('issues','prices','protocol','frozen-model'):
+    for name in ('protocol','frozen-model'):
         parser.add_argument('--'+name,type=Path,required=True)
+    for name in ('issues','prices','dataset'):
+        parser.add_argument('--'+name,type=Path)
     parser.add_argument('--as-of',type=instant,required=True)
     parser.add_argument('--root',type=Path)
     parser.add_argument('--experiment',type=Path)
@@ -250,8 +252,16 @@ def main():
     elif args.experiment is None or args.as_of < end:
         parser.error('Evaluation requires --experiment and the completed holdout')
     # Do not open issue/outcome exports before the timing gate passes.
-    issues = [json.loads(line) for line in args.issues.read_text().splitlines() if line.strip()]
-    prices = [json.loads(line) for line in args.prices.read_text().splitlines() if line.strip()]
+    if args.dataset:
+        if args.issues or args.prices:
+            parser.error('Use --dataset or the two manual exports, never both')
+        from .price_demand_export import load_export
+        issues,prices=load_export(args.dataset,protocol,'train' if args.action=='fit' else 'test')
+    else:
+        if args.issues is None or args.prices is None:
+            parser.error('Require --dataset or both --issues and --prices')
+        issues = [json.loads(line) for line in args.issues.read_text().splitlines() if line.strip()]
+        prices = [json.loads(line) for line in args.prices.read_text().splitlines() if line.strip()]
     result = (fit(issues,prices,protocol,args.as_of,args.root,args.frozen_model) if args.action == 'fit'
         else evaluate(issues,prices,protocol,args.as_of,args.experiment,args.frozen_model))
     print(json.dumps(result,indent=2,allow_nan=False))
