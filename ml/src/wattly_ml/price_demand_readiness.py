@@ -12,8 +12,8 @@ from .backtest import fresh
 from .baselines import baselines
 from .data import KnownPrices
 from .demand_candidate import _mapped
-from .features import features
 from .price_only import completed_price_history
+from .price_demand import completed_price_demand_history
 from .timebase import STEP, floor, instant, targets
 
 
@@ -37,17 +37,20 @@ def snapshot_inputs(issue, mapping_evidence):
         expectedDemand=raw['expectedDemand']))
     if any(r.sourceUpdatedAt > r.availableAt for r in request.priceHistory):
         raise ValueError('PRICE_RECEIPT_BEFORE_PUBLICATION')
-    history = KnownPrices({r.periodStart:r.model_dump() for r in request.priceHistory})
+    history = KnownPrices({r.periodStart:r.model_dump() for r in request.priceHistory},
+        [r.model_dump() for r in request.expectedDemand])
     if not fresh(history, origin):
         raise ValueError('STALE_PRICE_HISTORY')
     control = completed_price_history(history, origin)
-    candidate = KnownPrices(control, [r.model_dump() for r in request.expectedDemand])
-    for target in targets(origin):
-        values = features(candidate, origin, target, schema_version=2)
-        if values[-1] != 1:
-            raise ValueError('MISSING_TARGET_DEMAND')
-    if any(value is None for value in baselines(control, origin).values()):
+    try:
+        candidate = completed_price_demand_history(history, origin)
+    except ValueError as exc:
+        raise ValueError('MISSING_TARGET_DEMAND') from exc
+    if any(value is None for value in baselines(history, origin).values()):
         raise ValueError('INCOMPLETE_BASELINE_HISTORY')
+    # Baselines retain the original available quote, as in the app. Models use
+    # the completed-price recipe; no comparator is weakened to hide that choice.
+    candidate.as_issued_prices = history
     return candidate, control
 
 
