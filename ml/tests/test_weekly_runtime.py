@@ -2,6 +2,7 @@ from copy import deepcopy
 import fcntl
 import json
 import os
+import signal
 from pathlib import Path
 import sqlite3
 import subprocess
@@ -149,6 +150,81 @@ def test_terminal_audit_retry_preserves_exact_payload(configured,monkeypatch):
     assert runtime.sync(p['config'],p['now'],sender=send)['synced']==1
     assert recovered==[records[-1]] and len(fits)==1
     assert runtime.sync(p['config'],p['now'],sender=send)['synced']==0
+
+
+@pytest.mark.parametrize('stop_at',['audit_mirror','delivery','acknowledgement'])
+def test_sigkill_during_terminal_delivery_recovers_exact_result_without_refitting(configured,monkeypatch,stop_at):
+    p=configured;directory=Path(p['cfg']['runtime'])/'attempts/killed';directory.mkdir(parents=True)
+    initial=dict(attemptId='killed',state='RUNNING',trainingDate=p['now'].isoformat(),scores={})
+    runtime.Audit(directory,lambda *a:{'saved':True}).send(initial,required=True)
+    terminal={**initial,'state':'SUCCESS','scores':{'commonPairs':48},'promotionDecision':'NOT_ATTEMPTED_SHADOW_ONLY'}
+    # An actual SIGKILL cannot run the worker's exception/finally handlers.
+    code='''import json,os,signal,sys
+from pathlib import Path
+from wattly_ml import weekly_runtime as r
+original=r.atomic_json
+def save(path,value):
+    if (sys.argv[3]=='audit_mirror' and path.name=='audit.json'
+        or sys.argv[3]=='acknowledgement' and path.name=='audit.delivery.json' and not value['pending']):
+        os.kill(os.getpid(),signal.SIGKILL)
+    original(path,value)
+r.atomic_json=save
+def sender(*args):
+    if sys.argv[3]=='delivery':os.kill(os.getpid(),signal.SIGKILL)
+    return {'saved':True}
+r.Audit(Path(sys.argv[1]),sender).send(json.loads(sys.argv[2]),required=True)
+'''
+    child=subprocess.run([sys.executable,'-c',code,str(directory),json.dumps(terminal),stop_at],
+        env={**os.environ,'PYTHONPATH':str(Path(__file__).resolve().parents[1]/'src')},
+        capture_output=True,text=True,timeout=10)
+    assert child.returncode==-signal.SIGKILL,child.stderr
+    def forbidden(*args,**kwargs):raise AssertionError('Recovery must not refit')
+    monkeypatch.setattr(runtime,'train',forbidden)
+    recovered=[]
+    def send(path,value):recovered.append(deepcopy(value));return {'saved':True}
+    assert runtime.sync(p['config'],p['now'],sender=send)=={'synced':1,'refitted':False}
+    assert recovered==[terminal]
+    assert json.loads((directory/'audit.json').read_text())==terminal
+    assert runtime.sync(p['config'],p['now'],sender=send)['synced']==0
+
+
+def test_legacy_terminal_without_pending_marker_is_delivered_once(configured):
+    p=configured;directory=Path(p['cfg']['runtime'])/'attempts/legacy';directory.mkdir(parents=True)
+    terminal=dict(attemptId='legacy',state='REJECTED',trainingDate=p['now'].isoformat(),scores={'commonPairs':48})
+    runtime.atomic_json(directory/'audit.json',terminal)
+    recovered=[]
+    def send(path,value):recovered.append(deepcopy(value));return {'saved':True}
+    assert runtime.sync(p['config'],p['now'],sender=send)=={'synced':1,'refitted':False}
+    assert recovered==[terminal]
+    assert runtime.sync(p['config'],p['now'],sender=send)['synced']==0
+
+
+def test_journal_survives_interruption_before_first_audit_mirror(configured,monkeypatch):
+    p=configured;directory=Path(p['cfg']['runtime'])/'attempts/no-mirror';directory.mkdir(parents=True)
+    value=dict(attemptId='no-mirror',state='RUNNING',trainingDate=(p['now']-4*STEP).isoformat())
+    original=runtime.atomic_json
+    def interrupted(path,payload):
+        if path.name=='audit.json':raise SystemExit('Crash after write-ahead record')
+        original(path,payload)
+    with monkeypatch.context() as patch:
+        patch.setattr(runtime,'atomic_json',interrupted)
+        with pytest.raises(SystemExit):runtime.Audit(directory,lambda *a:{'saved':True}).send(value)
+    assert not (directory/'audit.json').exists()
+    recovered=[]
+    def send(path,payload):recovered.append(deepcopy(payload));return {'saved':True}
+    assert runtime.sync(p['config'],p['now'],sender=send)=={'synced':1,'refitted':False}
+    assert recovered[0]['state']=='FAILED' and 'Abandoned' in recovered[0]['reason']
+    assert runtime.sync(p['config'],p['now'],sender=send)['synced']==0
+
+
+def test_changed_delivery_payload_is_rejected_before_sending(configured):
+    p=configured;directory=Path(p['cfg']['runtime'])/'attempts/changed';directory.mkdir(parents=True)
+    def offline(*args):raise OSError('Fixture unavailable')
+    runtime.Audit(directory,offline).send(dict(state='SUCCESS',trainingDate=p['now'].isoformat()))
+    path=directory/'audit.delivery.json';record=json.loads(path.read_text())
+    record['payload']['state']='REJECTED';runtime.atomic_json(path,record)
+    def forbidden(*args):raise AssertionError('Changed payload must not be sent')
+    with pytest.raises(ValueError,match='journal changed'):runtime.sync(p['config'],p['now'],sender=forbidden)
 
 
 def test_concurrent_worker_does_not_create_an_attempt(configured):

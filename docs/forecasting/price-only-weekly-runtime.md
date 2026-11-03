@@ -27,8 +27,12 @@ services/databases; passing them is not evidence of improved price accuracy.
    No common pairs or worsened candidate MAE gives REJECTED; neither outcome
    authorizes adoption. Price/spike/savings gates and adequate support remain
    distinct from this completion diagnostic.
-5. On an audit outage preserve the exact terminal payload locally with its hash.
-   Explicit `sync` resends it without refitting. Database terminal attempts are
+5. Before sending an audit, atomically retain its exact payload, hash and pending
+   delivery state in `audit.delivery.json`. Acknowledgement is recorded only after
+   the API confirms the save. Explicit `sync` recovers this record even if a hard
+   kill prevented `audit.json` or the older pending marker from being written;
+   it resends the same result without refitting. Legacy terminal records without
+   delivery metadata are resent once through the idempotent API. Database terminal attempts are
    immutable/idempotent and use `promotion_state=TRAINING_ATTEMPT`, so they cannot
    become forecast models. After a hard kill, sync also recovers an unlocked
    RUNNING attempt older than an hour, even without a pending marker. A normal

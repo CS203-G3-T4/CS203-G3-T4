@@ -2,6 +2,7 @@
 import argparse
 from datetime import timedelta
 import fcntl
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -23,6 +24,9 @@ def atomic_json(path, value):
         except BaseException:
             temp.unlink(missing_ok=True);raise
     os.replace(temp,path)
+    directory=os.open(path.parent,os.O_RDONLY|os.O_DIRECTORY)
+    try:os.fsync(directory)
+    finally:os.close(directory)
 
 
 def config(path):
@@ -79,13 +83,31 @@ def config(path):
 class Audit:
     def __init__(self, directory, sender):
         self.path=directory/'audit.json';self.pending=directory/'audit.pending';self.sender=sender
+        self.delivery=directory/'audit.delivery.json'
+
+    @staticmethod
+    def payload_hash(value):
+        return hashlib.sha256(json.dumps(value,sort_keys=True,separators=(',',':'),allow_nan=False).encode()).hexdigest()
+
+    def read_delivery(self):
+        record=json.loads(self.delivery.read_text())
+        if (not isinstance(record,dict) or set(record)!={'payload','payloadSha256','pending'} or type(record['pending']) is not bool
+                or not isinstance(record['payload'],dict)
+                or record['payloadSha256']!=self.payload_hash(record['payload'])):
+            raise ValueError('Audit delivery journal changed')
+        return record
 
     def send(self,value,required=False):
+        # One atomic write-ahead record contains both payload and delivery state.
+        # A kill before the audit mirror or during HTTP cannot lose the result.
+        record=dict(payload=value,payloadSha256=self.payload_hash(value),pending=True)
+        atomic_json(self.delivery,record)
         atomic_json(self.path,value)
         try:
             saved=self.sender('forecast-training-attempts',value)
             if not isinstance(saved,dict) or saved.get('saved') is not True:
                 raise OSError('Training audit endpoint did not acknowledge the record')
+            atomic_json(self.delivery,{**record,'pending':False})
             self.pending.unlink(missing_ok=True);return True
         except (OSError,ValueError):
             self.pending.write_text(digest(self.path)+'\n')
@@ -160,17 +182,30 @@ def sync(config_path, now, *, sender=post_admin):
     root.mkdir(parents=True,exist_ok=True)
     with (root/'weekly.lock').open('a') as lock:
         fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
-        paths=sorted((root/'attempts').glob('*/audit.json'))
-        pending=[path for path in paths if path.with_name('audit.pending').exists()
-                 or json.loads(path.read_text())['state']=='RUNNING']
+        directories=sorted({path.parent for pattern in ('*/audit.json','*/audit.delivery.json')
+                            for path in (root/'attempts').glob(pattern)})
+        pending=[]
+        for directory in directories:
+            audit=Audit(directory,sender)
+            if audit.delivery.exists():
+                record=audit.read_delivery();value=record['payload']
+                if not record['pending'] and (not audit.path.exists() or json.loads(audit.path.read_text())!=value):
+                    raise ValueError('Acknowledged audit mirror changed')
+                if record['pending'] or audit.pending.exists() or value['state']=='RUNNING':
+                    pending.append((audit,value))
+            else:
+                # Legacy terminal files can be the original crash window. Resend
+                # once via the idempotent API, then retain a delivery acknowledgement.
+                value=json.loads(audit.path.read_text())
+                if audit.pending.exists() and audit.pending.read_text().strip()!=digest(audit.path):
+                    raise ValueError('Pending audit hash changed')
+                pending.append((audit,value))
         if len(pending)>100:raise ValueError('More than 100 pending attempts; inspect the spool')
-        for path in pending:
-            marker=path.with_name('audit.pending');value=json.loads(path.read_text())
-            if marker.exists() and marker.read_text().strip()!=digest(path):raise ValueError('Pending audit hash changed')
+        for audit,value in pending:
             if value['state']=='RUNNING':
                 if now-instant(value['trainingDate'])<=timedelta(hours=1):continue
                 value.update(state='FAILED',reason='Abandoned bounded weekly attempt; model retained')
-            if Audit(path.parent,sender).send(value,required=True):count+=1
+            if audit.send(value,required=True):count+=1
     return {'synced':count,'refitted':False}
 
 
