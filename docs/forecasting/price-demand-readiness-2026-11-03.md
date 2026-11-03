@@ -1,5 +1,9 @@
 # CSDT4-35: no-solar demand readiness — 3 November 2026
 
+Follow-up: the [shared recipe and bounded trainer](price-demand-training-2026-11-03.md)
+are now prepared. The evidence below records the earlier input-only preflight.
+No real candidate or new prospective protocol has been created.
+
 Bryan selected preparation of a separate price-plus-demand experiment without
 solar. The current price-only model, existing solar experiment and live trial
 remain unchanged. This delivers an offline input preflight, not a fitted model,
@@ -104,10 +108,10 @@ Before registering the replacement:
    then two untouched test weeks (also at least480 complete origins). Exact dates
    remain unset while the app is stopped and ongoing capture is undecided. These
    minima are a proposed support floor, not a guarantee of sufficient spike events.
-4. Prepare the separately versioned **completed-price plus mandatory as-issued
-   demand** training/inference policy and trainer. The input projection is checked
-   here; no new artifact is currently fitted or serveable. Do not set a demand
-   field on the frozen price-only model and attribute its old results to it.
+4. The separately versioned **completed-price plus mandatory as-issued demand**
+   policy and guarded trainer are now prepared; see the follow-up above. Real
+   registration, sufficient data and fitting remain outstanding. Do not set a
+   demand field on the frozen price-only model and attribute old results to it.
 5. Fit one demand candidate plus one matched price-only refit using identical
    origins, prices and actuals. The frozen current model and B1/B2/B3 are additional
    controls. Freeze all artifacts before the holdout. No grid search or repeated
@@ -132,5 +136,6 @@ passed23 synthetic tests, including closed-form means/spreads, demand-sensitive
 features, exact completed-price control, missing/future/conflicting inputs,
 mapping, first-eligible deduplication, model/demo/stale exclusion and write-once
 CLI output. These are contract checks, not measured accuracy. The existing
-demand-candidate/pipeline/acceptance contract suite also passed. No runtime source,
-model pointer, schema, API or frontend changes are included.
+demand-candidate/pipeline/acceptance contract suite also passed. Commit `d18ec0a` was input-only; the subsequent
+training guide explains the shared prediction/artifact/HTTP integration. No live
+model pointer, schema or frontend was changed.

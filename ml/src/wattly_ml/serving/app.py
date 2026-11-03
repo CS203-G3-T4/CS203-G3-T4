@@ -187,6 +187,9 @@ def create_app(loader=None):
             raise HTTPException(503,detail={"code":"STALE_INPUT"})
         history = KnownPrices({r.periodStart:r.model_dump() for r in request.priceHistory},
                               [r.model_dump() for r in request.expectedDemand])
+        from ..price_demand import PRICE_DEMAND_POLICY
+        if manifest.get('inputPolicy') == PRICE_DEMAND_POLICY and not app.state.experimental:
+            raise HTTPException(503,detail={'code':'PRICE_DEMAND_REQUIRES_EXPERIMENTAL_MODE'})
         input_evidence = None
         if manifest.get('featureSchemaVersion') in (3, 4):
             if not app.state.experimental:
@@ -216,7 +219,7 @@ def create_app(loader=None):
                 "modelVersion":manifest["version"],"usableFrom":manifest["usableFrom"],
                 "servingMode":"EXPERIMENTAL" if app.state.experimental else "APPROVED",
                 "baselineRanking":manifest["baselineRanking"],"manifest":manifest,
-                "points":points,"inputEvidence":input_evidence,"qualityFlags":(['PRICE_CALENDAR_HOLIDAY_ONLY', 'COMPLETED_PERIOD_PRICE_INPUTS', 'EXPECTED_DEMAND_OMITTED_BY_RECIPE'] if manifest.get('inputPolicy') == 'COMPLETED_PRICE_CALENDAR_HOLIDAY_NO_AUXILIARY_V1' else ['PRICE_CALENDAR_HOLIDAY_SOLAR', 'SOLAR_PUBLIC_PROVISIONAL_INPUTS', 'COMPLETED_PERIOD_PRICE_INPUTS'] + (['AS_ISSUED_EXPECTED_DEMAND'] if manifest.get('featureSchemaVersion')==4 else []) if manifest.get('featureSchemaVersion') in (3,4) else ['PRICE_CALENDAR_ONLY'] if manifest.get('featureSchemaVersion',1)==1 else
+                "points":points,"inputEvidence":input_evidence,"qualityFlags":(['PRICE_CALENDAR_HOLIDAY_DEMAND', 'COMPLETED_PERIOD_PRICE_INPUTS', 'AS_ISSUED_EXPECTED_DEMAND'] if manifest.get('inputPolicy') == PRICE_DEMAND_POLICY else ['PRICE_CALENDAR_HOLIDAY_ONLY', 'COMPLETED_PERIOD_PRICE_INPUTS', 'EXPECTED_DEMAND_OMITTED_BY_RECIPE'] if manifest.get('inputPolicy') == 'COMPLETED_PRICE_CALENDAR_HOLIDAY_NO_AUXILIARY_V1' else ['PRICE_CALENDAR_HOLIDAY_SOLAR', 'SOLAR_PUBLIC_PROVISIONAL_INPUTS', 'COMPLETED_PERIOD_PRICE_INPUTS'] + (['AS_ISSUED_EXPECTED_DEMAND'] if manifest.get('featureSchemaVersion')==4 else []) if manifest.get('featureSchemaVersion') in (3,4) else ['PRICE_CALENDAR_ONLY'] if manifest.get('featureSchemaVersion',1)==1 else
                     ['PRICE_CALENDAR_HOLIDAY_DEMAND', 'EXPECTED_DEMAND_PARTIAL_OR_MISSING'] if len({r.targetPeriod for r in request.expectedDemand if r.targetPeriod in targets(request.asOf)})<24 else ['PRICE_CALENDAR_HOLIDAY_DEMAND'])+
                     (["RETROSPECTIVE_TRAINING"] if manifest["retrospective"] else [])+
                     (["EXPERIMENTAL_AI"] if app.state.experimental else [])}

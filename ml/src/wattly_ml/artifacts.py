@@ -51,6 +51,13 @@ def load_bundle(path: Path):
                 or manifest.get('productionEligible') is not False
                 or manifest.get('expectedDemandPolicy') != 'ALWAYS_MISSING_AS_TRAINED'):
             raise ValueError('Invalid experimental price-only input contract')
+    from .price_demand import PRICE_DEMAND_POLICY, DEMAND_POLICY, RESEARCH_RECIPE
+    if manifest.get('inputPolicy') == PRICE_DEMAND_POLICY or manifest.get('researchRecipe') == RESEARCH_RECIPE:
+        if (schema != 2 or manifest.get('inputPolicy') != PRICE_DEMAND_POLICY
+                or manifest.get('researchRecipe') != RESEARCH_RECIPE
+                or manifest.get('productionEligible') is not False
+                or manifest.get('expectedDemandPolicy') != DEMAND_POLICY):
+            raise ValueError('Invalid experimental price-demand input contract')
     if schema in (3, 4):
         from .solar import SOLAR_POLICY, SOLAR_DEMAND_POLICY
         policy = SOLAR_POLICY if schema == 3 else SOLAR_DEMAND_POLICY
