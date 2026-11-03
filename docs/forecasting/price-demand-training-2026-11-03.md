@@ -1,5 +1,9 @@
 # CSDT4-35: prepared price-plus-demand trainer without solar
 
+The [export, F4 replay and isolated rehearsal guide](price-demand-flow-2026-11-03.md)
+now supplies the repeatable dataset and end-user comparison steps. Real-study
+registration, ongoing capture and real measured results remain outstanding.
+
 The no-solar training and inference code is prepared. **No real demand model has
 been fitted, adopted or deployed. Task35 remains incomplete on real fitting and
 unseen-period evaluation.** No Jira, live model/trial, collector, timer or serving
