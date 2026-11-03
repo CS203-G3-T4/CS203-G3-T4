@@ -11,6 +11,7 @@ from wattly_ml import weekly_runtime as runtime
 from wattly_ml import weekly_sources as sources
 from wattly_ml.data import digest,load_dataset
 from test_weekly_runtime import prepared,configured,audit_server,successful_training
+from test_operations_http import server as admin_server
 
 
 @pytest.fixture
@@ -114,6 +115,25 @@ def test_portable_command_uses_real_shared_session_and_retains_one_weekly_attemp
     assert json.loads(second.stdout)['state']=='SKIPPED_ALREADY_ATTEMPTED'
     assert len(records)==2 and records[0]['state']=='RUNNING'
     assert 'fixture-password' not in first.stdout+first.stderr
+
+
+@pytest.mark.parametrize('denied',[False,True])
+def test_deployment_admin_check_never_claims_or_trains_a_week(deployment,monkeypatch,denied):
+    p=deployment
+    with admin_server(denied=denied) as (base,calls):
+        monkeypatch.setenv('WATTLY_RUN_API_URL',base)
+        monkeypatch.setenv('WATTLY_ADMIN_PASSWORD','fixture password & +')
+        command=[sys.executable,'-m','wattly_ml.portable_weekly','check-admin']
+        result=subprocess.run(command,capture_output=True,text=True,timeout=30,
+            env={**os.environ,'PYTHONPATH':str(Path(__file__).resolve().parents[1]/'src')})
+    assert result.returncode==(2 if denied else 0),result.stderr
+    assert not (Path(p['cfg']['runtime'])/'attempts').exists()
+    assert 'fixture password' not in result.stdout+result.stderr
+    assert not any(method=='POST' and path!='/login' for method,path in calls)
+    if not denied:
+        value=json.loads(result.stdout)
+        assert value['ready'] and value['authenticatedAdminRead']
+        assert not value['trained'] and not value['auditWritten'] and not value['automaticAdoption']
 
 
 def test_database_error_never_enters_persisted_audit(deployment,monkeypatch):

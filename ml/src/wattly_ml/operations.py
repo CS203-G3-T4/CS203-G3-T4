@@ -35,14 +35,8 @@ def audit_url(base):
     return base, loopback
 
 
-def post_admin(path, value):
-    """Use the existing shared login/CSRF contract; never weaken server guards."""
-    base = os.environ.get('WATTLY_RUN_API_URL')
-    if not base:
-        return False
-    base, loopback = audit_url(base)
-    if path not in ('forecast-training-attempts', 'forecast-baseline-validation', 'forecast-demand', 'forecast-savings-replay'):
-        raise ValueError('Unsupported training audit endpoint')
+def _admin_client(base, loopback):
+    """Authenticate without following redirects or changing server guards."""
     user, password = os.environ.get('WATTLY_ADMIN_USER'), os.environ.get('WATTLY_ADMIN_PASSWORD')
     if not user or not password:
         raise ValueError('Admin credentials required for training-run persistence')
@@ -75,6 +69,35 @@ def post_admin(path, value):
     else:
         token = base64.b64encode((user+':'+password).encode()).decode()
         headers['Authorization'] = 'Basic '+token
+    return opener, headers
+
+
+def check_admin_access():
+    """Read the audit endpoint using shared login; never submit a training record."""
+    base = os.environ.get('WATTLY_RUN_API_URL')
+    if not base:
+        raise ValueError('Set WATTLY_RUN_API_URL')
+    base, loopback = audit_url(base)
+    if os.environ.get('WATTLY_RUN_AUTH_MODE', 'session') != 'session':
+        raise ValueError('Deployment readiness requires shared session authentication')
+    opener, headers = _admin_client(base, loopback)
+    request = Request(base+'/api/v1/admin/forecast-training-attempts?limit=1', headers=headers)
+    with opener.open(request, timeout=10) as response:
+        value = json.load(response)
+        if response.status != 200 or not isinstance(value, dict) or not isinstance(value.get('attempts'), list):
+            raise ValueError('Training audit admin read did not return the expected response')
+    return {'authenticatedAdminRead': True, 'auditWritten': False}
+
+
+def post_admin(path, value):
+    """Use the existing shared login/CSRF contract; never weaken server guards."""
+    base = os.environ.get('WATTLY_RUN_API_URL')
+    if not base:
+        return False
+    base, loopback = audit_url(base)
+    if path not in ('forecast-training-attempts', 'forecast-baseline-validation', 'forecast-demand', 'forecast-savings-replay'):
+        raise ValueError('Unsupported training audit endpoint')
+    opener, headers = _admin_client(base, loopback)
     request = Request(base+'/api/v1/admin/'+path,
                       data=json.dumps(value, allow_nan=False).encode(),
                       headers={**headers, 'Content-Type':'application/json'})

@@ -1,5 +1,8 @@
 # Portable weekly training [CSDT4-59]
 
+The [deployer handoff](weekly-deployer-handoff.md) gives the complete setup,
+readiness, delayed activation and recovery procedure for the hosting owner.
+
 The same one-shot worker runs on a Linux VPS, a Linux container on a Docker host,
 or a managed platform with scheduled container jobs. It does not need WSL,
 systemd, a logged-in desktop, a GPU, a browser collector or the developer's laptop.
@@ -79,6 +82,7 @@ With the private environment injected, use:
 
 ```sh
 python -m wattly_ml.portable_weekly check
+python -m wattly_ml.portable_weekly check-admin
 python -m wattly_ml.portable_weekly run
 python -m wattly_ml.portable_weekly sync
 ```
@@ -86,6 +90,9 @@ python -m wattly_ml.portable_weekly sync
 `check` loads the trusted pinned model, verifies dependencies, storage/process
 locks and read-only source access. It writes only local configuration/preflight
 files, makes no training-audit POST and performs no fit or model adoption.
+`check-admin` also authenticates with shared login/rotated CSRF and reads the
+training-audit endpoint. It rejects missing/incompatible endpoints or a denied
+account without submitting an audit or claiming a weekly attempt.
 Normal `run` stays disabled unless `WATTLY_WEEKLY_ENABLED=true`. It also skips
 before `WATTLY_WEEKLY_NOT_BEFORE`, without claiming a weekly attempt. Its wrapper
 supplies the real scheduling time to the core; tests can inject `--as-of`.

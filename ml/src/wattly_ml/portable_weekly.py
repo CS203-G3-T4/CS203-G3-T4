@@ -12,7 +12,7 @@ import tempfile
 
 from .artifacts import load_bundle
 from .data import digest
-from .operations import audit_url
+from .operations import audit_url,check_admin_access
 from .timebase import instant
 from .weekly_runtime import config,run_week,sync
 
@@ -106,6 +106,7 @@ def check(path,cfg):
 
 def execute(action,path,cfg,now):
     if action=='check':return check(path,cfg)
+    if action=='check-admin':return {**check(path,cfg),**check_admin_access()}
     # Reconcile the exact saved audit even when training data/model storage is
     # unavailable. sync acquires the existing runtime lock and never fits.
     if action=='sync':return sync(path,now)
@@ -120,7 +121,7 @@ def execute(action,path,cfg,now):
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action',choices=('check','run','sync','_worker'))
+    parser.add_argument('action',choices=('check','check-admin','run','sync','_worker'))
     parser.add_argument('--as-of',type=instant)
     parser.add_argument('--worker-action',choices=('run','sync'),help=argparse.SUPPRESS)
     args=parser.parse_args()
