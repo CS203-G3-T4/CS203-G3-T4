@@ -13,6 +13,7 @@
     .rec-stat { padding: 19px 22px; }
     .rec-stat span { color: var(--muted); font-size: 12px; }
     .rec-stat strong { display: block; margin-top: 5px; font: 700 30px/1.2 "Space Grotesk", sans-serif; }
+    .rec-stat small { display: block; margin-top: 4px; color: var(--muted); font-size: 12px; }
     .rec-panel { padding: 22px; }
     .rec-panel-head { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: center; }
     .rec-panel h2 { font-size: 18px; }
@@ -106,9 +107,9 @@
     </header>
     <div id="page-banner" aria-live="polite"></div>
     <section id="savings-alerts" aria-label="Savings changes" aria-live="polite" hidden></section>
-    <section class="rec-overview" aria-label="Suggestion summary">
-      <div class="card rec-stat"><span>Open suggestions</span><strong id="recommendation-count">—</strong></div>
-      <div class="card rec-stat"><span>Estimated savings for these runs</span><strong id="recommendation-savings">—</strong></div>
+    <section class="rec-overview" aria-label="Your savings this week">
+      <div class="card rec-stat"><span>Estimated savings this week</span><strong id="estimated-week">—</strong><small>From the suggestions you accepted</small></div>
+      <div class="card rec-stat"><span>Actual savings this week</span><strong id="actual-week">—</strong><small>At actual prices, once each run is done</small></div>
     </section>
     <section class="card rec-panel" aria-labelledby="suggestions-title">
       <div class="rec-panel-head"><h2 id="suggestions-title">Your suggestions</h2><span class="source-badge" id="recommendation-source" hidden>Demo forecast</span></div>
