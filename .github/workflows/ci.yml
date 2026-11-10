@@ -3,7 +3,8 @@ name: CI
 # Runs the project's existing automated tests on every pull request to main and
 # on every push to main. It runs whatever tests the repository contains, so a new
 # feature is only covered if its PR adds tests (see the PR template's Validation
-# section). There is no deployment step: the project is not deployed.
+# section). There is no deployment step: Railway deploys main itself
+# (see docs/deployment.md).
 on:
   pull_request:
     branches: [main]

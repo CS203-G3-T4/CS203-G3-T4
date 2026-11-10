@@ -9,6 +9,19 @@ Each feed retains its saved history when an upstream fails. No CSV files are wri
 
 USEP is expressed in **SGD/MWh**. It is a wholesale market signal, not a complete household electricity tariff or bill rate.
 
+**Live app:** <https://wattlyapp.me/> (Railway; the same service is also reachable
+at `app-production-1d803.up.railway.app`).
+
+**API documentation (Swagger UI):** <https://wattlyapp.me/swagger-ui/index.html>,
+or `http://localhost:8080/swagger-ui/index.html` when running locally. The OpenAPI
+document is at [`/v3/api-docs`](https://wattlyapp.me/v3/api-docs). Both are public;
+the endpoints they describe still require sign-in where noted.
+
+Contents: [Run locally](#run-locally) · [Deploy](#deploy) ·
+[Architecture](#architecture) · [Hand-off interfaces](#hand-off-interfaces) ·
+[Units and time conventions](#units-and-time-conventions) ·
+[Team conventions](#team-conventions) · [API](#api) · [Tests](#tests)
+
 ## Run locally
 
 Requirements: Java 21 or newer, and Docker with Compose (or a PostgreSQL server). The Maven wrapper downloads Maven automatically.
@@ -50,6 +63,134 @@ checksums. Use a fresh disposable local database to try the renamed seed data.
 Production runs on Railway with the `prod` profile, which requires `DB_URL`,
 `DB_USER` and `DB_PASSWORD`. See [docs/deployment.md](docs/deployment.md).
 
+## Architecture
+
+Wattly is a modular monolith: one Spring Boot application (Java 21) split into
+feature packages under `sg.edu.smu.cs203`, backed by one PostgreSQL database whose
+schema is managed by Flyway (`src/main/resources/db/migration`). Each feature
+follows controller → service → repository (Spring `JdbcTemplate`). Features call
+each other through the small interfaces listed under
+[Hand-off interfaces](#hand-off-interfaces), never through another feature's
+tables or repositories. An optional Python inference service (`ml/`) serves the
+trained forecast model on loopback; when it is absent or invalid, F3 falls back to
+the Java baseline.
+
+```mermaid
+flowchart LR
+    subgraph External["External sources"]
+        NEMS["NEMS USEP API<br/>(half-hourly price)"]
+        NEA2["NEA 2-hour forecast"]
+        NEA24["NEA 24-hour forecast"]
+    end
+
+    subgraph App["Spring Boot application (Java 21)"]
+        F1["F1 market<br/>market.price · market.weather<br/>ingestion, feed health, stale fallback"]
+        F2["F2 household<br/>households, appliances,<br/>load model, spend, budget"]
+        F3["F3 forecast<br/>baselines, AI forecast,<br/>spike assessment, accuracy"]
+        F4["F4 recommendation<br/>cheapest start, ranking,<br/>explanations, savings"]
+        F5["F5 common<br/>TimeConfig · DemoClock · replay"]
+        SEC["security<br/>login, RESIDENT / ADMIN roles"]
+        ADM["admin<br/>platform overview"]
+        API["REST /api/v1<br/>Swagger UI · /v3/api-docs"]
+        WEB["Static web UI<br/>src/main/resources/static"]
+    end
+
+    PY["Python inference<br/>ml/ (loopback, optional)"]
+    DB[("PostgreSQL<br/>Flyway V1–V27")]
+
+    NEMS --> F1
+    NEA2 --> F1
+    NEA24 --> F1
+    F1 -- "PriceFeedStatus, PastPrices,<br/>SpikeThresholds" --> F4
+    F1 -- "price history" --> F3
+    F3 -- "PriceForecastSource" --> F4
+    F3 <-- "HTTP, bounded timeout" --> PY
+    F2 -- "HouseholdDirectory,<br/>HouseholdRecommendationReader" --> F4
+    F5 -. "injected Clock" .-> F1 & F2 & F3 & F4
+    F1 & F2 & F3 & F4 & SEC & ADM --> DB
+    F1 & F2 & F3 & F4 & ADM --> API
+    SEC --> API
+    WEB --> API
+```
+
+| Package | Feature | Responsibility |
+| --- | --- | --- |
+| `market.price`, `market.weather` | F1 Live Market Engine | Poll NEMS and NEA, store price and weather history, feed health, outage switch, price-gap checks |
+| `household` (+ `appliance`, `load`, `spend`, `budget`) | F2 Household Profiling | Households and plans, appliance CRUD, EMA-calibrated load model, month-to-date spend and budget |
+| `forecast` | F3 AI Forecaster | Baselines, AI forecast via the Python service, spike assessment, accuracy scoreboard |
+| `recommendation` | F4 Recommendation Engine | Cheapest start times, accept/override/dismiss, explanations, confidence, realised savings |
+| `common` | F5 Demo Replay / shared | Asia/Singapore `Clock`, `DemoClock`, replay controls |
+| `security`, `admin` | Accounts and admin | Login, resident/admin roles, demo accounts, admin overview |
+
+## Hand-off interfaces
+
+These are the agreed boundaries between features (CSDT4-9). Depend on the
+interface, not on the implementing feature's repositories or tables. Each lives
+in the package of the feature that consumes or owns it, as noted.
+
+| Interface | Owner → consumer | Contract |
+| --- | --- | --- |
+| [`HouseholdDirectory`](src/main/java/sg/edu/smu/cs203/household/HouseholdDirectory.java) | F2 → F4, spend | `households()` (real households only), `household(id)` (profile, plan, USEP exposure), `flexibleAppliances(id)`, `loadProfile(id, date)` (kWh per half-hour; `null` date = today in Singapore) |
+| [`HouseholdRecommendationReader`](src/main/java/sg/edu/smu/cs203/household/HouseholdRecommendationReader.java) | F2 → F4 worker | Read-only household plus flexible appliances for the recommendation worker. Internal only, never a resident API |
+| [`PriceForecastSource`](src/main/java/sg/edu/smu/cs203/recommendation/PriceForecastSource.java) | F3 → F4 | `forecast()` returns a forecast F4 may act on, or the reason there is none. `demo` uses the labelled replay-day curve; `f3` uses F3's latest forecast only when it is actionable (`RECOMMENDATION_FORECAST_SOURCE`) |
+| [`ForecastPredictor`](src/main/java/sg/edu/smu/cs203/forecast/ForecastPredictor.java) | F3 internal | `predict(knownPrices, asOf)` returns 24 ordered half-hours (SGD/MWh), or an empty list when inputs are insufficient |
+| [`PriceFeedStatus`](src/main/java/sg/edu/smu/cs203/recommendation/PriceFeedStatus.java) | F1 → F4 | `stale()` is true when the latest price is `STALE` or none exists; `simulatedOutage()` is true while the admin outage switch is on. Either blocks new recommendations |
+| [`PastPrices`](src/main/java/sg/edu/smu/cs203/recommendation/PastPrices.java) | F1 → F4 | Actual half-hourly USEP known by `asOf` (about four weeks), never filled in or guessed |
+| [`SpikeThresholds`](src/main/java/sg/edu/smu/cs203/recommendation/SpikeThresholds.java) | F3 rule → F4 | Spike threshold (SGD/MWh) per target half-hour, using only prices known before `asOf`; missing when history is insufficient |
+| `java.time.Clock` from [`TimeConfig`](src/main/java/sg/edu/smu/cs203/common/TimeConfig.java) | F5 → all | The only source of business time. It is a `DemoClock`: real Singapore time normally, simulated time while an admin runs a replay |
+
+HTTP contracts between the browser and the backend are the `/api/v1` endpoints in
+Swagger UI. The browser never calls the Python service; Spring owns validation,
+persistence and fallback.
+
+## Units and time conventions
+
+| Quantity | Stored / API unit | Notes |
+| --- | --- | --- |
+| Wholesale price (USEP, VCP) | SGD/MWh | Persisted as `NUMERIC`, `BigDecimal` in Java |
+| Displayed price | cents/kWh | cents/kWh = SGD/MWh ÷ 10, shown to one decimal place |
+| Fixed-rate tariff, planning rate | cents/kWh | Entered in Household Settings and Spending |
+| Energy cost | SGD | SGD = kWh × SGD/MWh ÷ 1000; money is always `NUMERIC`/`BigDecimal`, never `double` |
+| System demand | MW | NEMS demand forecast |
+| Appliance power | kW | Appliance run time is in minutes |
+| Household energy | kWh | Load profiles are 48 half-hourly kWh values per day, modelled rather than metered |
+| Temperature | °C | Heat-hint threshold defaults to 33°C (inclusive) |
+
+Time rules (see also [Shared Clock rule](#shared-clock-rule-csdt4-21)):
+
+- Get the current time only from the injected `Clock` in `common/TimeConfig`.
+  Never call a no-argument `now()` or `System.currentTimeMillis()` in business code.
+- Persist moments as instants (`TIMESTAMPTZ`); store times of day, such as an
+  appliance's flexibility window, as `TIME`.
+- JSON timestamps are ISO-8601 instants. Convert to `Asia/Singapore` for local
+  dates, "today", month boundaries and display.
+- Prices belong to half-hour periods: `period_start = floor(source_updated / 30 min)`.
+  Forecasts cover the next 24 half-hours (12 hours).
+- Time-dependent tests use `Clock.fixed(instant, ZoneId.of("Asia/Singapore"))`.
+
+## Team conventions
+
+- **Jira:** every change belongs to a CSDT4 issue. Use its key in the branch name,
+  every commit, and the PR title.
+- **Branches:** `<type>/CSDT4-<n>-short-description`, created from the latest
+  `origin/main`, for example `feat/CSDT4-55-admin-overview` or
+  `docs/CSDT4-139-readme-architecture-handoffs`. Types: `feat`, `fix`, `refactor`,
+  `docs`, `test`, `chore`, `ci`.
+- **Commits and PR titles:** `type(scope): imperative summary [CSDT4-<n>]`, for
+  example `fix(forecast): use replay prices while demo is active [CSDT4-35]`.
+  Scopes include `market`, `households`, `forecast`, `recommendations`,
+  `spending`, `admin`, `demo`, `db`, `ml` and `repo`.
+- **Pull requests:** never push to `main`. Open a PR into `main` using the
+  [PR template](.github/pull_request_template.md): Jira link, acceptance criteria,
+  exact validation results, screenshots for UI changes, and the shared-Clock
+  checklist. At least one teammate other than the author must approve the latest
+  push, review conversations must be resolved, and the **CI passed** check
+  ([workflow](.github/workflows/ci.yml)) must succeed.
+- **Merging:** use **Squash and merge** with the PR title as the commit title,
+  then delete the branch and move the Jira issue to Done.
+- **Secrets and data:** credentials, `.env` files, database dumps and generated
+  datasets stay out of Git.
+
 ## Run an already restored team dataset
 
 Copy `.env.team-demo.example` to `.env.team-demo`, set `DB_URL` to the restored
@@ -79,7 +220,7 @@ the existing schema and initialize new databases.
 - `GET /api/v1/admin/overview` (admin) reports households monitored, price-linked households, realised savings this month and the forecast MAE, together with the household summary rows.
 - `GET /api/v1/admin/households/summary` (admin) returns each household's plan, realised savings this month, budget status and simulated flag.
 - `GET /actuator/health` reports application and database health.
-- `/swagger-ui.html` displays the API documentation; `/v3/api-docs` returns the OpenAPI document.
+- `/swagger-ui/index.html` displays the API documentation; `/v3/api-docs` returns the OpenAPI document.
 
 `/latest` returns HTTP 503 with `freshness: UNAVAILABLE` if no price has ever been stored. Once a price has been stored, a feed outage does not erase it; the endpoint returns that value with `freshness: STALE`. A successful poll can still be classified as `STALE_SOURCE` if the upstream API responds with an old timestamp. The freshness limit defaults to 40 minutes.
 

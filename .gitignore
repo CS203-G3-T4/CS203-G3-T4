@@ -32,6 +32,9 @@ build/
 ### VS Code ###
 .vscode/
 
+### macOS ###
+.DS_Store
+
 # F3 local data and trusted model artifacts live outside source control.
 .env
 .venv/

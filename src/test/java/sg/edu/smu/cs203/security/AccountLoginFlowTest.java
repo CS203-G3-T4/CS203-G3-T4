@@ -82,6 +82,14 @@ class AccountLoginFlowTest {
     }
 
     @Test
+    void swaggerUiEntryPathIsPublic() throws Exception {
+        // springdoc's documented /swagger-ui.html redirects into /swagger-ui/**. Without its own
+        // allow-list entry the deployed site answered the shared Swagger link with 403.
+        mvc.perform(get("/swagger-ui.html"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void logoutEndsTheSessionAndReturnsToLoginPage() throws Exception {
         MvcResult login = mvc.perform(post("/login")
                         .param("username", "resident")
@@ -147,6 +155,12 @@ class AccountLoginFlowTest {
 
         @GetMapping("/test")
         String test() {
+            return "ok";
+        }
+
+        // Stands in for springdoc, which this web slice does not load.
+        @GetMapping("/swagger-ui.html")
+        String swaggerUi() {
             return "ok";
         }
     }
