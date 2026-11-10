@@ -332,22 +332,12 @@ const WattlyRecommendations = {};
     return note + WattlyRecommendations.updatedText(data.refreshedAt);
   };
 
-  // Header figures: how many open suggestions and their estimated savings (from the app's data).
-  WattlyRecommendations.showTotals = function (recs) {
-    const count = document.getElementById('recommendation-count');
-    const savings = document.getElementById('recommendation-savings');
-    if (count) count.textContent = String(recs.length);
-    if (savings) savings.textContent = WattlyRecommendations.money(
-      recs.reduce(function (sum, rec) { return sum + Number(rec.estSavingSgd || 0); }, 0));
-  };
-
   function render(data) {
     const list = document.getElementById('recommendation-list');
     const note = document.getElementById('recommendation-note');
     const badge = document.getElementById('recommendation-source');
     badge.hidden = !data.demoForecast;
     const recs = WattlyRecommendations.withSavingsEvidence(data);
-    WattlyRecommendations.showTotals(recs);
     note.textContent = WattlyRecommendations.noteText(data, recs.length);
     const nowMs = Date.now();
     list.innerHTML = recs.map(function (rec) { return WattlyRecommendations.itemHtml(rec, nowMs); }).join('');
@@ -374,11 +364,8 @@ const WattlyRecommendations = {};
     status.className = 'rec-status done';
     item.classList.add('decided');
     item.querySelector('.rec-actions').remove();
-    const count = document.getElementById('recommendation-count');
-    const savings = document.getElementById('recommendation-savings');
-    if (count) count.textContent = String(Math.max(0, Number(count.textContent) - 1));
-    if (savings) savings.textContent = WattlyRecommendations.money(
-      Math.max(0, Number(savings.textContent.replace(/[^0-9.-]/g, '')) - Number(result.data.estSavingSgd || 0)));
+    // A page can react to a decision, e.g. the Recommendations page updates its weekly savings.
+    if (WattlyRecommendations.onDecided) WattlyRecommendations.onDecided(result.data);
     Wattly.toast(WattlyRecommendations.toastFor(result.data));
   }
 
@@ -389,10 +376,6 @@ const WattlyRecommendations = {};
     const result = await Wattly.api('GET', WattlyRecommendations.listUrl(Wattly.householdId()));
     if (!result.ok) {
       document.getElementById('recommendation-list').innerHTML = '';
-      const count = document.getElementById('recommendation-count');
-      const savings = document.getElementById('recommendation-savings');
-      if (count) count.textContent = '—';
-      if (savings) savings.textContent = '—';
       note.textContent = (result.data && result.data.detail) || 'Could not load suggestions.';
       return;
     }

@@ -88,8 +88,8 @@ for (const stage of ['list', 'chart']) {
   for (const busy of ['focused input', 'unsaved time', 'pending decision']) {
     test('automatic refresh preserves ' + busy + ' begun during the ' + stage + ' request', async () => {
       const nodes = {};
-      ['recommendation-list', 'recommendation-note', 'recommendation-source', 'recommendation-count',
-        'recommendation-savings', 'snoozed-block', 'recommendation-snoozed', 'rec-tabpanel', 'realised-block',
+      ['recommendation-list', 'recommendation-note', 'recommendation-source',
+        'snoozed-block', 'recommendation-snoozed', 'rec-tabpanel', 'realised-block',
         'tab-active', 'tab-accepted', 'tab-dismissed', 'tab-history'].forEach(id => {
           nodes[id] = { textContent: '', innerHTML: '', hidden: false, setAttribute() {} };
         });
@@ -195,8 +195,8 @@ test('loading the Active tab shows open cards with charts and the snoozed ones r
   const element = () => ({ textContent: '', innerHTML: '', hidden: false, attrs: {},
     setAttribute(name, value) { this.attrs[name] = value; }, tabIndex: 0 });
   const nodes = {};
-  ['recommendation-list', 'recommendation-note', 'recommendation-source', 'recommendation-count',
-    'recommendation-savings', 'snoozed-block', 'recommendation-snoozed', 'rec-tabpanel', 'realised-block',
+  ['recommendation-list', 'recommendation-note', 'recommendation-source',
+    'snoozed-block', 'recommendation-snoozed', 'rec-tabpanel', 'realised-block',
     'tab-active', 'tab-accepted', 'tab-dismissed', 'tab-history'].forEach((id) => { nodes[id] = element(); });
   const { Wattly, Page } = load(nodes);
   const points = [];
@@ -213,15 +213,14 @@ test('loading the Active tab shows open cards with charts and the snoozed ones r
   assert.doesNotMatch(nodes['recommendation-list'].innerHTML, /data-id="2"/);
   assert.equal(nodes['snoozed-block'].hidden, false);
   assert.match(nodes['recommendation-snoozed'].innerHTML, /Snoozed: comes back at/);
-  assert.equal(nodes['recommendation-count'].textContent, '1');
   assert.equal(nodes['tab-active'].attrs['aria-selected'], 'true');
   assert.equal(nodes['tab-history'].attrs['aria-selected'], 'false');
 });
 
 test('an older refresh cannot overwrite newer advice on the same tab', async () => {
   const nodes = {};
-  ['recommendation-list', 'recommendation-note', 'recommendation-source', 'recommendation-count',
-    'recommendation-savings', 'snoozed-block', 'recommendation-snoozed', 'rec-tabpanel', 'realised-block',
+  ['recommendation-list', 'recommendation-note', 'recommendation-source',
+    'snoozed-block', 'recommendation-snoozed', 'rec-tabpanel', 'realised-block',
     'tab-active', 'tab-accepted', 'tab-dismissed', 'tab-history'].forEach((id) => {
       nodes[id] = { textContent: '', innerHTML: '', hidden: false, setAttribute() {} };
     });
@@ -319,4 +318,68 @@ test('realised totals can be negative, and a failed load says so instead of show
 
   assert.equal(nodes['saved-week'].textContent, '—');
   assert.equal(nodes['realised-note'].textContent, 'You do not have access to this household.');
+});
+
+// The header shows this week's estimated and actual savings from accepted suggestions; both only go up.
+test('the header cards show this week\'s estimated and actual savings', () => {
+  const { Page } = load();
+
+  const totals = Page.weekTotals({ totalSavedSgd: 0.49, items: [
+    { estimatedSavingSgd: 0.45, state: 'REALISED' }, { estimatedSavingSgd: 0.12, state: 'PENDING' }] });
+
+  assert.equal(totals.estimated, '$0.57');
+  assert.equal(totals.actual, '$0.49');
+  assert.deepEqual({ ...Page.weekTotals({ totalSavedSgd: 0, items: [] }) }, { estimated: '$0.00', actual: '$0.00' });
+});
+
+test('accepting a suggestion reloads the weekly totals so the estimate goes up', async () => {
+  const element = () => ({ textContent: '', innerHTML: '', hidden: false, setAttribute() {}, addEventListener() {},
+    focus() {}, click() {}, tabIndex: 0 });
+  const nodes = {};
+  ['recommendation-list', 'recommendation-note', 'recommendation-source', 'snoozed-block', 'recommendation-snoozed',
+    'rec-tabpanel', 'realised-block', 'refresh-recommendations', 'estimated-week', 'actual-week', 'page-banner',
+    'tab-active', 'tab-accepted', 'tab-dismissed', 'tab-history'].forEach((id) => { nodes[id] = element(); });
+  const { Wattly, Page, context } = load(nodes);
+  nodes['rec-tabs'] = element(); // added after loading, so the page doesn't start itself before the stubs
+  context.window.addEventListener = () => {};
+  context.window.setInterval = () => 0;
+  context.document.addEventListener = () => {};
+  context.history = { replaceState() {} };
+  Wattly.keepHouseholdInLinks = () => {};
+  Wattly.loadHouseholdSwitcher = () => {};
+  Wattly.renderHouseholdCard = () => {};
+  let estimate = 0.12;
+  const savingsCalls = [];
+  Wattly.api = async (method, url) => {
+    if (url.includes('/savings')) {
+      savingsCalls.push(url);
+      return { ok: true, data: { totalSavedSgd: 0, items: estimate ? [{ estimatedSavingSgd: estimate }] : [] } };
+    }
+    return { ok: true, data: { recommendations: [] } };
+  };
+
+  Page.start();
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.equal(nodes['estimated-week'].textContent, '$0.12');
+  assert.equal(nodes['actual-week'].textContent, '$0.00');
+
+  estimate = 0.54;
+  vm.runInContext('WattlyRecommendations.onDecided({ status: "DISMISSED" })', context);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.equal(nodes['estimated-week'].textContent, '$0.12', 'dismissing does not change the totals');
+  vm.runInContext('WattlyRecommendations.onDecided({ status: "ACCEPTED" })', context);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.equal(nodes['estimated-week'].textContent, '$0.54');
+  assert.ok(savingsCalls.every((url) => url === '/api/v1/households/4/savings?period=week'));
+});
+
+test('if the weekly savings can\'t load, the cards show a dash instead of $0', async () => {
+  const nodes = { 'estimated-week': { textContent: '' }, 'actual-week': { textContent: '' } };
+  const { Wattly, Page } = load(nodes);
+  Wattly.api = async () => ({ ok: false, status: 500, data: null });
+
+  await Page.loadWeekTotals();
+
+  assert.equal(nodes['estimated-week'].textContent, '—');
+  assert.equal(nodes['actual-week'].textContent, '—');
 });

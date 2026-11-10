@@ -2,6 +2,7 @@
 // later" until a chosen time, and a mini forecast chart on each open suggestion. The chart uses the
 // forecast the suggestion was built from: F3's (/api/v1/forecast/latest) or the demo forecast.
 // CSDT4-53: the Accepted tab shows what accepted suggestions really saved this week and this month.
+// The header cards show this week's estimated and actual savings from accepted suggestions.
 // Needs wattly.js and recommendations.js first. Every figure comes from the API.
 
 const WattlyRecommendationsPage = {};
@@ -51,6 +52,24 @@ const WattlyRecommendationsPage = {};
         : month.pendingCount + ' accepted runs this month are not counted yet.');
     }
     return notes.join(' ');
+  };
+
+  // Header cards: this week's savings (Monday to Sunday) from accepted suggestions. Estimated is
+  // what the forecast said for every accepted run this week; actual counts only finished runs at
+  // actual prices. Both only grow as the resident accepts suggestions and runs finish.
+  Page.weekTotals = function (week) {
+    const estimated = (week.items || []).reduce(function (sum, item) {
+      return sum + Number(item.estimatedSavingSgd || 0);
+    }, 0);
+    return { estimated: WattlyRecommendations.money(estimated), actual: Page.savedText(week.totalSavedSgd) };
+  };
+
+  Page.loadWeekTotals = async function () {
+    if (!el('estimated-week')) return;
+    const result = await Wattly.api('GET', Page.savingsUrl(Wattly.householdId(), 'week'));
+    const totals = result.ok ? Page.weekTotals(result.data) : { estimated: '—', actual: '—' };
+    el('estimated-week').textContent = totals.estimated;
+    el('actual-week').textContent = totals.actual;
   };
 
   // Totals for this week (Monday to Sunday) and this month, at actual prices.
@@ -145,7 +164,6 @@ const WattlyRecommendationsPage = {};
     const points = await Page.forecastPoints(recs);
     if (!mayApply()) return;
     el('recommendation-source').hidden = !data.demoForecast;
-    WattlyRecommendations.showTotals(split.open);
     note.textContent = WattlyRecommendations.noteText(data, split.open.length);
     list.innerHTML = split.open.map(function (rec) {
       return WattlyRecommendations.itemHtml(rec, { nowMs: nowMs, points: points[rec.forecastSource] || [] });
@@ -167,6 +185,7 @@ const WattlyRecommendationsPage = {};
 
   // Check before requesting and before rendering, including after chart requests.
   Page.refreshAutomatically = async function () {
+    if (!document.hidden) Page.loadWeekTotals(); // a run that just finished now has an actual saving
     if (!document.hidden && current !== 'ACTIVE') { await Page.loadAlerts(); return; }
     if (automaticallyRefreshing || residentBusy()) return;
     automaticallyRefreshing = true;
@@ -254,12 +273,11 @@ const WattlyRecommendationsPage = {};
     Wattly.loadHouseholdSwitcher();
     WattlyRecommendations.init('recommendation-list');
     loadHousehold();
-    // The header figures always describe the open suggestions, whichever tab is shown first.
-    if (tabFromHash() !== 'ACTIVE') {
-      Wattly.api('GET', Page.tabUrl(Wattly.householdId(), 'ACTIVE')).then(function (result) {
-        if (result.ok) WattlyRecommendations.showTotals(Page.splitActive(result.data.recommendations || [], Date.now()).open);
-      });
-    }
+    // Accepting a suggestion adds it to this week's estimated savings straight away.
+    WattlyRecommendations.onDecided = function (rec) {
+      if (rec.status === 'ACCEPTED') Page.loadWeekTotals();
+    };
+    Page.loadWeekTotals();
     Page.loadTab(tabFromHash());
     Page.startAutoRefresh();
   };

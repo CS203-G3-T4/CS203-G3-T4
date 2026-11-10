@@ -146,8 +146,7 @@ test('the page only reads suggestions; it never asks the server to recompute the
   const calls = [];
   const nodes = {};
   const element = () => ({ textContent: '', innerHTML: '', hidden: false });
-  ['recommendation-list', 'recommendation-note', 'recommendation-source',
-    'recommendation-count', 'recommendation-savings'].forEach((id) => { nodes[id] = element(); });
+  ['recommendation-list', 'recommendation-note', 'recommendation-source'].forEach((id) => { nodes[id] = element(); });
   const document = escapingDocument();
   document.getElementById = (id) => nodes[id] || null;
   const { Wattly, Recs, context } = load({ document, window: { location: { search: '?household=4' } }, URLSearchParams });
@@ -162,7 +161,7 @@ test('the page only reads suggestions; it never asks the server to recompute the
   assert.deepEqual(calls, ['GET /api/v1/households/4/recommendations']);
   assert.match(nodes['recommendation-note'].textContent, /demo forecast/);
   assert.match(nodes['recommendation-note'].textContent, /Updated 2:31 PM\.$/);
-  assert.equal(nodes['recommendation-count'].textContent, '1');
+  assert.match(nodes['recommendation-list'].innerHTML, /data-id="/);
   assert.ok(context);
 });
 
