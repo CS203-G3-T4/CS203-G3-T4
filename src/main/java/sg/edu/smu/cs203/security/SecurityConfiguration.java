@@ -27,7 +27,7 @@ public class SecurityConfiguration {
                                 "/css/**", "/js/**", "/images/**", "/favicon.ico")
                         .permitAll()
                         .requestMatchers("/actuator/health", "/actuator/health/**",
-                                "/swagger-ui/**", "/v3/api-docs/**")
+                                "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**")
                         .permitAll()
                         .requestMatchers("/forecast.html", "/api/v1/forecast/**")
                         .permitAll()
