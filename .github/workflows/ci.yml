@@ -66,10 +66,26 @@ jobs:
       - name: Run JavaScript tests
         run: node --test src/test/js/*.test.js
 
+  # The Python suite took ~13.5 min in one job, about half of it in three study
+  # tests. It runs as parallel shards instead; each shard has its own PostgreSQL.
+  # "rest" runs every test file not named by another shard, so new test files
+  # are always covered. Rebalance with `pytest --durations=25` if one shard grows.
   python:
-    name: Python tests
+    name: Python tests (${{ matrix.shard.name }})
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        shard:
+          - { name: corrections, files: test_corrections.py }
+          - { name: retraining, files: test_retraining.py }
+          - { name: stability, files: test_stability.py }
+          - name: studies
+            files: >-
+              test_ts_variants.py test_experiments.py test_improvement.py
+              test_timeseries.py test_portable_weekly.py
+          - { name: rest, files: "" }
     services:
       postgres:
         image: postgres:17-alpine
@@ -89,6 +105,12 @@ jobs:
       OMP_NUM_THREADS: "1"
       OPENBLAS_NUM_THREADS: "1"
       MKL_NUM_THREADS: "1"
+      SHARD_FILES: ${{ matrix.shard.files }}
+      # Every file named by a shard above; "rest" ignores these.
+      SHARDED_FILES: >-
+        test_corrections.py test_retraining.py test_stability.py
+        test_ts_variants.py test_experiments.py test_improvement.py
+        test_timeseries.py test_portable_weekly.py
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -107,7 +129,18 @@ jobs:
           python -m pip install -r ml/requirements-server.lock
           python -m pip install --no-deps --no-build-isolation -e ml
       - name: Run Python tests
-        run: python -m pytest -q ml/tests
+        run: |
+          set --
+          if [ -n "$SHARD_FILES" ]; then
+            for f in $SHARD_FILES; do set -- "$@" "ml/tests/$f"; done
+          else
+            set -- ml/tests
+            for f in $SHARDED_FILES; do
+              test -f "ml/tests/$f" || { echo "Missing sharded file $f"; exit 1; }
+              set -- "$@" "--ignore=ml/tests/$f"
+            done
+          fi
+          python -m pytest -q "$@"
 
   weekly-container:
     name: Portable weekly container
