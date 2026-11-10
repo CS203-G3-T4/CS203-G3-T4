@@ -115,4 +115,27 @@ class DailyWeatherTest {
         assertThat(response.stale()).isTrue();
         assertThat(response.heatHint()).isFalse();
     }
+
+    @Test
+    void forecastCoveringNowIsPreferredOverTodaysRow() throws Exception {
+        when(repository.findCovering(now)).thenReturn(Optional.of(forecast()));
+        var response = service.today();
+        assertThat(response.forecast()).isEqualTo(forecast());
+        assertThat(response.stale()).isFalse();
+        verify(repository, never()).findByDate(any());
+    }
+
+    @Test
+    void afterMidnightTheEveningIssueFromYesterdayIsShownFresh() throws Exception {
+        // 01:00 SGT on 24 Sep: no record is dated 24 Sep yet, but the issue dated 23 Sep covers until noon.
+        Instant afterMidnight = Instant.parse("2026-09-23T17:00:00Z");
+        var covering = DailyWeatherForecast.from(envelope().path("data").path("records").get(0),
+                afterMidnight.minus(Duration.ofHours(1)));
+        when(repository.findCovering(afterMidnight)).thenReturn(Optional.of(covering));
+        var response = new DailyWeatherService(client, repository,
+                Clock.fixed(afterMidnight, ZoneId.of("Asia/Singapore")), Duration.ofHours(6), BigDecimal.valueOf(33)).today();
+        assertThat(response.available()).isTrue();
+        assertThat(response.stale()).isFalse();
+        assertThat(response.forecast().date()).isEqualTo(LocalDate.of(2026, 9, 23));
+    }
 }
