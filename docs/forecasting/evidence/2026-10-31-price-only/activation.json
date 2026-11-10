@@ -1,0 +1,55 @@
+{
+  "status": "ACTIVE_PRICE_ONLY_EXPERIMENTAL_AI",
+  "activatedAt": "2026-10-31T08:49:42.468210+00:00",
+  "modelVersion": "price-only-183d-20261031-local-v1",
+  "modelSha256": "023fb405d78ac19eb046b3a17ac11e70ef9736eca761c46456d6128428578ce9",
+  "manifestSha256": "47d8c29c5e93f5d75d5f668c4c88be25cfdff023e5fc51cd067f783514e7c2da",
+  "pythonSourceHead": "ee3707820bc3a881e5ce254df6f43328624ffdc6",
+  "springJarUnchanged": true,
+  "schemaUnchanged": true,
+  "actionable": true,
+  "stale": false,
+  "points": 24,
+  "qualityFlags": [
+    "PRICE_CALENDAR_HOLIDAY_ONLY",
+    "COMPLETED_PERIOD_PRICE_INPUTS",
+    "EXPECTED_DEMAND_OMITTED_BY_RECIPE",
+    "RETROSPECTIVE_TRAINING",
+    "EXPERIMENTAL_AI"
+  ],
+  "forecastAsOf": "2026-10-31T08:49:41.849188Z",
+  "newTrial": {
+    "id": "price-only-live-20261031-v1",
+    "started_at": "2026-10-31T16:48:09.208049+08:00",
+    "ends_at": "2026-11-28T16:48:09.208049+08:00",
+    "model_version": "price-only-183d-20261031-local-v1",
+    "model_sha256": "023fb405d78ac19eb046b3a17ac11e70ef9736eca761c46456d6128428578ce9",
+    "policy": {
+      "days": 28,
+      "scope": "Modelled wholesale costs assuming plans followed; not metered household bills",
+      "truth": "FIRST_COMPLETE_PROVISIONAL_AS_OBSERVED",
+      "weight": "runsPerWeek/7",
+      "version": "FIRST_ELIGIBLE_PLAN_V1",
+      "baseline": "B3-v1",
+      "calibration": "90_PERCENT_DAILY_MAX_NORMALIZED_SAVINGS_ERROR_20_COMPLETE_DAYS",
+      "minimumSavingSgd": 0.05,
+      "maximumSuggestions": 3
+    }
+  },
+  "newTrialCounts": {
+    "issues": 1,
+    "eligibleIssues": 1,
+    "pricePairs": 24,
+    "opportunities": 9
+  },
+  "solarTrialMetadataUnchanged": true,
+  "solarModelUnchanged": true,
+  "approvedPointerCreated": false,
+  "retrainingPerformed": false,
+  "productionEligible": false,
+  "solarDependency": false,
+  "expectedDemandDependency": false,
+  "emcHelperStopped": false,
+  "ownerLocalRefreshUsed": true,
+  "scope": "Model/inference configuration switch only. Review-fix Java migrations/code not deployed; old trials/accepted plans/archives retained."
+}

@@ -1,0 +1,51 @@
+{
+  "checkedAt": "2026-10-30T06:59:25.340728+00:00",
+  "status": "PREPARED_AND_TESTED_COLLECTING_REAL_OUTCOMES",
+  "protocolId": "SOLAR_AS_ISSUED_DEMAND_ABLATION_20261030_V1",
+  "protocolSha256": "330ad3225bf5feb65910a7e4dcc568666cae86b5e5bc6314be25199ea376c276",
+  "pythonSuite": {
+    "passed": 144,
+    "elapsedSeconds": 388.23,
+    "scope": "Full ml/tests suite"
+  },
+  "focusedContractTests": 40,
+  "realInputSnapshotCheck": {
+    "asOf": "2026-10-30T06:53:53.376633+00:00",
+    "originalSavedSolarIssues": 31,
+    "withCompleteOriginalDemandAndSolar": 16,
+    "completeTrainingOrigins": 0,
+    "cohortStart": "2026-10-30T15:00:00+08:00",
+    "note": "Snapshot precedes the registered cohort start; earlier issues are input contract checks only."
+  },
+  "liveModelGuard": {
+    "checkedRun": "a32f6e4e9acb34799d2df27417ded3a254d600db6095f0cf4468a2ea4a036650",
+    "checkedAsOf": "2026-10-30T14:38:08.11788+08:00",
+    "all24FrozenPredictionsMatchSavedRun": true,
+    "maxDifference": 0.0,
+    "schema3StillIgnoresDemand": true,
+    "trial": [
+      {
+        "id": "solar-live-20261030-v1",
+        "startedAt": "2026-10-30T11:48:01.044093+08:00",
+        "endsAt": "2026-11-27T11:48:01.044093+08:00",
+        "modelSha": "e3d96c2dfb4a49a7698e3f9898bac0a896d90bedec8bd0543e637c116c2fe51d"
+      }
+    ]
+  },
+  "frozenModelHashUnchanged": true,
+  "realCandidateFitted": false,
+  "accuracyImprovement": null,
+  "savingsImprovement": null,
+  "syntheticFitTestMeaning": "24-model candidate and control fit/load/evaluate and demand-sensitive HTTP plumbing only",
+  "liveRuntimeChanged": false,
+  "liveTrialReset": false,
+  "weeklyRetrainingActivated": false,
+  "newTimerOrGoalCreated": false,
+  "automaticPromotion": false,
+  "remaining": [
+    "Collect complete original issue inputs and received outcomes",
+    "One explicit fit in registered pre-holdout window if support is sufficient",
+    "One untouched end-of-test report, then real F4 savings/harm replay",
+    "Review outcome; retain current model on failure, no repeated parameter search"
+  ]
+}

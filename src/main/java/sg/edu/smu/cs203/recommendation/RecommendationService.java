@@ -18,13 +18,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Propagation;
 
 import sg.edu.smu.cs203.household.HouseholdDirectory;
+import sg.edu.smu.cs203.household.HouseholdRecommendationReader;
 import sg.edu.smu.cs203.household.HouseholdResponse;
 import sg.edu.smu.cs203.household.ValidationFailedException;
 import sg.edu.smu.cs203.household.appliance.ApplianceResponse;
@@ -78,6 +81,8 @@ public class RecommendationService {
 
     private final RecommendationRepository recommendations;
     private final HouseholdDirectory households;
+    private final HouseholdRecommendationReader backgroundHouseholds;
+    private final SavingsMonitoringService savingsMonitoring;
     private final PriceForecastSource forecasts;
     private final PriceFeedStatus feed;
     private final Clock clock;
@@ -89,6 +94,8 @@ public class RecommendationService {
 
     public RecommendationService(RecommendationRepository recommendations,
                                  HouseholdDirectory households,
+                                 HouseholdRecommendationReader backgroundHouseholds,
+                                 SavingsMonitoringService savingsMonitoring,
                                  PriceForecastSource forecasts,
                                  PriceFeedStatus feed,
                                  Clock clock,
@@ -100,6 +107,8 @@ public class RecommendationService {
         }
         this.recommendations = recommendations;
         this.households = households;
+        this.backgroundHouseholds = Objects.requireNonNull(backgroundHouseholds);
+        this.savingsMonitoring = Objects.requireNonNull(savingsMonitoring);
         this.forecasts = forecasts;
         this.feed = feed;
         this.clock = clock;
@@ -171,8 +180,8 @@ public class RecommendationService {
 
     /**
      * Recomputes a household's suggestions against the current forecast. Called in the background
-     * by RecommendationRecomputeJob (new price, appliance or plan change, every 30 minutes), not on
-     * page load. An unchanged suggestion is kept, a changed one replaces the old one, and a run the
+     * by the manual resident endpoint; background work uses generateInBackground instead. An
+     * unchanged suggestion is kept, a changed one replaces the old one, and a run the
      * resident already accepted or dismissed is not suggested again.
      */
     @Transactional
@@ -180,6 +189,20 @@ public class RecommendationService {
         HouseholdResponse household = households.household(householdId);
         // A background run and a manual one at the same moment would both try to insert.
         recommendations.lockHousehold(householdId);
+        var status = generateInternal(householdId, household, () -> households.flexibleAppliances(householdId));
+        return response(householdId, status);
+    }
+
+    /** Worker-only operation: no controller route and no SecurityContext changes. */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    void generateInBackground(long householdId) {
+        recommendations.lockHousehold(householdId);
+        var inputs = backgroundHouseholds.read(householdId);
+        generateInternal(householdId, inputs.household(), inputs::flexibleAppliances);
+    }
+
+    private RecommendationRepository.RefreshStatus generateInternal(long householdId, HouseholdResponse household,
+                                                Supplier<List<ApplianceResponse>> flexibleAppliances) {
         Instant now = clock.instant();
         expirePassed(householdId, now);
 
@@ -209,7 +232,7 @@ public class RecommendationService {
         // Guards: disabled and non-flexible appliances never reach here (flexibleAppliances);
         // the time-window and past-start guards are inside CheapestStartCalculator.
         List<Candidate> candidates = new ArrayList<>();
-        for (ApplianceResponse appliance : households.flexibleAppliances(householdId)) {
+        for (ApplianceResponse appliance : flexibleAppliances.get()) {
             if (appliance.earliestStart() == null || appliance.mustFinishBy() == null) {
                 continue; // F2 requires a window for FLEXIBLE; skip a bad row rather than fail
             }
@@ -322,16 +345,17 @@ public class RecommendationService {
                 confidence == null ? null : confidence.cheaperDays(),
                 confidence == null ? null : confidence.daysChecked());
         long id = recommendations.insert(created);
+        savingsMonitoring.remember(id,householdId,appliance,result,forecast);
         recommendations.logEvent(id, RecommendationRepository.CREATED, now, result.bestStart(), false);
     }
 
-    private RecommendationsResponse finish(long householdId, Instant now, PriceForecast forecast, String message) {
+    private RecommendationRepository.RefreshStatus finish(long householdId, Instant now, PriceForecast forecast, String message) {
         RecommendationRepository.RefreshStatus status = new RecommendationRepository.RefreshStatus(now,
                 forecast == null ? null : forecast.source(),
                 forecast == null ? null : truncate(forecast.model(), 60),
                 truncate(message, 300));
         recommendations.saveRefresh(householdId, status);
-        return response(householdId, status);
+        return status;
     }
 
     /** Accept the suggestion, optionally at the resident's own time (HH:mm) inside the same window. */
@@ -371,6 +395,7 @@ public class RecommendationService {
         if (appliance != null) {
             // The run agreed to, for realised savings later (CSDT4-53) even if the appliance is edited.
             recommendations.saveRun(recommendationId, appliance.powerKw(), appliance.runMinutes());
+            savingsMonitoring.accepted(recommendationId,start,appliance.powerKw(),appliance.runMinutes());
         }
         recommendations.logEvent(recommendationId, RecommendationStatus.ACCEPTED.name(), now, start, overridden);
         return RecommendationResponse.from(recommendations.findById(recommendationId).orElseThrow());
@@ -521,7 +546,8 @@ public class RecommendationService {
                 .map(r -> RecommendationResponse.from(r, runMinutes.get(r.applianceId()), realised.get(r.id())))
                 .toList();
         return new RecommendationsResponse(householdId, status.forecastSource(), status.forecastModel(),
-                PriceForecast.DEMO.equals(status.forecastSource()), status.message(), shown, status.refreshedAt());
+                PriceForecast.DEMO.equals(status.forecastSource()), status.message(), shown, status.refreshedAt(),
+                savingsMonitoring.views(householdId,rows));
     }
 
     /** Realised savings for the accepted ones among these rows (CSDT4-53), by recommendation id. */

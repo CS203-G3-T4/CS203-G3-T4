@@ -67,6 +67,7 @@ class ForecastMathTest {
         rows.clear();
         for (int d=28;d>=0;d--) rows.add(row(current.minus(Duration.ofDays(d)),BigDecimal.ZERO));
         when(repo.asOf(NOW)).thenReturn(rows);
+        when(service.mappingVerified(rows)).thenReturn(true);
         assertThat(assessment.current().deviationPercent()).isNull();
         assertThat(assessment.current().classification()).isEqualTo("NORMAL");
     }

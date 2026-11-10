@@ -1,0 +1,28 @@
+{
+  "status": "PASS",
+  "restartStartedAt": "2026-10-29T21:11:57.319015+00:00",
+  "backgroundRefresh": {
+    "realHouseholds": 5,
+    "refreshedAfterRestart": 5,
+    "f3Households": 4
+  },
+  "backgroundAccessFailures": 0,
+  "javaTestsPassed": 358,
+  "javaTestsSkipped": 0,
+  "frontendTestsPassed": 64,
+  "modelWeightsChanged": false,
+  "weeklyRetrainingActivated": false,
+  "browser": {
+    "status": "PASS",
+    "automaticStartupRefresh": true,
+    "refreshedAt": "2026-10-29T21:12:01.644506Z",
+    "forecastSource": "F3_FORECAST",
+    "forecastModel": "AI (experimental)",
+    "demoForecast": false,
+    "automaticPagePollObserved": true,
+    "pageReadCount": 2,
+    "manualGenerateRequests": 0,
+    "crossHouseholdReadStatus": 403,
+    "pageErrors": []
+  }
+}
