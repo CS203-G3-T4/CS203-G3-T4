@@ -271,7 +271,9 @@ class RecommendationSpikeWarningTest {
     // ------------------------------------------------------------ helpers
 
     private RecommendationService serviceAt(Instant at) {
-        return new RecommendationService(repository, households, forecasts, feed, Clock.fixed(at, SINGAPORE),
+        return new RecommendationService(repository, households, org.mockito.Mockito.mock(
+            sg.edu.smu.cs203.household.HouseholdRecommendationReader.class), org.mockito.Mockito.mock(
+            SavingsMonitoringService.class), forecasts, feed, Clock.fixed(at, SINGAPORE),
                 new BigDecimal("0.05"), 3, false);
     }
 

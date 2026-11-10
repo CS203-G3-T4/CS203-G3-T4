@@ -1,0 +1,13 @@
+# Whitelist application sources/dependency metadata only. No host models, data,
+# environment files, credentials, test outputs or arbitrary working-tree files.
+*
+!src/
+!src/**
+!pyproject.toml
+!requirements.lock
+!requirements-server.lock
+!Dockerfile.weekly
+**/__pycache__/**
+**/*.pyc
+**/*.joblib
+**/.env

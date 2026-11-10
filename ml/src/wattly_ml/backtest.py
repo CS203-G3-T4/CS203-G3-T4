@@ -37,6 +37,12 @@ def fresh(history, origin):
 
 
 def predict(bundle, history, origin):
+    from .price_demand import PRICE_DEMAND_POLICY, completed_price_demand_history
+    from .price_only import PRICE_ONLY_POLICY, completed_price_history
+    if bundle['manifest'].get('inputPolicy') == PRICE_DEMAND_POLICY:
+        history = completed_price_demand_history(history,origin)
+    elif bundle['manifest'].get('inputPolicy') == PRICE_ONLY_POLICY:
+        history = completed_price_history(history,origin)
     from threadpoolctl import threadpool_limits
     with threadpool_limits(limits=1):
         return [float(model.predict([features(history, origin, target, schema_version=bundle['manifest'].get('featureSchemaVersion',1))])[0])

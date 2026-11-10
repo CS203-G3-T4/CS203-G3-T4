@@ -183,3 +183,31 @@ def test_savings_replay_sends_only_saved_forecast_spikes_never_future_truth(tmp_
     for method in ('ai','baseline'):
         assert [p['spike'] for p in calls[0][method]]==[True]+[False]*23
     assert all(p['spike'] is False for p in calls[0]['actual'])
+
+
+def test_fitted_demand_aware_model_consumes_the_correct_target_vintage_over_http():
+    # Synthetic plumbing proof only: never a real accuracy or savings claim.
+    import numpy as np
+    from sklearn.impute import SimpleImputer
+    from sklearn.pipeline import make_pipeline
+    from sklearn.tree import DecisionTreeRegressor
+    payload=request_payload();origin=instant(payload['asOf']);payload['schemaVersion']=2
+    past=KnownPrices({instant(r['periodStart']):r for r in payload['priceHistory']})
+    def demands(mw):
+        return [{'targetPeriod':t.isoformat(),'publishedAt':(origin-STEP).isoformat(),
+                 'availableAt':origin.isoformat(),'demandMw':mw,'source':'SYNTHETIC_TEST_FORECAST'} for t in targets(origin)]
+    x=[];y=[]
+    for mw,price in [(6000,100),(7000,200)]:
+        past.demand_forecasts=demands(mw)
+        x.append(features(past,origin,targets(origin)[0],schema_version=2));y.append(price)
+    model=make_pipeline(SimpleImputer(keep_empty_features=True),DecisionTreeRegressor(random_state=42)).fit(np.asarray(x),y)
+    bundle=synthetic_bundle();bundle['models']=[model]*24;bundle['manifest']['version']='SYNTHETIC_DEMAND_HTTP_TEST'
+    with TestClient(create_app(lambda:bundle)) as client:
+        for mw,expected in [(6000,100),(7000,200)]:
+            payload['expectedDemand']=demands(mw)
+            response=client.post('/forecast',json=payload)
+            assert response.status_code==200
+            assert all(p['predictedUsep']==expected for p in response.json()['points'])
+            assert 'EXPECTED_DEMAND_PARTIAL_OR_MISSING' not in response.json()['qualityFlags']
+        payload['expectedDemand'][0]['availableAt']=(origin+STEP).isoformat()
+        assert client.post('/forecast',json=payload).status_code==422

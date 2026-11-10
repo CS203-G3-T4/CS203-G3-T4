@@ -36,15 +36,47 @@ const WattlyRecommendations = {};
       WattlyRecommendations.money(rec.estSavingSgd);
   };
 
-  // How sure: from actual prices on past days, never made up (CSDT4-39).
+  // Past-day frequency is descriptive; it is not forecast-error coverage.
   WattlyRecommendations.confidenceText = function (rec) {
     const suggested = Wattly.prettyTime(WattlyRecommendations.localTime(rec.suggestedStart));
     const usual = Wattly.prettyTime(WattlyRecommendations.localTime(rec.usualStart));
     if (rec.confidencePercent === null || rec.confidencePercent === undefined) {
-      return 'How sure: not enough price history yet to check this.';
+      return 'Past-day pattern: not enough price history yet to check this.';
     }
-    return 'How sure: ' + suggested + ' was really cheaper than ' + usual + ' on ' + rec.confidenceCheaperDays +
+    return 'Past-day pattern: ' + suggested + ' was really cheaper than ' + usual + ' on ' + rec.confidenceCheaperDays +
       ' of ' + rec.confidenceDaysChecked + ' past days (' + rec.confidencePercent + '%).';
+  };
+
+  WattlyRecommendations.withSavingsEvidence = function (data) {
+    return (data.recommendations || []).map(function (rec) {
+      return Object.assign({}, rec, { savingsEvidence: (data.savingsEvidence || {})[String(rec.id)] });
+    });
+  };
+
+  WattlyRecommendations.rangeHtml = function (rec) {
+    if (rec.demoForecast || rec.forecastSource !== 'F3_FORECAST' || rec.realisedSavingSgd != null) return '';
+    const evidence = rec.savingsEvidence || {}, range = evidence.range || {};
+    let text;
+    if (range.available) {
+      const money = function (n) { return Number(n) < 0 ? '-' + WattlyRecommendations.money(-Number(n)) : WattlyRecommendations.money(n); };
+      text = 'Past-error savings range: ' + money(range.lowerSgd) + ' to ' + money(range.upperSgd) +
+        ' for this run. Based on ' + range.completedDays + ' completed days; 90% target, not a guarantee.';
+      if (rec.acceptedStart && rec.acceptedStart !== rec.suggestedStart) {
+        text = 'For your chosen start: estimated saving ' + money(evidence.estimatedSavingSgd) + '. ' + text;
+      }
+    } else if (range.reason === 'ORIGINAL_FORECAST_NOT_RECORDED') {
+      text = 'Savings range unavailable for this older suggestion.';
+    } else if (range.reason === 'LIVE_ERROR_HISTORY_STALE') {
+      text = 'Savings range unavailable: recent completed live results are missing.';
+    } else if (range.reason === 'ORIGINAL_FORECAST_INCOMPLETE') {
+      text = 'Savings range unavailable: the original forecast does not cover your chosen run.';
+    } else {
+      text = 'Savings range: collecting live results (' + Number(range.completedDays || 0) + '/20 completed days). Estimates may change.';
+    }
+    if (evidence.latestCheck && evidence.latestCheck.estimatedSavingSgd != null) {
+      text += ' Latest start-time saving estimate: ' + WattlyRecommendations.money(evidence.latestCheck.estimatedSavingSgd) + '.';
+    }
+    return '<div class="rec-range">' + Wattly.escape(text) + '</div>';
   };
 
   WattlyRecommendations.listUrl = function (householdId) {
@@ -248,7 +280,7 @@ const WattlyRecommendations = {};
         '<div class="rec-when">Avoid <strong>' + Wattly.escape(usual) + '</strong>. Run at ' +
           Wattly.escape(instead) + ' instead</div>' +
         '<div class="rec-reason">' + Wattly.escape(rec.reason) + '</div>' +
-        '<div class="rec-confidence">' + Wattly.escape(WattlyRecommendations.confidenceText(rec)) + '</div>' +
+        '<div class="rec-confidence">' + Wattly.escape(WattlyRecommendations.confidenceText(rec)) + '</div>' + WattlyRecommendations.rangeHtml(rec) +
       '</div>' +
       '<div class="rec-saving">' + Wattly.escape(WattlyRecommendations.savingText(rec)) + '</div>' +
       cardEnd(rec, options,
@@ -270,7 +302,7 @@ const WattlyRecommendations = {};
         '<div class="rec-when">Start at <strong>' + Wattly.escape(Wattly.prettyTime(suggested)) +
           '</strong> instead of ' + Wattly.escape(Wattly.prettyTime(usual)) + '</div>' +
         '<div class="rec-reason">' + Wattly.escape(rec.reason) + '</div>' +
-        '<div class="rec-confidence">' + Wattly.escape(WattlyRecommendations.confidenceText(rec)) + '</div>' +
+        '<div class="rec-confidence">' + Wattly.escape(WattlyRecommendations.confidenceText(rec)) + '</div>' + WattlyRecommendations.rangeHtml(rec) +
       '</div>' +
       '<div class="rec-saving">' + Wattly.escape(WattlyRecommendations.savingText(rec)) + '</div>' +
       cardEnd(rec, options,
@@ -314,7 +346,7 @@ const WattlyRecommendations = {};
     const note = document.getElementById('recommendation-note');
     const badge = document.getElementById('recommendation-source');
     badge.hidden = !data.demoForecast;
-    const recs = data.recommendations || [];
+    const recs = WattlyRecommendations.withSavingsEvidence(data);
     WattlyRecommendations.showTotals(recs);
     note.textContent = WattlyRecommendations.noteText(data, recs.length);
     const nowMs = Date.now();

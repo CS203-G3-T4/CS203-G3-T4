@@ -1,0 +1,15 @@
+{
+  "status": "PASS",
+  "costChecks": 96512,
+  "matchedCases": 600,
+  "earlierSolarAndBaselineResultsReproduced": true,
+  "allSourcesUnchanged": true,
+  "outputChecksums": {
+    "blend-input.tsv": "994d4923fa8eb5f2285574574ff8298367a50f5685dc3be7762154822fc31b98",
+    "blend-output.tsv": "0f9dce7e9c11eee742df28d5821bd97b04f38b69acc14ec81a98689b3b324d49",
+    "decisions.jsonl.gz": "7ee5363e49ab65ff918c947a5bf7dfaba4e500092e5a49e819ae9997fbbd7869",
+    "F4Replay.java": "2ca2890ca9bc9406b5b99735b63f9eeb843ce679dbb9b9415eb86f31e3bf152e",
+    "protocol.json": "59a77e11c04b29715eb353de3db18af0d69b2aff9dbd40df6c14d4a3e1a42275",
+    "summary.json": "5b15593a1962649eb318ea7c58da562f4b1c2fb73006ad1878b2ae0e755d241f"
+  }
+}

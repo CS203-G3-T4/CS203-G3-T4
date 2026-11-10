@@ -1,0 +1,12 @@
+{
+  "status": "PASS",
+  "examinedDevelopmentOrigins": 16,
+  "featureScalarsExactlyMatched": 7296,
+  "weeklySavedPredictionsMatched": 384,
+  "maximumPredictionDifference": 0.0,
+  "packagedFinalPredictionsExactlyMatched": 384,
+  "sourceHashesUnchanged": true,
+  "retrainingPerformed": false,
+  "newOutcomeScoringPerformed": false,
+  "protectedStudyRead": false
+}

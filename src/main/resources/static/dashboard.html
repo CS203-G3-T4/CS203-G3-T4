@@ -143,6 +143,7 @@
         <div class="price-line"><span class="price-value" id="price-value" aria-live="polite">—</span><span class="price-unit">¢ / kWh</span></div>
         <p class="price-context">Wholesale USEP signal; your retail tariff may differ.</p>
         <div class="state-line"><span class="status-pill unavailable" id="price-status">Loading price</span></div>
+        <p class="price-context" id="price-assessment" role="status" aria-live="polite">Checking typical prices…</p>
         <div class="banner warn" id="price-stale-banner" role="status" hidden>
           Live feed unavailable. Showing the last known price.
         </div>
@@ -185,6 +186,7 @@
 <script src="/js/wattly.js"></script>
 <script src="/js/recommendations.js"></script>
 <script src="/js/budget-status.js"></script>
+<script src="/js/current-assessment.js"></script>
 <script src="/js/dashboard.js"></script>
 </body>
 </html>

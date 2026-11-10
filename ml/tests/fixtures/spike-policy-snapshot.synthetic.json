@@ -1,0 +1,225 @@
+{
+  "synthetic": true,
+  "readOnly": "on",
+  "snapshotAt": "2026-01-02T03:10:00+00:00",
+  "trials": [
+    {
+      "id": "SYNTHETIC_TRIAL",
+      "model_version": "SYNTHETIC_MODEL"
+    }
+  ],
+  "pairs": [
+    {
+      "run_id": "SYNTHETIC_RUN",
+      "horizon": 1,
+      "target_period": "2026-01-02T00:30:00+00:00",
+      "ai": 100,
+      "b3": 100,
+      "threshold": 103,
+      "actual": 95,
+      "evaluated_at": "2026-01-02T03:00:00+00:00",
+      "as_of": "2026-01-02T00:00:00+00:00",
+      "model_version": "SYNTHETIC_MODEL",
+      "captured_at": "2026-01-02T00:00:01+00:00"
+    },
+    {
+      "run_id": "SYNTHETIC_RUN",
+      "horizon": 2,
+      "target_period": "2026-01-02T01:00:00+00:00",
+      "ai": 300,
+      "b3": 100,
+      "threshold": 103,
+      "actual": 110,
+      "evaluated_at": "2026-01-02T03:00:00+00:00",
+      "as_of": "2026-01-02T00:00:00+00:00",
+      "model_version": "SYNTHETIC_MODEL",
+      "captured_at": "2026-01-02T00:00:01+00:00"
+    },
+    {
+      "run_id": "SYNTHETIC_RUN",
+      "horizon": 3,
+      "target_period": "2026-01-02T01:30:00+00:00",
+      "ai": 100,
+      "b3": 100,
+      "threshold": 103,
+      "actual": 90,
+      "evaluated_at": "2026-01-02T03:00:00+00:00",
+      "as_of": "2026-01-02T00:00:00+00:00",
+      "model_version": "SYNTHETIC_MODEL",
+      "captured_at": "2026-01-02T00:00:01+00:00"
+    }
+  ],
+  "opportunities": [
+    {
+      "id": 1,
+      "trial_id": "SYNTHETIC_TRIAL",
+      "run_id": "SYNTHETIC_RUN",
+      "household_id": 1,
+      "appliance_id": 1,
+      "issued_at": "2026-01-02T00:00:00+00:00",
+      "usual_start": "2026-01-02T01:00:00+00:00",
+      "ai_start": "2026-01-02T00:30:00+00:00",
+      "b3_start": "2026-01-02T01:00:00+00:00",
+      "run_minutes": 30,
+      "power_kw": 2,
+      "weight": 1,
+      "prediction": {
+        "AI": 0.2,
+        "B3": 0,
+        "aiWarning": true,
+        "b3Warning": false,
+        "aiRange": {
+          "available": true,
+          "completedDays": 20,
+          "lowerSgd": 0.1,
+          "upperSgd": 0.3
+        }
+      },
+      "outcome": {
+        "AI": {
+          "savingSgd": 0.015,
+          "usualCostSgd": 0.11,
+          "chosenCostSgd": 0.095
+        }
+      },
+      "evaluated_at": "2026-01-02T03:00:00+00:00"
+    }
+  ],
+  "history": [
+    {
+      "id": 1,
+      "source": "SYNTHETIC_REFERENCE",
+      "period_start": "2026-01-01T01:00:00+00:00",
+      "published_at": "2026-01-01T01:00:00+00:00",
+      "available_at": "2026-01-01T01:00:00+00:00",
+      "usep": 100,
+      "price_status": "FINAL"
+    },
+    {
+      "id": 2,
+      "source": "SYNTHETIC_REFERENCE",
+      "period_start": "2025-12-31T01:00:00+00:00",
+      "published_at": "2025-12-31T01:00:00+00:00",
+      "available_at": "2025-12-31T01:00:00+00:00",
+      "usep": 100,
+      "price_status": "FINAL"
+    },
+    {
+      "id": 3,
+      "source": "SYNTHETIC_REFERENCE",
+      "period_start": "2025-12-30T01:00:00+00:00",
+      "published_at": "2025-12-30T01:00:00+00:00",
+      "available_at": "2025-12-30T01:00:00+00:00",
+      "usep": 100,
+      "price_status": "FINAL"
+    },
+    {
+      "id": 4,
+      "source": "SYNTHETIC_REFERENCE",
+      "period_start": "2025-12-29T01:00:00+00:00",
+      "published_at": "2025-12-29T01:00:00+00:00",
+      "available_at": "2025-12-29T01:00:00+00:00",
+      "usep": 100,
+      "price_status": "FINAL"
+    },
+    {
+      "id": 5,
+      "source": "SYNTHETIC_REFERENCE",
+      "period_start": "2025-12-28T01:00:00+00:00",
+      "published_at": "2025-12-28T01:00:00+00:00",
+      "available_at": "2025-12-28T01:00:00+00:00",
+      "usep": 100,
+      "price_status": "FINAL"
+    },
+    {
+      "id": 6,
+      "source": "SYNTHETIC_REFERENCE",
+      "period_start": "2025-12-27T01:00:00+00:00",
+      "published_at": "2025-12-27T01:00:00+00:00",
+      "available_at": "2025-12-27T01:00:00+00:00",
+      "usep": 100,
+      "price_status": "FINAL"
+    },
+    {
+      "id": 7,
+      "source": "SYNTHETIC_REFERENCE",
+      "period_start": "2025-12-26T01:00:00+00:00",
+      "published_at": "2025-12-26T01:00:00+00:00",
+      "available_at": "2025-12-26T01:00:00+00:00",
+      "usep": 100,
+      "price_status": "FINAL"
+    },
+    {
+      "id": 8,
+      "source": "SYNTHETIC_REFERENCE",
+      "period_start": "2025-12-25T01:00:00+00:00",
+      "published_at": "2025-12-25T01:00:00+00:00",
+      "available_at": "2025-12-25T01:00:00+00:00",
+      "usep": 100,
+      "price_status": "FINAL"
+    },
+    {
+      "id": 9,
+      "source": "SYNTHETIC_REFERENCE",
+      "period_start": "2025-12-24T01:00:00+00:00",
+      "published_at": "2025-12-24T01:00:00+00:00",
+      "available_at": "2025-12-24T01:00:00+00:00",
+      "usep": 100,
+      "price_status": "FINAL"
+    },
+    {
+      "id": 10,
+      "source": "SYNTHETIC_REFERENCE",
+      "period_start": "2025-12-23T01:00:00+00:00",
+      "published_at": "2025-12-23T01:00:00+00:00",
+      "available_at": "2025-12-23T01:00:00+00:00",
+      "usep": 100,
+      "price_status": "FINAL"
+    },
+    {
+      "id": 11,
+      "source": "SYNTHETIC_REFERENCE",
+      "period_start": "2025-12-22T01:00:00+00:00",
+      "published_at": "2025-12-22T01:00:00+00:00",
+      "available_at": "2025-12-22T01:00:00+00:00",
+      "usep": 100,
+      "price_status": "FINAL"
+    },
+    {
+      "id": 12,
+      "source": "SYNTHETIC_REFERENCE",
+      "period_start": "2025-12-21T01:00:00+00:00",
+      "published_at": "2025-12-21T01:00:00+00:00",
+      "available_at": "2025-12-21T01:00:00+00:00",
+      "usep": 100,
+      "price_status": "FINAL"
+    },
+    {
+      "id": 13,
+      "source": "SYNTHETIC_REFERENCE",
+      "period_start": "2025-12-20T01:00:00+00:00",
+      "published_at": "2025-12-20T01:00:00+00:00",
+      "available_at": "2025-12-20T01:00:00+00:00",
+      "usep": 100,
+      "price_status": "FINAL"
+    },
+    {
+      "id": 14,
+      "source": "SYNTHETIC_REFERENCE",
+      "period_start": "2025-12-19T01:00:00+00:00",
+      "published_at": "2025-12-19T01:00:00+00:00",
+      "available_at": "2025-12-19T01:00:00+00:00",
+      "usep": 100,
+      "price_status": "FINAL"
+    },
+    {
+      "id": 100,
+      "source": "NEMS_SN_SG",
+      "period_start": "2026-01-02T01:00:00+00:00",
+      "published_at": "2026-01-02T01:01:00+00:00",
+      "available_at": "2026-01-02T01:01:00+00:00",
+      "usep": 110,
+      "price_status": "PROVISIONAL"
+    }
+  ]
+}
