@@ -42,7 +42,8 @@ public class DailyWeatherService {
 
     public TodayResponse today() {
         Instant now = clock.instant();
-        return repository.findByDate(LocalDate.now(clock)).map(forecast -> {
+        // Prefer the issue covering now; today's row is the fallback (and is then reported stale).
+        return repository.findCovering(now).or(() -> repository.findByDate(LocalDate.now(clock))).map(forecast -> {
             boolean stale = lastPollFailed || now.isBefore(forecast.validStart())
                     || !now.isBefore(forecast.validEnd()) || forecast.updatedAt().isAfter(now.plusSeconds(120))
                     || Duration.between(forecast.fetchedAt(), now).compareTo(staleAfter) > 0;
