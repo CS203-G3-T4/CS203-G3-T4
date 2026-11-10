@@ -66,10 +66,47 @@ jobs:
       - name: Run JavaScript tests
         run: node --test src/test/js/*.test.js
 
+  # The Python suite took ~13.5 min in one job, about half of it in three study
+  # tests. It runs as parallel shards instead; each shard has its own PostgreSQL.
+  # The shard map is defined ONCE, in the "shards" job below. The matrix and the
+  # "rest" ignore list are both derived from it, so they cannot drift apart.
+  # "rest" runs every test file not named by another shard, so new test files
+  # are always covered. Rebalance with `pytest --durations=25` if one shard grows.
+  shards:
+    name: Python test shards
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      matrix: ${{ steps.map.outputs.matrix }}
+      sharded: ${{ steps.map.outputs.sharded }}
+    steps:
+      - id: map
+        name: Define shard map
+        run: |
+          # The only place shards are listed. Edit here; "rest" is added below.
+          shard_map='[
+            {"name": "corrections", "files": ["test_corrections.py"]},
+            {"name": "retraining",  "files": ["test_retraining.py"]},
+            {"name": "stability",   "files": ["test_stability.py"]},
+            {"name": "studies",     "files": ["test_ts_variants.py", "test_experiments.py",
+                                              "test_improvement.py", "test_timeseries.py",
+                                              "test_portable_weekly.py"]}
+          ]'
+          matrix=$(jq -c '{shard: (map({name, files: (.files | join(" "))}) + [{name: "rest", files: ""}])}' <<<"$shard_map")
+          sharded=$(jq -r '[.[].files[]] | join(" ")' <<<"$shard_map")
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+          echo "sharded=$sharded" >> "$GITHUB_OUTPUT"
+          echo "matrix=$matrix"
+          echo "sharded=$sharded"
+
   python:
-    name: Python tests
+    name: Python tests (${{ matrix.shard.name }})
+    needs: shards
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.shards.outputs.matrix) }}
     services:
       postgres:
         image: postgres:17-alpine
@@ -89,6 +126,9 @@ jobs:
       OMP_NUM_THREADS: "1"
       OPENBLAS_NUM_THREADS: "1"
       MKL_NUM_THREADS: "1"
+      SHARD_FILES: ${{ matrix.shard.files }}
+      # Derived from the "shards" job; "rest" ignores every sharded file.
+      SHARDED_FILES: ${{ needs.shards.outputs.sharded }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -107,7 +147,20 @@ jobs:
           python -m pip install -r ml/requirements-server.lock
           python -m pip install --no-deps --no-build-isolation -e ml
       - name: Run Python tests
-        run: python -m pytest -q ml/tests
+        run: |
+          set --
+          if [ -n "$SHARD_FILES" ]; then
+            for f in $SHARD_FILES; do set -- "$@" "ml/tests/$f"; done
+          else
+            set -- ml/tests
+            echo "rest shard ignores (run by other shards):"
+            for f in $SHARDED_FILES; do
+              test -f "ml/tests/$f" || { echo "Missing sharded file $f"; exit 1; }
+              echo "  $f"
+              set -- "$@" "--ignore=ml/tests/$f"
+            done
+          fi
+          python -m pytest -q "$@"
 
   weekly-container:
     name: Portable weekly container
@@ -167,7 +220,7 @@ jobs:
   ci-passed:
     name: CI passed
     if: always()
-    needs: [java, frontend, python, evidence, weekly-container]
+    needs: [java, frontend, shards, python, evidence, weekly-container]
     runs-on: ubuntu-latest
     steps:
       - name: Require every job to succeed
@@ -177,4 +230,5 @@ jobs:
           test "${{ needs.weekly-container.result }}" = "success"
           test "${{ needs.java.result }}" = "success"
           test "${{ needs.frontend.result }}" = "success"
+          test "${{ needs.shards.result }}" = "success"
           test "${{ needs.python.result }}" = "success"
