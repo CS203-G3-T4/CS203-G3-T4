@@ -17,6 +17,7 @@ import zipfile
 from pathlib import Path
 
 FILES = ("manifest.json", "models.joblib")
+MAX_BYTES = 50_000_000
 
 
 def sha256(data: bytes) -> str:
@@ -35,14 +36,31 @@ def main() -> int:
     if manifest.is_file() and sha256(manifest.read_bytes()) == pin:
         print(f"Forecast model {version} already present")
         return 0
-    with urllib.request.urlopen(os.environ["WATTLY_MODEL_ZIP_URL"], timeout=60) as response:
-        archive = response.read(50_000_000)
-    with zipfile.ZipFile(io.BytesIO(archive)) as bundle:
-        contents = {name: bundle.read(f"models/{version}/{name}") for name in FILES}
+    # Only the exception type is printed: messages and tracebacks can contain the URL.
+    try:
+        with urllib.request.urlopen(os.environ["WATTLY_MODEL_ZIP_URL"], timeout=60) as response:
+            archive = response.read(MAX_BYTES + 1)
+    except Exception as exc:
+        print(f"Model bundle download failed ({type(exc).__name__})", file=sys.stderr)
+        return 1
+    if len(archive) > MAX_BYTES:
+        print("Model bundle is larger than 50 MB", file=sys.stderr)
+        return 1
+    try:
+        with zipfile.ZipFile(io.BytesIO(archive)) as bundle:
+            contents = {name: bundle.read(f"models/{version}/{name}") for name in FILES}
+    except Exception as exc:
+        print(f"Model bundle is not a zip with models/{version}/ ({type(exc).__name__})", file=sys.stderr)
+        return 1
     if sha256(contents["manifest.json"]) != pin:
         print("Downloaded manifest does not match the pinned SHA-256", file=sys.stderr)
         return 1
-    if sha256(contents["models.joblib"]) != json.loads(contents["manifest.json"])["modelSha256"]:
+    try:
+        expected_model = json.loads(contents["manifest.json"])["modelSha256"]
+    except Exception as exc:
+        print(f"Downloaded manifest has no modelSha256 ({type(exc).__name__})", file=sys.stderr)
+        return 1
+    if sha256(contents["models.joblib"]) != expected_model:
         print("Downloaded model does not match its manifest", file=sys.stderr)
         return 1
     staging = Path(tempfile.mkdtemp(dir=home / "models", prefix=".fetch-"))

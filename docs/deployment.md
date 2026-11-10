@@ -114,6 +114,11 @@ runs Spring and the Python forecast service in the same container instead.
 Python listens on `127.0.0.1:8001` only and is never published. It is opt-in, and
 enabling experimental AI on the public site is a team decision.
 
+0. **Try it outside the presentation domain first.** The amd64 build on Railway and
+   Railway's use of `app-with-forecast.Dockerfile.dockerignore` have not been
+   tested yet (the image was only built and run locally on arm64). Create a
+   separate Railway environment (for example `staging`) with its own PostgreSQL,
+   follow the steps below there, and only then repeat them on wattlyapp.me.
 1. **Volume:** on the app service, add a volume mounted at `/data`.
 2. **Model:** the bundle (`models/<version>/manifest.json` and `models.joblib`)
    never goes into Git or the image. Put the zip at a private HTTPS URL, for
@@ -130,18 +135,37 @@ enabling experimental AI on the public site is a team decision.
    WATTLY_EXPERIMENTAL_MODEL_VERSION=<bundle version>
    WATTLY_EXPERIMENTAL_MANIFEST_SHA256=<SHA-256 of its manifest.json>
    FORECAST_PERIOD_MAPPING_EVIDENCE=EMC_RT_20260929_24_PERIODS
+   JAVA_OPTS=-XX:MaxRAMPercentage=50
    ```
 
    Once the deploy logs show `Forecast model <version> installed`, you can remove
    `WATTLY_MODEL_ZIP_URL`; later starts log `already present`.
+
+   `FORECAST_PERIOD_MAPPING_EVIDENCE` is not only for the AI model.
+   `ForecastService` uses it to clear the `PERIOD_MAPPING_UNVERIFIED` flag in
+   `ForecastJob`, and it also gates the F2 assessment (`CurrentAssessmentService`)
+   and F4 (`LiveComparisonService`). Setting it makes the Java baselines
+   actionable too, so it is part of the same team decision.
+
+   **Memory:** the JVM and Python now share the service's memory limit. Without
+   `JAVA_OPTS` the JVM sizes its heap from the whole container limit, so cap it at
+   half. In a local run (10 November 2026), the Python service with this model
+   loaded used about 145 MB RSS. Check the app service's memory limit in Railway
+   before enabling it; the JVM figure on Railway has not been measured.
 4. **Check:** `https://<domain>/api/v1/forecast/latest` shows
    `"modelType":"AI"` after the next half-hour price. `PYTHON_UNAVAILABLE_OR_INVALID`
    means Python is not ready: look for `Model not ready` in the deploy logs.
 
-If the download, model check or Python process fails, Spring still starts and
-falls back to the baselines. Without `WATTLY_ML_HOME` the image behaves like the
-default build. To switch back, delete `RAILWAY_DOCKERFILE_PATH` and
-`WATTLY_ALLOW_EXPERIMENTAL_AI` and redeploy; the volume can stay.
+If the download or model check fails, Spring still starts and falls back to the
+baselines; the logs give only the error type, never the URL. If the Python
+process exits, it is restarted after 10 seconds (`Forecast service exited;
+restarting in 10s`). Without `WATTLY_ML_HOME` the image behaves like the default
+build.
+
+To switch back to today's state, delete `RAILWAY_DOCKERFILE_PATH`,
+`WATTLY_ALLOW_EXPERIMENTAL_AI` **and** `FORECAST_PERIOD_MAPPING_EVIDENCE`, then
+redeploy; the volume can stay. Leaving `FORECAST_PERIOD_MAPPING_EVIDENCE` set
+keeps the B1 baseline and F2/F4 actionable on the live site.
 
 ## Weekly model worker
 
