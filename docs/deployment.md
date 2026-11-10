@@ -104,6 +104,44 @@ CSDT4-70 then covers the 24-hour check for missing half-hours.
   `pg_dump` (Postgres service → **Connect** gives the public URL) before risky
   migrations.
 
+## AI forecast container
+
+By default Railway builds the jar alone and F3 serves the Java baselines. The
+experimental AI model only answers over loopback (`PythonForecastClient` refuses
+any other host), so a separate Railway service cannot serve it.
+[`deploy/app-with-forecast.Dockerfile`](../deploy/app-with-forecast.Dockerfile)
+runs Spring and the Python forecast service in the same container instead.
+Python listens on `127.0.0.1:8001` only and is never published. It is opt-in, and
+enabling experimental AI on the public site is a team decision.
+
+1. **Volume:** on the app service, add a volume mounted at `/data`.
+2. **Model:** the bundle (`models/<version>/manifest.json` and `models.joblib`)
+   never goes into Git or the image. Put the zip at a private HTTPS URL, for
+   example a presigned link from a Railway bucket. The container downloads it to
+   the volume once, and only after the manifest matches the pinned SHA-256 and the
+   model matches its manifest.
+3. **Variables** on the app service (keep the existing ones):
+
+   ```text
+   RAILWAY_DOCKERFILE_PATH=deploy/app-with-forecast.Dockerfile
+   WATTLY_ML_HOME=/data/wattly-ml
+   WATTLY_MODEL_ZIP_URL=<private link to the bundle zip>
+   WATTLY_ALLOW_EXPERIMENTAL_AI=true
+   WATTLY_EXPERIMENTAL_MODEL_VERSION=<bundle version>
+   WATTLY_EXPERIMENTAL_MANIFEST_SHA256=<SHA-256 of its manifest.json>
+   FORECAST_PERIOD_MAPPING_EVIDENCE=EMC_RT_20260929_24_PERIODS
+   ```
+
+   Once the deploy logs show `Forecast model <version> installed`, you can remove
+   `WATTLY_MODEL_ZIP_URL`; later starts log `already present`.
+4. **Check:** `https://<domain>/api/v1/forecast/latest` shows
+   `"modelType":"AI"` after the next half-hour price. `PYTHON_UNAVAILABLE_OR_INVALID`
+   means Python is not ready: look for `Model not ready` in the deploy logs.
+
+If the download, model check or Python process fails, Spring still starts and
+falls back to the baselines. Without `WATTLY_ML_HOME` the image behaves like the
+default build. To switch back, delete `RAILWAY_DOCKERFILE_PATH` and
+`WATTLY_ALLOW_EXPERIMENTAL_AI` and redeploy; the volume can stay.
 
 ## Weekly model worker
 
