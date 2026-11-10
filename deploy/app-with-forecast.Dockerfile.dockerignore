@@ -1,0 +1,19 @@
+# Only what app-with-forecast.Dockerfile copies. No models, data, env files or build output.
+*
+!.mvn/
+!.mvn/**
+!mvnw
+!pom.xml
+!src/
+!src/**
+!ml/pyproject.toml
+!ml/requirements.lock
+!ml/requirements-server.lock
+!ml/src/
+!ml/src/**
+!deploy/fetch_forecast_model.py
+!deploy/start-app-with-forecast.sh
+**/__pycache__/**
+**/*.pyc
+**/*.joblib
+**/.env*
