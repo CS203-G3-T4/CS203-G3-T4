@@ -42,17 +42,34 @@
     .rec-snooze summary { cursor: pointer; color: var(--accent); font-size: 13px; font-weight: 600; }
     .rec-snooze[open] { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
     .rec-snooze input { padding: 6px 8px; border: 1px solid var(--border); border-radius: 8px; font: inherit; }
-    .rec-chart { grid-column: 1 / -1; margin: 4px 0 0; }
-    .rec-chart svg { display: block; width: 100%; height: 56px; }
-    .rec-bar { fill: #cfcdc5; }
-    .rec-bar.usual { fill: var(--accent); }
-    .rec-bar.suggested { fill: var(--teal); }
-    .rec-bar-cap { fill: var(--ink); }
-    .rec-chart-axis { display: flex; justify-content: space-between; margin-top: 4px; color: var(--muted); font-size: 11.5px; }
-    .rec-chart-legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 4px; color: var(--ink-2); font-size: 12.5px; }
-    .rec-swatch { display: inline-block; width: 10px; height: 10px; margin-right: 6px; border-radius: 2px; vertical-align: -1px; }
-    .rec-swatch.usual { background: var(--accent); }
-    .rec-swatch.suggested { background: var(--teal); }
+    .rec-chart { grid-column: 1 / -1; margin: 6px 0 0; container-type: inline-size; }
+    .rec-chart-frame { display: grid; grid-template-columns: 34px minmax(0, 1fr); grid-template-rows: 150px 20px; }
+    .rec-chart-y { position: relative; }
+    .rec-chart-y span { position: absolute; right: 6px; transform: translateY(-50%); color: var(--muted); font-size: 11px; line-height: 1; white-space: nowrap; }
+    .rec-chart-plot { position: relative; min-width: 0; }
+    .rec-chart-plot svg { display: block; width: 100%; height: 100%; overflow: visible; }
+    .rec-chart-x { grid-column: 2; position: relative; }
+    .rec-chart-x span { position: absolute; top: 5px; transform: translateX(-50%); color: var(--muted); font-size: 11px; line-height: 1; white-space: nowrap; }
+    .rec-chart-x span.start { transform: none; }
+    .rec-chart-x span.end { transform: translateX(-100%); }
+    @container (max-width: 520px) { .rec-chart-x span.minor { display: none; } }
+    @container (max-width: 640px) { .rec-chart-x.two-hourly span.minor { display: none; } }
+    .rec-band.suggested { fill: var(--teal); fill-opacity: .16; }
+    .rec-band.usual { fill: var(--accent); fill-opacity: .14; }
+    .rec-chart-grid { stroke: var(--gridline); stroke-width: 1; vector-effect: non-scaling-stroke; }
+    .rec-chart-grid.hour { stroke-dasharray: 2 3; }
+    .rec-chart-grid.zero { stroke: var(--muted); }
+    .rec-line { fill: none; stroke: var(--ink); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+    .rec-dot { fill: none; stroke: var(--ink); stroke-width: 4; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+    .rec-dot.off-scale { stroke: var(--critical); stroke-width: 7; }
+    .rec-chart-target { fill: transparent; }
+    .rec-chart-target:hover { fill: var(--ink); fill-opacity: .06; }
+    .rec-chart-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 8px; color: var(--ink-2); font-size: 12.5px; }
+    .rec-swatch { display: inline-block; width: 12px; height: 10px; margin-right: 6px; border-radius: 2px; vertical-align: -1px; }
+    .rec-swatch.suggested { background: var(--teal); opacity: .5; }
+    .rec-swatch.usual { background: var(--accent); opacity: .45; }
+    .rec-swatch.line { height: 2px; vertical-align: 3px; background: var(--ink); }
+    .rec-chart-source { margin-top: 4px; color: var(--muted); font-size: 12px; }
     .rec-chart-empty { grid-column: 1 / -1; margin: 0; color: var(--muted); font-size: 12.5px; }
     .rec-confidence { margin-top: 4px; color: var(--ink-2); font-size: 12.5px; }
     .rec-flag { color: var(--warning); font-size: 11.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
@@ -61,7 +78,7 @@
     .rec-realised-figure span { color: var(--ink-2); font-size: 12px; }
     .rec-realised-figure strong { display: block; margin-top: 3px; color: var(--teal); font: 700 24px/1.2 "Space Grotesk", sans-serif; }
     .rec-realised .rec-help { margin: 10px 0 0; }
-    @media (max-width: 620px) { .rec-item { grid-template-columns: 1fr; } .rec-overview { gap: 8px; } }
+    @media (max-width: 620px) { .rec-item { grid-template-columns: 1fr; } .rec-overview { gap: 8px; } .rec-chart-frame { grid-template-rows: 130px 20px; } }
   </style>
 </head>
 <body>

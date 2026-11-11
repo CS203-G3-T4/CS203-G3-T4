@@ -53,7 +53,7 @@ made-up numbers, and the label keeps it from being presented as an AI prediction
 | --- | --- |
 | `GET /api/v1/households/{id}/recommendations` | Open (`ACTIVE`) suggestions not snoozed, best saving first, plus the latest background recompute's outcome. What the dashboard calls. |
 | `GET /api/v1/households/{id}/recommendations?status=ACTIVE\|ACCEPTED\|DISMISSED\|HISTORY` | One tab of the Recommendations page (CSDT4-40). `ACTIVE` includes snoozed ones (with `remindAt`); the others cover the last 30 days, newest first. |
-| `GET /api/v1/recommendations/demo-forecast` | The demo forecast behind demo suggestions, for the page's mini charts. 404 while suggestions use F3. |
+| `GET /api/v1/recommendations/demo-forecast` | The demo forecast behind demo suggestions, for the page's forecast charts. 404 while suggestions use F3. |
 | `POST /api/v1/recommendations/{recId}/snooze` | "Remind me later" until a chosen time: body `{"until": "15:30"}` (Singapore time, the next time the clock shows it). Must be before the suggestion runs out (`deadline`); 400 otherwise. |
 | `POST /api/v1/households/{id}/recommendations/generate` | Recomputes one household now. Normally done in the background (CSDT4-37). Safe to repeat. |
 | `POST /api/v1/recommendations/{recId}/accept` | Accepts. Optional body `{"startTime": "15:10"}` is the resident's own start (Singapore `HH:mm`) inside the same window. |
@@ -211,12 +211,19 @@ start), otherwise it would only come back once it's useless. If the background r
 a snoozed suggestion for the same run, the reminder carries over while it still comes back in time.
 V16 lets any suggestion be snoozed (V13 allowed warnings only).
 
-**Mini forecast chart.** Each open card on the page draws the forecast it was built from, one bar
-per half-hour in ¢/kWh, with the usual run in blue and the suggested run in teal. The page picks
-the source by the card's `forecastSource`: `F3_FORECAST` → `GET /api/v1/forecast/latest`,
-`DEMO_FORECAST` → `GET /api/v1/recommendations/demo-forecast`, so the chart always shows the same
-prices as the explanation. A spike that would flatten the other bars is drawn full height and
-marked off the scale (the exact price is in its tooltip).
+**Forecast chart.** Each open card on the page draws the forecast it was built from as a line of the
+price in ¢/kWh, with a gridline and a label on every hour of the x-axis ("2pm", "3pm", …, every 2
+hours for the 24-hour demo forecast; a narrow chart on a phone shows every 3 or 6 hours), Singapore
+time. The suggested run is shaded teal and the usual run blue, from their exact start to start + run
+time; the legend gives both as time ranges. The line keeps F3's half-hours rather than averaging
+them per hour, so it shows the same prices as the card's explanation (each point sits in the middle
+of its half-hour; hovering one shows its exact price). The page picks the source by the card's
+`forecastSource`: `F3_FORECAST` → `GET /api/v1/forecast/latest`, `DEMO_FORECAST` → `GET
+/api/v1/recommendations/demo-forecast`, and the caption names it ("AI price forecast (F3), made 2:05
+PM" or "Demo forecast: a replay of 26 Sep prices, not a live prediction"). A spike that would
+flatten the rest of the line is drawn at the top of the scale in red and marked off the scale (the
+exact price is in its tooltip). Changed after demo feedback that the old bar chart (one bar per
+half-hour, labelled only at both ends) was hard to read.
 
 ## Realised savings from actual prices (CSDT4-53)
 

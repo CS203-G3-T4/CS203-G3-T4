@@ -182,68 +182,171 @@ const WattlyRecommendations = {};
     return WattlyRecommendations.decidedText(rec) + ' (' + when + ')';
   };
 
-  // Mini forecast chart (CSDT4-40): one bar per forecast half-hour in ¢/kWh, the usual run in
-  // blue and the suggested run in teal, so the cheaper window is visible. points are
-  // { periodStart, usepSgdPerMwh } from the forecast the suggestion was built from.
-  WattlyRecommendations.chartHtml = function (rec, points) {
-    if (!points || points.length === 0) {
+  const hourOfDay = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Asia/Singapore', hour: '2-digit', hourCycle: 'h23'
+  });
+
+  // Chart labels, Singapore time: "2pm", "12am", and "1:30pm" when not on the hour.
+  WattlyRecommendations.shortTime = function (ms) {
+    const parts = WattlyRecommendations.localTime(new Date(ms).toISOString()).split(':');
+    if (parts.length < 2) return '';
+    const hour = Number(parts[0]);
+    return ((hour % 12) || 12) + (parts[1] === '00' ? '' : ':' + parts[1]) + (hour < 12 ? 'am' : 'pm');
+  };
+
+  function sgtDay(ms) {
+    return singaporeDate.format(new Date(ms));
+  }
+
+  // A round ¢/kWh step that gives 2 to 4 gridlines over the shown range.
+  function niceStep(range) {
+    const steps = [0.5, 1, 2, 2.5, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000];
+    for (let i = 0; i < steps.length; i++) {
+      if (range / steps[i] <= 4) return steps[i];
+    }
+    return steps[steps.length - 1];
+  }
+
+  // Forecast chart on the Recommendations page (CSDT4-40, reworked after demo feedback): a line
+  // of the forecast price in ¢/kWh with an hour gridline and an "2pm" style label on the x-axis,
+  // and shaded bands for the suggested run (teal) and the usual run (blue). points are
+  // { periodStart, usepSgdPerMwh } half-hours from the forecast the suggestion was built from.
+  // The half-hours are kept, not averaged per hour, so the line shows the same prices as the
+  // card's explanation; each point sits in the middle of its half-hour. sourceLabel says which
+  // forecast it is (demo replay or F3's AI forecast).
+  WattlyRecommendations.chartHtml = function (rec, points, sourceLabel) {
+    const valid = (points || []).filter(function (p) {
+      return Number.isFinite(Date.parse(p.periodStart)) && p.usepSgdPerMwh !== null &&
+        p.usepSgdPerMwh !== undefined && Number.isFinite(Number(p.usepSgdPerMwh));
+    });
+    if (valid.length === 0) {
       return '<p class="rec-chart-empty">Forecast chart not available right now.</p>';
     }
-    const sorted = points.slice().sort(function (a, b) { return Date.parse(a.periodStart) - Date.parse(b.periodStart); });
+    const sorted = valid.slice().sort(function (a, b) { return Date.parse(a.periodStart) - Date.parse(b.periodStart); });
+    const times = sorted.map(function (p) { return Date.parse(p.periodStart); });
     const prices = sorted.map(function (p) { return Number(p.usepSgdPerMwh) / 10; });
     const ordered = prices.slice().sort(function (a, b) { return a - b; });
-    // A single spike would flatten every other bar, so with enough points the scale tops out a
-    // little above the 95th percentile; taller bars are drawn full height and marked as off the
+    // A single spike would squash the rest of the line, so with enough points the scale tops out
+    // a little above the 95th percentile; higher prices are drawn at the top, marked as off the
     // scale (exact in the tooltip).
+    const lowest = ordered[0];
     const highest = ordered[ordered.length - 1];
     const p95 = ordered[Math.floor(0.95 * (ordered.length - 1))];
     const top = Math.max(ordered.length >= 10 ? Math.min(highest, p95 * 1.25) : highest, 0.1);
-    const cents = function (value) { return (value < 10 ? value.toFixed(1) : String(Math.round(value))) + '¢'; };
-    const runMs = (rec.runMinutes || 30) * MINUTE_MS;
-    function inRun(startIso, t) {
-      const start = Date.parse(startIso);
-      return t >= start - (start % HALF_HOUR_MS) && t < start + runMs;
+    const bottom = Math.min(0, lowest); // USEP can go negative
+    const step = niceStep(top - bottom);
+    const yMax = Math.ceil(top / step) * step;
+    const yMin = Math.floor(bottom / step) * step;
+    const cents = function (value) {
+      const sign = value < 0 ? '-' : '';
+      const size = Math.abs(value);
+      return sign + (size < 10 && size !== Math.round(size) ? size.toFixed(1) : String(Math.round(size))) + '¢';
+    };
+
+    // Plot coordinates: x 0-1000 across the forecast (first half-hour start to last half-hour end),
+    // y 0-100 from yMax down to yMin. The SVG stretches to the card; text is HTML so it stays sharp.
+    const t0 = times[0];
+    const t1 = times[times.length - 1] + HALF_HOUR_MS;
+    const x = function (t) { return (t - t0) / (t1 - t0) * 1000; };
+    const y = function (v) { return (yMax - Math.min(Math.max(v, yMin), yMax)) / (yMax - yMin) * 100; };
+    const pct = function (value, total) { return (value / total * 100).toFixed(2) + '%'; };
+    const num = function (value) { return value.toFixed(1); };
+
+    let grid = '';
+    let yLabels = '';
+    for (let v = yMin; v <= yMax + step / 1000; v += step) {
+      grid += '<line class="rec-chart-grid' + (Math.abs(v) < step / 1000 ? ' zero' : '') + '" x1="0" x2="1000" y1="' +
+        num(y(v)) + '" y2="' + num(y(v)) + '"></line>';
+      yLabels += '<span style="top:' + pct(y(v), 100) + '">' + cents(v) + '</span>';
     }
-    const step = 6;
-    const height = 56;
-    const bars = sorted.map(function (p, i) {
-      const t = Date.parse(p.periodStart);
+
+    // An hour gridline on every hour, labelled every hour (every 2 hours past 13 hours, so a 24-hour
+    // demo forecast fits). Labels between every third one are "minor": a narrow chart (a phone)
+    // hides them, so it shows every 3 hours (every 6 for the demo) without labels overlapping.
+    const labelEvery = t1 - t0 > 13 * HOUR_MS ? 2 : 1;
+    let xLabels = '';
+    for (let t = Math.ceil(t0 / HOUR_MS) * HOUR_MS; t <= t1; t += HOUR_MS) {
+      grid += '<line class="rec-chart-grid hour" x1="' + num(x(t)) + '" x2="' + num(x(t)) + '" y1="0" y2="100"></line>';
+      const hour = Number(hourOfDay.format(new Date(t)));
+      if (hour % labelEvery !== 0) continue;
+      const at = x(t) / 10;
+      const classes = (at < 3 ? ' start' : at > 97 ? ' end' : '') + (hour % (labelEvery * 3) !== 0 ? ' minor' : '');
+      xLabels += '<span' + (classes ? ' class="' + classes.trim() + '"' : '') + ' style="left:' + at.toFixed(2) + '%">' +
+        WattlyRecommendations.shortTime(t) + '</span>';
+    }
+
+    // Bands for the two runs, clipped to the forecast. A run outside the forecast has no band.
+    const runMs = (rec.runMinutes || 30) * MINUTE_MS;
+    function band(kind, startIso) {
+      const start = Date.parse(startIso);
+      if (!Number.isFinite(start)) return { svg: '', range: '', shown: false };
+      const from = Math.max(start, t0);
+      const to = Math.min(start + runMs, t1);
+      const range = WattlyRecommendations.shortTime(start) + '–' + WattlyRecommendations.shortTime(start + runMs);
+      if (to <= from) return { svg: '', range: range, shown: false };
+      return {
+        svg: '<rect class="rec-band ' + kind + '" x="' + num(x(from)) + '" y="0" width="' +
+          num(Math.max(x(to) - x(from), 2)) + '" height="100"></rect>',
+        range: range,
+        shown: true
+      };
+    }
+    const usualBand = band('usual', rec.usualStart);
+    const suggestedBand = band('suggested', rec.suggestedStart);
+
+    // The line through the middle of each half-hour; a missing half-hour breaks it.
+    let path = '';
+    let dots = '';
+    let targets = '';
+    sorted.forEach(function (p, i) {
+      const t = times[i];
       const value = prices[i];
-      const kind = inRun(rec.suggestedStart, t) ? 'suggested' : inRun(rec.usualStart, t) ? 'usual' : '';
-      const clipped = value > top;
-      // Highlighted runs stay visible even when they are very cheap.
-      const h = Math.max(kind ? 4 : 1, Math.min(value, top) / top * height);
-      const label = Wattly.prettyTime(WattlyRecommendations.localTime(p.periodStart)) + ': ' +
-        cents(value) + '/kWh' + (clipped ? ' (off the scale)' : '');
-      return '<rect class="rec-bar' + (kind ? ' ' + kind : '') + '" x="' + (i * step) + '" y="' + (height - h).toFixed(1) +
-        '" width="4" height="' + h.toFixed(1) + '" rx="1"><title>' + Wattly.escape(label) + '</title></rect>' +
-        (clipped ? '<rect class="rec-bar-cap" x="' + (i * step) + '" y="0" width="4" height="2"></rect>' : '');
-    }).join('');
-    const usual = Wattly.prettyTime(WattlyRecommendations.localTime(rec.usualStart));
-    const suggested = Wattly.prettyTime(WattlyRecommendations.localTime(rec.suggestedStart));
-    const first = Wattly.prettyTime(WattlyRecommendations.localTime(sorted[0].periodStart));
-    const nextDay = WattlyRecommendations.when(sorted[0].periodStart).split(',')[0] !==
-      WattlyRecommendations.when(sorted[sorted.length - 1].periodStart).split(',')[0];
-    const last = Wattly.prettyTime(WattlyRecommendations.localTime(sorted[sorted.length - 1].periodStart)) +
-      (nextDay ? ' tomorrow' : '');
+      const px = x(t + HALF_HOUR_MS / 2);
+      const py = y(value);
+      const joined = i > 0 && t - times[i - 1] === HALF_HOUR_MS;
+      path += (joined ? 'L' : 'M') + num(px) + ' ' + num(py) + ' ';
+      const clipped = value > yMax;
+      dots += '<path class="rec-dot' + (clipped ? ' off-scale' : '') + '" d="M' + num(px) + ' ' + num(py) + 'h0"></path>';
+      const label = WattlyRecommendations.shortTime(t) + '–' + WattlyRecommendations.shortTime(t + HALF_HOUR_MS) +
+        ': ' + cents(value) + '/kWh' + (clipped ? ' (off the scale)' : '');
+      targets += '<rect class="rec-chart-target" x="' + num(x(t)) + '" y="0" width="' + num(x(t + HALF_HOUR_MS) - x(t)) +
+        '" height="100"><title>' + Wattly.escape(label) + '</title></rect>';
+    });
+
+    const first = WattlyRecommendations.shortTime(t0);
+    const last = WattlyRecommendations.shortTime(t1) + (sgtDay(t0) !== sgtDay(t1) ? ' tomorrow' : '');
     const warning = rec.kind === 'AVOID';
-    const summary = 'Forecast price from ' + first + ' to ' + last + ', ' + cents(ordered[0]) + ' to ' +
-      cents(highest) + '/kWh. ' + (warning ? 'Avoid ' : 'Your usual ') + usual + ' in blue, ' +
-      (warning ? 'run at ' : 'suggested ') + suggested + ' in teal.';
+    const usualName = warning ? 'Avoid ' : 'Your usual ';
+    const suggestedName = warning ? 'Run at ' : 'Suggested ';
+    const outside = function (b) { return b.shown ? '' : ' (outside this forecast)'; };
+    const summary = 'Forecast price from ' + first + ' to ' + last + ', ' + cents(lowest) + ' to ' +
+      cents(highest) + '/kWh. ' + suggestedName + suggestedBand.range + ' shaded teal' + outside(suggestedBand) +
+      ', ' + usualName.toLowerCase() + usualBand.range + ' shaded blue' + outside(usualBand) + '.';
     return '<figure class="rec-chart">' +
-      '<svg viewBox="0 0 ' + (sorted.length * step - 2) + ' ' + height + '" preserveAspectRatio="none" role="img" ' +
-        'aria-label="' + Wattly.escape(summary) + '">' + bars + '</svg>' +
-      '<figcaption class="rec-chart-axis"><span>' + Wattly.escape(first) + '</span><span>up to ' +
-        cents(top) + '/kWh shown</span><span>' + Wattly.escape(last) + '</span></figcaption>' +
-      '<div class="rec-chart-legend"><span><i class="rec-swatch usual"></i>' + (warning ? 'Avoid ' : 'Your usual ') +
-        Wattly.escape(usual) + '</span><span><i class="rec-swatch suggested"></i>' +
-        (warning ? 'Run at ' : 'Suggested ') + Wattly.escape(suggested) + '</span></div>' +
+      '<div class="rec-chart-frame">' +
+        '<div class="rec-chart-y" aria-hidden="true">' + yLabels + '</div>' +
+        '<div class="rec-chart-plot">' +
+          '<svg viewBox="0 0 1000 100" preserveAspectRatio="none" role="img" aria-label="' + Wattly.escape(summary) + '">' +
+            usualBand.svg + suggestedBand.svg + grid +
+            '<path class="rec-line" d="' + path.trim() + '"></path>' + dots + targets +
+          '</svg>' +
+        '</div>' +
+        '<div class="rec-chart-x' + (labelEvery === 2 ? ' two-hourly' : '') + '" aria-hidden="true">' + xLabels + '</div>' +
+      '</div>' +
+      '<figcaption>' +
+        '<div class="rec-chart-legend">' +
+          '<span><i class="rec-swatch suggested"></i>' + Wattly.escape(suggestedName + suggestedBand.range + outside(suggestedBand)) + '</span>' +
+          '<span><i class="rec-swatch usual"></i>' + Wattly.escape(usualName + usualBand.range + outside(usualBand)) + '</span>' +
+          '<span><i class="rec-swatch line"></i>Forecast price, ¢/kWh' + (highest > yMax ? ' (spikes above ' + cents(yMax) + ' marked at the top)' : '') + '</span>' +
+        '</div>' +
+        (sourceLabel ? '<div class="rec-chart-source">' + Wattly.escape(sourceLabel) + '</div>' : '') +
+      '</figcaption>' +
     '</figure>';
   };
 
   // The parts every card ends with: chart (on the Recommendations page), actions or what happened.
   function cardEnd(rec, options, actions) {
-    const chart = options.points ? WattlyRecommendations.chartHtml(rec, options.points) : '';
+    const chart = options.points ? WattlyRecommendations.chartHtml(rec, options.points, options.forecastLabel) : '';
     if (options.readOnly) {
       return chart + '<p class="rec-status" role="status">' +
         Wattly.escape(WattlyRecommendations.statusText(rec, options.nowMs)) + '</p>';
@@ -288,7 +391,8 @@ const WattlyRecommendations = {};
     '</li>';
   };
 
-  // options: nowMs, points (draw the mini chart) and readOnly (a card on a decided tab).
+  // options: nowMs, points (draw the forecast chart), forecastLabel (which forecast the chart shows)
+  // and readOnly (a card on a decided tab).
   WattlyRecommendations.itemHtml = function (rec, nowMsOrOptions) {
     const options = cardOptions(nowMsOrOptions);
     if (rec.kind === 'AVOID') {
