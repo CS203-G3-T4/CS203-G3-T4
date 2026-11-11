@@ -7,3 +7,10 @@ wattly:
       admin:
         username: admin
         password: admin-demo
+    # Off by default. scripts/run-local-demo.sh turns it on so a local run starts the replay
+    # (Forecast + Recommendations) without an admin pressing Start on /admin-demo.html.
+    replay:
+      autostart:
+        enabled: ${WATTLY_DEMO_REPLAY_AUTOSTART:false}
+        date: ${WATTLY_DEMO_REPLAY_DATE:2026-09-26}
+        time: ${WATTLY_DEMO_REPLAY_TIME:14:00}
