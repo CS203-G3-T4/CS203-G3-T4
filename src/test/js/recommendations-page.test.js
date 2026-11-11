@@ -169,26 +169,79 @@ test('the chart uses the demo forecast for demo suggestions and F3s latest forec
   Wattly.api = async (method, url) => {
     calls.push(url);
     if (url === '/api/v1/recommendations/demo-forecast') {
-      return { ok: true, data: { points: [{ periodStart: 'a', usepSgdPerMwh: 100 }] } };
+      return { ok: true, data: { replayDay: '2026-09-26', points: [{ periodStart: 'a', usepSgdPerMwh: 100 }] } };
     }
-    return { ok: true, data: { run: { points: [
+    return { ok: true, data: { run: { asOf: '2026-09-30T06:05:00Z', points: [
       { targetPeriod: 'b', predictedUsep: 250 }, { targetPeriod: 'c', predictedUsep: null }] } } };
   };
 
   const demoOnly = await Page.forecastPoints([rec(1)]);
   assert.deepEqual(calls, ['/api/v1/recommendations/demo-forecast']);
-  assert.equal(demoOnly.DEMO_FORECAST[0].usepSgdPerMwh, 100);
+  assert.deepEqual([...Object.keys(demoOnly)], ['DEMO_FORECAST']);
+  assert.equal(demoOnly.DEMO_FORECAST.points[0].usepSgdPerMwh, 100);
+  assert.equal(demoOnly.DEMO_FORECAST.label, 'Demo forecast: a replay of 26 Sep prices, not a live prediction.');
 
   calls.length = 0;
   const f3 = await Page.forecastPoints([rec(1, { forecastSource: 'F3_FORECAST' })]);
   assert.deepEqual(calls, ['/api/v1/forecast/latest']);
-  assert.equal(f3.F3_FORECAST.length, 1);
-  assert.equal(f3.F3_FORECAST[0].periodStart, 'b');
-  assert.equal(f3.F3_FORECAST[0].usepSgdPerMwh, 250);
+  assert.deepEqual([...Object.keys(f3)], ['F3_FORECAST']);
+  assert.equal(f3.F3_FORECAST.points.length, 1);
+  assert.equal(f3.F3_FORECAST.points[0].periodStart, 'b');
+  assert.equal(f3.F3_FORECAST.points[0].usepSgdPerMwh, 250);
+  assert.equal(f3.F3_FORECAST.label, 'AI price forecast (F3), made 2:05 PM.');
 
   calls.length = 0;
-  await Page.forecastPoints([]);
+  const both = await Page.forecastPoints([rec(1), rec(2, { forecastSource: 'F3_FORECAST' })]);
+  assert.deepEqual([...Object.keys(both)].sort(), ['DEMO_FORECAST', 'F3_FORECAST']);
+
+  calls.length = 0;
+  assert.deepEqual({ ...await Page.forecastPoints([]) }, {});
   assert.deepEqual(calls, []);
+});
+
+test('a failed forecast request gives no points and no label', async () => {
+  const { Wattly, Page } = load();
+  Wattly.api = async () => ({ ok: false, data: null });
+
+  const failed = await Page.forecastPoints([rec(1), rec(2, { forecastSource: 'F3_FORECAST' })]);
+  assert.equal(failed.DEMO_FORECAST.points.length, 0);
+  assert.equal(failed.DEMO_FORECAST.label, undefined);
+  assert.equal(failed.F3_FORECAST.points.length, 0);
+  assert.equal(failed.F3_FORECAST.label, undefined);
+
+  Wattly.api = async () => ({ ok: true, data: { run: null } });
+  const noRun = await Page.forecastPoints([rec(1, { forecastSource: 'F3_FORECAST' })]);
+  assert.equal(noRun.F3_FORECAST.points.length, 0);
+  assert.equal(noRun.F3_FORECAST.label, undefined);
+});
+
+test('the chart label says whether the forecast is a demo replay or the AI forecast, and when it was made', () => {
+  const { Page } = load();
+
+  assert.equal(Page.forecastLabel('DEMO_FORECAST', { replayDay: '2026-09-26' }),
+    'Demo forecast: a replay of 26 Sep prices, not a live prediction.');
+  assert.equal(Page.forecastLabel('DEMO_FORECAST', { replayDay: '2026-10-05' }),
+    'Demo forecast: a replay of 5 Oct prices, not a live prediction.');
+  assert.equal(Page.forecastLabel('DEMO_FORECAST', {}),
+    'Demo forecast: a replay of past prices, not a live prediction.');
+  assert.equal(Page.forecastLabel('DEMO_FORECAST', undefined),
+    'Demo forecast: a replay of past prices, not a live prediction.');
+
+  const replay = 'Demo replay: past prices, not a live prediction.';
+  assert.equal(Page.forecastLabel('F3_FORECAST', { run: { mode: 'REPLAY', asOf: '2026-09-30T06:05:00Z' } }), replay);
+  assert.equal(Page.forecastLabel('F3_FORECAST', { run: { modelType: 'DEMO', asOf: '2026-09-30T06:05:00Z' } }), replay);
+
+  assert.equal(Page.forecastLabel('F3_FORECAST', { run: { mode: 'LIVE', modelType: 'LSTM', asOf: '2026-09-30T06:05:00Z' } }),
+    'AI price forecast (F3), made 2:05 PM.');
+  // asOf wins; generatedAt is the fallback.
+  assert.equal(Page.forecastLabel('F3_FORECAST',
+    { run: { asOf: '2026-09-30T06:05:00Z', generatedAt: '2026-09-30T08:00:00Z' } }), 'AI price forecast (F3), made 2:05 PM.');
+  assert.equal(Page.forecastLabel('F3_FORECAST', { run: { generatedAt: '2026-09-30T08:00:00Z' } }),
+    'AI price forecast (F3), made 4:00 PM.');
+  assert.equal(Page.forecastLabel('F3_FORECAST', { stale: true, run: { asOf: '2026-09-30T06:05:00Z' } }),
+    'AI price forecast (F3), made 2:05 PM. Out of date.');
+  assert.equal(Page.forecastLabel('F3_FORECAST', { run: {} }), 'AI price forecast (F3).');
+  assert.equal(Page.forecastLabel('F3_FORECAST', { stale: true, run: {} }), 'AI price forecast (F3). Out of date.');
 });
 
 test('loading the Active tab shows open cards with charts and the snoozed ones read-only', async () => {
@@ -202,13 +255,15 @@ test('loading the Active tab shows open cards with charts and the snoozed ones r
   const points = [];
   for (let i = 0; i < 24; i++) points.push({ periodStart: soon(30 * i), usepSgdPerMwh: 300 });
   Wattly.api = async (method, url) => url.includes('demo-forecast')
-    ? { ok: true, data: { points } }
+    ? { ok: true, data: { replayDay: '2026-09-26', points } }
     : { ok: true, data: { demoForecast: true, recommendations: [rec(1), rec(2, { remindAt: soon(60) })] } };
 
   await Page.loadTab('ACTIVE');
 
   assert.match(nodes['recommendation-list'].innerHTML, /data-id="1"/);
   assert.match(nodes['recommendation-list'].innerHTML, /<figure class="rec-chart">/);
+  assert.match(nodes['recommendation-list'].innerHTML,
+    /<div class="rec-chart-source">Demo forecast: a replay of 26 Sep prices, not a live prediction\.<\/div>/);
   assert.match(nodes['recommendation-list'].innerHTML, /data-action="accept"/);
   assert.doesNotMatch(nodes['recommendation-list'].innerHTML, /data-id="2"/);
   assert.equal(nodes['snoozed-block'].hidden, false);

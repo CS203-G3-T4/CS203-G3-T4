@@ -268,31 +268,212 @@ test('cards on the decided tabs say what happened and have no buttons', () => {
     'Snoozed: comes back at 3:30 PM.');
 });
 
-test('the mini chart marks the usual run in blue and the suggested run in teal, from real prices', () => {
-  const { Recs } = load();
-  // 1:00 PM to 8:30 PM Singapore time: 300 SGD/MWh, cheap 1:00-2:00 PM, 4000 spike at 8:00 PM.
+// Forecast chart helpers: half-hourly points from a fixed instant, with a price per index.
+function forecast(startIso, count, price) {
   const points = [];
-  for (let i = 0; i < 16; i++) {
-    const start = new Date(at('2026-09-30T05:00:00Z') + i * 1800000).toISOString();
-    points.push({ periodStart: start, usepSgdPerMwh: i < 2 ? 20 : i === 14 ? 4000 : 300 });
+  for (let i = 0; i < count; i++) {
+    points.push({ periodStart: new Date(at(startIso) + i * 1800000).toISOString(), usepSgdPerMwh: price(i) });
   }
-  const html = Recs.chartHtml({ ...dryer, runMinutes: 60 }, points);
+  return points;
+}
+const xLabelsOf = (html) => [...html.match(/<div class="rec-chart-x[^"]*"[^>]*>(.*?)<\/div>/)[1]
+  .matchAll(/<span(?: class="([^"]*)")? style="left:[^"]*">([^<]*)<\/span>/g)].map((m) => ({ cls: m[1] || '', text: m[2] }));
+const yLabelsOf = (html) => [...html.match(/<div class="rec-chart-y"[^>]*>(.*?)<\/div>/)[1]
+  .matchAll(/<span style="top:[^"]*">([^<]*)<\/span>/g)].map((m) => m[1]);
+const tooltipsOf = (html) => [...html.matchAll(/<title>([^<]*)<\/title>/g)].map((m) => m[1]);
+const bandOf = (html, kind) => {
+  const m = html.match(new RegExp('<rect class="rec-band ' + kind + '" x="([\\d.]+)" y="0" width="([\\d.]+)"'));
+  return m && { x: Number(m[1]), width: Number(m[2]) };
+};
+const EMPTY_CHART = '<p class="rec-chart-empty">Forecast chart not available right now.</p>';
 
-  assert.equal((html.match(/class="rec-bar suggested"/g) || []).length, 2); // 1:00 and 1:30 PM
-  assert.equal((html.match(/class="rec-bar usual"/g) || []).length, 3);     // 7:30, 8:00, 8:30 PM (7:45-8:45)
-  assert.match(html, /<title>1:00 PM: 2\.0¢\/kWh<\/title>/);
-  assert.match(html, /<title>8:00 PM: 400¢\/kWh \(off the scale\)<\/title>/);
-  assert.match(html, /Your usual 7:45 PM/);
-  assert.match(html, /Suggested 1:00 PM/);
-  assert.match(html, /role="img" aria-label="Forecast price from 1:00 PM to 8:30 PM/);
+test('shortTime gives Singapore chart labels like 2pm, 1:30pm and 12am', () => {
+  const { Recs } = load();
+
+  assert.equal(Recs.shortTime(at('2026-09-30T06:00:00Z')), '2pm');
+  assert.equal(Recs.shortTime(at('2026-09-30T05:30:00Z')), '1:30pm');
+  assert.equal(Recs.shortTime(at('2026-09-30T16:00:00Z')), '12am');
+  assert.equal(Recs.shortTime(at('2026-09-30T04:00:00Z')), '12pm');
+  assert.equal(Recs.shortTime(at('2026-09-30T11:45:00Z')), '7:45pm');
+  assert.equal(Recs.shortTime(at('2026-09-30T16:15:00Z')), '12:15am');
+  assert.equal(Recs.shortTime(at('2026-09-30T01:00:00Z')), '9am');
+});
+
+// 1:00 PM to 9:00 PM Singapore time: 300 SGD/MWh (30¢), cheap 1:00-2:00 PM (2¢), 4000 spike at 8:00 PM.
+const afternoon = () => forecast('2026-09-30T05:00:00Z', 16, (i) => (i < 2 ? 20 : i === 14 ? 4000 : 300));
+const dryerRun = { ...dryer, runMinutes: 60 };
+
+test('the chart is a line with a dot per half-hour and hour labels along the bottom', () => {
+  const { Recs } = load();
+  const html = Recs.chartHtml(dryerRun, afternoon());
+
+  assert.match(html, /<svg viewBox="0 0 1000 100" preserveAspectRatio="none" role="img"/);
+  assert.equal((html.match(/<path class="rec-line"/g) || []).length, 1);
+  assert.equal((html.match(/class="rec-dot/g) || []).length, 16);
+  assert.doesNotMatch(html, /rec-bar/);
+  assert.deepEqual(xLabelsOf(html).map((l) => l.text), ['1pm', '2pm', '3pm', '4pm', '5pm', '6pm', '7pm', '8pm', '9pm']);
+  // On a narrow chart (a phone) only every third hour shows: 3pm, 6pm and 9pm; the rest are minor.
+  assert.deepEqual(xLabelsOf(html).map((l) => l.cls),
+    ['start minor', 'minor', '', 'minor', 'minor', '', 'minor', 'minor', 'end']);
+  assert.equal((html.match(/class="rec-chart-grid hour"/g) || []).length, 9);
   assert.doesNotMatch(html, /tomorrow/);
-  assert.equal(Recs.chartHtml(dryer, []), '<p class="rec-chart-empty">Forecast chart not available right now.</p>');
-  // A forecast running past midnight says so, and a very cheap suggested bar is still visible.
-  const overnight = [{ periodStart: '2026-09-30T15:00:00Z', usepSgdPerMwh: 1 },
-    { periodStart: '2026-09-30T16:00:00Z', usepSgdPerMwh: 900 }];
-  const night = Recs.chartHtml({ ...dryer, suggestedStart: '2026-09-30T15:00:00Z', runMinutes: 30 }, overnight);
-  assert.match(night, /<span>12:00 AM tomorrow<\/span>/);
-  assert.match(night, /class="rec-bar suggested" x="0" y="52\.0" width="4" height="4\.0"/);
+  assert.doesNotMatch(html, /rec-chart-source/);
+});
+
+test('the suggested and usual runs are shaded from their exact start for the length of the run', () => {
+  const { Recs } = load();
+  const html = Recs.chartHtml(dryerRun, afternoon());
+
+  // 8 hours across 1000 units: 125 per hour. Suggested 1pm-2pm starts at 0; usual 7:45pm is 6.75 hours in.
+  assert.deepEqual(bandOf(html, 'suggested'), { x: 0, width: 125 });
+  assert.deepEqual(bandOf(html, 'usual'), { x: 843.8, width: 125 });
+  assert.equal((html.match(/class="rec-band /g) || []).length, 2);
+  // A 30-minute run is half as wide.
+  assert.deepEqual(bandOf(Recs.chartHtml({ ...dryer, runMinutes: 30 }, afternoon()), 'suggested'), { x: 0, width: 62.5 });
+});
+
+test('hovering a half-hour says its time range and price, and marks the spike as off the scale', () => {
+  const { Recs } = load();
+  const html = Recs.chartHtml(dryerRun, afternoon());
+  const tips = tooltipsOf(html);
+
+  assert.equal(tips.length, 16);
+  assert.equal(tips[0], '1pm–1:30pm: 2¢/kWh');
+  assert.equal(tips[2], '2pm–2:30pm: 30¢/kWh');
+  assert.equal(tips[14], '8pm–8:30pm: 400¢/kWh (off the scale)');
+  assert.equal(tips.filter((t) => t.includes('off the scale')).length, 1);
+  assert.equal((html.match(/class="rec-dot off-scale"/g) || []).length, 1);
+  assert.equal((html.match(/class="rec-dot"/g) || []).length, 15);
+  assert.match(html, /spikes above 40¢ marked at the top/);
+  assert.deepEqual(yLabelsOf(html), ['0¢', '10¢', '20¢', '30¢', '40¢']);
+});
+
+test('the legend and screen-reader summary name both runs and the forecast range', () => {
+  const { Recs } = load();
+  const html = Recs.chartHtml(dryerRun, afternoon());
+
+  assert.match(html, /<span><i class="rec-swatch suggested"><\/i>Suggested 1pm–2pm<\/span>/);
+  assert.match(html, /<span><i class="rec-swatch usual"><\/i>Your usual 7:45pm–8:45pm<\/span>/);
+  assert.match(html, /aria-label="Forecast price from 1pm to 9pm, 2¢ to 400¢\/kWh\. Suggested 1pm–2pm shaded teal, your usual 7:45pm–8:45pm shaded blue\."/);
+  assert.doesNotMatch(html, /outside this forecast/);
+});
+
+test('an AVOID warning says run at and avoid instead of suggested and your usual', () => {
+  const { Recs } = load();
+  const html = Recs.chartHtml({ ...dryerRun, kind: 'AVOID' }, afternoon());
+
+  assert.match(html, /<i class="rec-swatch suggested"><\/i>Run at 1pm–2pm<\/span>/);
+  assert.match(html, /<i class="rec-swatch usual"><\/i>Avoid 7:45pm–8:45pm<\/span>/);
+  assert.doesNotMatch(html, /Your usual|Suggested/);
+  assert.match(html, /Run at 1pm–2pm shaded teal, avoid 7:45pm–8:45pm shaded blue/);
+});
+
+test('the chart says which forecast it shows, escaping the label, and omits the caption without one', () => {
+  const { Recs } = load();
+  const labelled = Recs.chartHtml(dryerRun, afternoon(), 'Demo <b>"replay"</b> & more');
+
+  assert.match(labelled, /<div class="rec-chart-source">Demo &lt;b&gt;&quot;replay&quot;&lt;\/b&gt; &amp; more<\/div>/);
+  assert.doesNotMatch(labelled, /<b>/);
+  assert.match(Recs.chartHtml(dryerRun, afternoon(), 'AI price forecast (F3), made 2:05 PM.'),
+    /<div class="rec-chart-source">AI price forecast \(F3\), made 2:05 PM\.<\/div>/);
+  assert.doesNotMatch(Recs.chartHtml(dryerRun, afternoon(), ''), /rec-chart-source/);
+  assert.doesNotMatch(Recs.chartHtml(dryerRun, afternoon(), undefined), /rec-chart-source/);
+});
+
+test('a forecast running past Singapore midnight says tomorrow and labels 12am', () => {
+  const { Recs } = load();
+  // 10:00 PM to 2:00 AM.
+  const night = forecast('2026-09-30T14:00:00Z', 8, () => 300);
+  const html = Recs.chartHtml({ ...dryer, suggestedStart: '2026-09-30T16:00:00Z', usualStart: '2026-09-30T14:00:00Z', runMinutes: 30 }, night);
+
+  assert.deepEqual(xLabelsOf(html).map((l) => l.text), ['10pm', '11pm', '12am', '1am', '2am']);
+  assert.match(html, /Forecast price from 10pm to 2am tomorrow, 30¢ to 30¢\/kWh\./);
+  // The same forecast within one day has no "tomorrow".
+  assert.doesNotMatch(Recs.chartHtml(dryerRun, afternoon()), /tomorrow/);
+});
+
+test('a 48-point forecast labels every second hour so the axis fits on a phone', () => {
+  const { Recs } = load();
+  // 12:00 AM to 12:00 AM next day, in 48 half-hours.
+  const day = forecast('2026-09-29T16:00:00Z', 48, (i) => 200 + i);
+  const html = Recs.chartHtml({ ...dryer, suggestedStart: '2026-09-29T20:00:00Z', usualStart: '2026-09-30T10:00:00Z', runMinutes: 60 }, day);
+  const labels = xLabelsOf(html).map((l) => l.text);
+
+  assert.deepEqual(labels, ['12am', '2am', '4am', '6am', '8am', '10am', '12pm', '2pm', '4pm', '6pm', '8pm', '10pm', '12am']);
+  assert.equal(xLabelsOf(html)[0].cls, 'start');
+  assert.equal(xLabelsOf(html)[12].cls, 'end');
+  assert.match(html, /<div class="rec-chart-x two-hourly" aria-hidden="true">/);
+  // A narrow chart keeps every 6 hours: 12am, 6am, 12pm, 6pm, 12am.
+  assert.deepEqual(xLabelsOf(html).filter((l) => !l.cls.includes('minor')).map((l) => l.text),
+    ['12am', '6am', '12pm', '6pm', '12am']);
+  assert.equal((html.match(/class="rec-chart-grid hour"/g) || []).length, 25); // gridlines stay hourly
+  assert.equal((html.match(/class="rec-dot/g) || []).length, 48);
+  assert.match(html, /Forecast price from 12am to 12am tomorrow/);
+  assert.ok(bandOf(html, 'suggested') && bandOf(html, 'usual'));
+});
+
+test('a missing half-hour breaks the line instead of drawing across the gap', () => {
+  const { Recs } = load();
+  const whole = forecast('2026-09-30T05:00:00Z', 6, () => 300);
+  const gappy = whole.filter((p, i) => i !== 3);
+  const pathOf = (html) => html.match(/<path class="rec-line" d="([^"]*)"/)[1];
+
+  assert.equal((pathOf(Recs.chartHtml(dryerRun, whole)).match(/M/g) || []).length, 1);
+  assert.equal((pathOf(Recs.chartHtml(dryerRun, whole)).match(/L/g) || []).length, 5);
+  const broken = pathOf(Recs.chartHtml(dryerRun, gappy));
+  assert.equal((broken.match(/M/g) || []).length, 2);
+  assert.equal((broken.match(/L/g) || []).length, 3);
+  assert.equal((Recs.chartHtml(dryerRun, gappy).match(/class="rec-dot/g) || []).length, 5);
+  // Points given out of order are drawn in time order.
+  assert.equal(pathOf(Recs.chartHtml(dryerRun, whole.slice().reverse())), pathOf(Recs.chartHtml(dryerRun, whole)));
+});
+
+test('a run outside the forecast gets no band and the legend says so', () => {
+  const { Recs } = load();
+  // Forecast 1:00-9:00 PM; the usual run is at 11:45 PM.
+  const html = Recs.chartHtml({ ...dryerRun, usualStart: '2026-09-30T15:45:00Z' }, afternoon());
+
+  assert.equal(bandOf(html, 'usual'), null);
+  assert.ok(bandOf(html, 'suggested'));
+  assert.equal((html.match(/class="rec-band /g) || []).length, 1);
+  assert.match(html, /Your usual 11:45pm–12:45am \(outside this forecast\)<\/span>/);
+  assert.match(html, /shaded blue \(outside this forecast\)\./);
+  assert.doesNotMatch(html, /Suggested 1pm–2pm \(outside/);
+  // And the same for a suggestion before the forecast starts.
+  const early = Recs.chartHtml({ ...dryerRun, suggestedStart: '2026-09-30T00:00:00Z' }, afternoon());
+  assert.equal(bandOf(early, 'suggested'), null);
+  assert.match(early, /Suggested 8am–9am \(outside this forecast\)/);
+});
+
+test('negative prices get a 0¢ gridline and a negative label', () => {
+  const { Recs } = load();
+  // -50, 100, 200 SGD/MWh = -5¢, 10¢, 20¢.
+  const html = Recs.chartHtml(dryerRun, forecast('2026-09-30T05:00:00Z', 3, (i) => [-50, 100, 200][i]));
+
+  assert.equal((html.match(/class="rec-chart-grid zero"/g) || []).length, 1);
+  assert.ok(yLabelsOf(html).includes('0¢'));
+  assert.deepEqual(yLabelsOf(html), ['-10¢', '0¢', '10¢', '20¢']); // round steps, lowest first drawn at the bottom
+  assert.equal(tooltipsOf(html)[0], '1pm–1:30pm: -5¢/kWh');
+  assert.match(html, /Forecast price from 1pm to 2:30pm, -5¢ to 20¢\/kWh\./);
+  // Prices that stay positive have the zero line at the bottom of the chart.
+  assert.match(Recs.chartHtml(dryerRun, afternoon()), /class="rec-chart-grid zero" x1="0" x2="1000" y1="100\.0"/);
+});
+
+test('empty, missing or unusable points give the not-available paragraph', () => {
+  const { Recs } = load();
+
+  assert.equal(Recs.chartHtml(dryer, []), EMPTY_CHART);
+  assert.equal(Recs.chartHtml(dryer, undefined), EMPTY_CHART);
+  assert.equal(Recs.chartHtml(dryer, null), EMPTY_CHART);
+  assert.equal(Recs.chartHtml(dryer, [{ periodStart: '2026-09-30T05:00:00Z', usepSgdPerMwh: null },
+    { periodStart: '2026-09-30T05:30:00Z', usepSgdPerMwh: 'abc' }, { periodStart: '2026-09-30T06:00:00Z' },
+    { periodStart: 'not a time', usepSgdPerMwh: 100 }]), EMPTY_CHART);
+  // Unusable points are skipped, the rest still chart.
+  const mixed = Recs.chartHtml(dryerRun, [{ periodStart: '2026-09-30T05:00:00Z', usepSgdPerMwh: null },
+    { periodStart: '2026-09-30T05:30:00Z', usepSgdPerMwh: 100 }, { periodStart: '2026-09-30T06:00:00Z', usepSgdPerMwh: 'abc' },
+    { periodStart: 'nope', usepSgdPerMwh: 100 }, { periodStart: '2026-09-30T06:30:00Z', usepSgdPerMwh: '200' }]);
+  assert.equal((mixed.match(/class="rec-dot/g) || []).length, 2);
+  assert.deepEqual(tooltipsOf(mixed), ['1:30pm–2pm: 10¢/kWh', '2:30pm–3pm: 20¢/kWh']);
 });
 
 
