@@ -17,7 +17,8 @@ or `http://localhost:8080/swagger-ui/index.html` when running locally. The OpenA
 document is at [`/v3/api-docs`](https://wattlyapp.me/v3/api-docs). Both are public;
 the endpoints they describe still require sign-in where noted.
 
-Contents: [Run locally](#run-locally) · [Deploy](#deploy) ·
+Contents: [Run locally](#run-locally) ·
+[Run the demo locally (for markers)](#run-the-demo-locally-for-markers) · [Deploy](#deploy) ·
 [Architecture](#architecture) · [Hand-off interfaces](#hand-off-interfaces) ·
 [Units and time conventions](#units-and-time-conventions) ·
 [Team conventions](#team-conventions) · [API](#api) · [Tests](#tests)
@@ -57,6 +58,54 @@ The labels are defined directly in the V5 and V7 seed migrations. Flyway only
 runs those seeds on a fresh database; an existing database that already applied
 V5/V7 retains its old seed names, and editing applied migrations changes their
 checksums. Use a fresh disposable local database to try the renamed seed data.
+
+### Run the demo locally (for markers)
+
+A plain local run has no live prices and no Python forecast service, so the
+Forecast page would be empty. This command runs the app on this machine only and
+replays the bundled 26 September 2026 prices instead:
+
+```sh
+./scripts/run-local-demo.sh
+```
+
+It needs Docker and Java 21 or newer. The first build downloads Maven
+dependencies; after that it needs no internet. The script starts the Compose
+PostgreSQL container and creates a separate `wattly_local_demo` database if it is
+missing. It then runs the app at <http://127.0.0.1:8080/> with the `demo` profile.
+NEMS and NEA polling are off. Stop it with Ctrl+C. The settings below are optional:
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `WATTLY_LOCAL_DEMO_PORT` | `8080` | App port (bound to 127.0.0.1) |
+| `WATTLY_LOCAL_DEMO_DB` | `wattly_local_demo` | Database name in the Compose container |
+| `POSTGRES_PORT` | `55432` | Host port of the Compose PostgreSQL container |
+| `WATTLY_DEMO_REPLAY_DATE`, `WATTLY_DEMO_REPLAY_TIME` | `2026-09-26`, `14:00` | Replay start (Singapore time) |
+
+Sign in with an account from `application-demo.yml`:
+
+- `admin` / `admin-demo`: all five properties and the admin pages.
+- `resident` / `resident-demo`: Home only.
+
+On startup the app starts the demo clock as if the admin had pressed Start on
+`/admin-demo.html` (setting `WATTLY_DEMO_REPLAY_AUTOSTART`, used only under the
+`demo` profile). A bar at the top of every page shows the simulated time.
+
+- **Forecast**: the next 12 hours of the replay day, labelled as a historical
+  replay of actual prices, not a model prediction.
+- **Recommendations**: demo-forecast suggestions for the price-linked
+  properties (Home 3, Office 1 1, Rental 1, Office 2 3). Office 3 is on a fixed-rate
+  plan, so it gets none.
+- **Households, Appliances, Spending & Budget**: the seeded properties and their
+  appliances.
+
+Limits: only the bundled replay days (25 and 26 September 2026) can be loaded. The **+30 min** and **+2 h**
+buttons cannot advance past midnight of the replay day; start another day
+instead. The demo clock is shared by everyone using this app instance, and
+records created during the replay get the simulated time. A fresh database has
+no earlier price history, so spike checks and the past-day pattern say there is
+not enough history. **Stop** returns the app to real time, where the Forecast page
+is empty again without live polling.
 
 ## Deploy
 
