@@ -6,34 +6,35 @@ reports, horizon CSVs, screenshots and the full historical demo payload are now
 preserved in a reproducible archive rather than the current source tree. No
 experiments, prices or saved results were discarded or recomputed to improve a
 score. [The manifest](artifacts.json) records every original path, byte count and
-SHA-256, pinned to reviewed commit `76c4866284ffb9c92c0369a088ad034c29a9d6f6`.
-The original Git history remains intact.
+SHA-256, pinned to commit `0b73a58966eed8699f87f32c51e29a8d120b0f85`.
+That commit has the same files (Git tree) as the originally reviewed `76c4866`, which left
+the published history when `main` was rewritten on 12 November 2026.
 
 ## Retrieval
 
 GitHub Actions' **Frozen research archive** job publishes the verified archive as
-`wattly-forecast-evidence-76c4866` on each PR run, retained for 30 days. Open PR #11's
+`wattly-forecast-evidence-0b73a58` on each PR run, retained for 30 days. Open PR #11's
 Actions run and download that artifact once the job succeeds. Expiry does not lose
 the evidence: a full clone can reproduce the exact archive from the frozen commit.
 For shallow clones, fetch that commit first. From the repository root:
 
 ```bash
-git fetch origin 76c4866284ffb9c92c0369a088ad034c29a9d6f6
+git fetch origin 0b73a58966eed8699f87f32c51e29a8d120b0f85
 mkdir -p .local/artifacts
 python3 scripts/forecast-artifacts.py build \
-  .local/artifacts/wattly-forecast-evidence-76c4866.tar.gz
+  .local/artifacts/wattly-forecast-evidence-0b73a58.tar.gz
 python3 scripts/forecast-artifacts.py verify \
-  .local/artifacts/wattly-forecast-evidence-76c4866.tar.gz
+  .local/artifacts/wattly-forecast-evidence-0b73a58.tar.gz
 python3 scripts/forecast-artifacts.py restore \
-  .local/artifacts/wattly-forecast-evidence-76c4866.tar.gz \
-  .local/research-evidence-76c4866
+  .local/artifacts/wattly-forecast-evidence-0b73a58.tar.gz \
+  .local/research-evidence-0b73a58
 ```
 
 Build and restore refuse existing destinations. Every entry and the complete
 archive are checked before restoration; unexpected entries, links, traversal,
 changed contents and duplicate members are rejected. Original relative paths are
 preserved under the destination. For example, the full AR study is at
-`.local/research-evidence-76c4866/docs/forecasting/ar-improvements-2026-10-06.json`.
+`.local/research-evidence-0b73a58/docs/forecasting/ar-improvements-2026-10-06.json`.
 Numerical report links that previously pointed into generated files now lead here.
 Earlier executable reproduction commands remain in the dated reports/runbook.
 Raw `.local` model binaries, collector snapshots and household database dumps are
@@ -67,7 +68,7 @@ To reproduce the projection into a new private file:
 
 ```bash
 python3 scripts/compact-forecast-demo.py \
-  .local/research-evidence-76c4866/src/main/resources/static/forecast-demo-latest.json \
+  .local/research-evidence-0b73a58/src/main/resources/static/forecast-demo-latest.json \
   .local/forecast-demo-public.json
 ```
 

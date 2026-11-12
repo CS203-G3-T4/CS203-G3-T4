@@ -1,6 +1,6 @@
 {
-  "sourceCommit": "76c4866284ffb9c92c0369a088ad034c29a9d6f6",
-  "archiveName": "wattly-forecast-evidence-76c4866.tar.gz",
+  "sourceCommit": "0b73a58966eed8699f87f32c51e29a8d120b0f85",
+  "archiveName": "wattly-forecast-evidence-0b73a58.tar.gz",
   "files": [
     {
       "path": "docs/forecasting/accuracy-study-2026-10-05.json",
@@ -188,5 +188,5 @@
       "sha256": "5e2c5e8a8d0130232f0301a05b6b36afa940de2777737d1e262c407a5fa5582a"
     }
   ],
-  "archiveSha256": "4d153531160edf9cb77e160cc1107a37e80434b61585c0f9d689af8531c63551"
+  "archiveSha256": "278333c8033b08f607a37966ca1fdc395e6e62b4d352e7f765eec93363793a3f"
 }
