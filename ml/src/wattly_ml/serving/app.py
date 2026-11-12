@@ -204,6 +204,7 @@ def create_app(loader=None):
         try:
             predictions = predict(bundle,history,request.asOf)
         except Exception:
+            logging.getLogger('wattly_ml').exception('Inference failed')
             raise HTTPException(503,detail={"code":"MODEL_INFERENCE_FAILED"})
         import math
         if len(predictions)!=24 or not all(math.isfinite(v) for v in predictions):
