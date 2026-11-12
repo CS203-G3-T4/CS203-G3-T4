@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import org.springframework.stereotype.Service;
 
@@ -66,8 +67,9 @@ public class SpendService {
         boolean priceLinked = household.planType() == PlanType.PRICE_LINKED;
         Map<Instant, BigDecimal> usep = priceLinked ? usep(monthStart, now) : Map.of();
         List<SpendCalculator.HalfHour> halfHours = new ArrayList<>();
+        Function<LocalDate, LoadProfileResponse> profiler = loads.profiler(householdId);
         for (LocalDate day = month.atDay(1); !day.isAfter(local.toLocalDate()); day = day.plusDays(1)) {
-            halfHours.addAll(finishedHalfHours(householdId, day, now, usep));
+            halfHours.addAll(finishedHalfHours(profiler, day, now, usep));
         }
 
         List<String> notes = new ArrayList<>();
@@ -113,24 +115,7 @@ public class SpendService {
      * half-hour without a saved price is skipped (see each result's halfHoursWithoutPrice).
      */
     public Map<LocalDate, SpendCalculator.Result> dailySpend(long householdId, LocalDate from) {
-        HouseholdResponse household = households.get(householdId);
-        Instant now = clock.instant();
-        LocalDate today = now.atZone(SpendCalculator.SINGAPORE).toLocalDate();
-        boolean priceLinked = household.planType() == PlanType.PRICE_LINKED;
-        Instant fromStart = from.atStartOfDay(SpendCalculator.SINGAPORE).toInstant();
-        Map<Instant, BigDecimal> usep = priceLinked ? usep(fromStart, now) : Map.of();
-        List<TariffComponent> components = priceLinked
-                ? tariffs.forPeriod(PlanType.PRICE_LINKED, from, today) : List.of();
-        BigDecimal rate = household.fixedRateCentsPerKwh() == null ? BigDecimal.ZERO
-                : household.fixedRateCentsPerKwh();
-        Map<LocalDate, SpendCalculator.Result> days = new LinkedHashMap<>();
-        for (LocalDate day = from; !day.isAfter(today); day = day.plusDays(1)) {
-            List<SpendCalculator.HalfHour> halfHours = finishedHalfHours(householdId, day, now, usep);
-            days.put(day, priceLinked
-                    ? SpendCalculator.priceLinked(halfHours, components, halfHoursIn(YearMonth.from(day)))
-                    : SpendCalculator.fixedRate(halfHours, rate));
-        }
-        return days;
+        return dailySpend(householdId, from, LocalDate.MAX);
     }
 
     public WeeklySpendResponse weekly(long householdId, YearMonth requestedMonth) {
@@ -186,9 +171,10 @@ public class SpendService {
                 ? tariffs.forPeriod(PlanType.PRICE_LINKED, from, end) : List.of();
         BigDecimal rate = household.fixedRateCentsPerKwh() == null ? BigDecimal.ZERO
                 : household.fixedRateCentsPerKwh();
+        Function<LocalDate, LoadProfileResponse> profiler = loads.profiler(householdId);
         Map<LocalDate, SpendCalculator.Result> days = new LinkedHashMap<>();
         for (LocalDate day = from; !day.isAfter(end); day = day.plusDays(1)) {
-            List<SpendCalculator.HalfHour> halfHours = finishedHalfHours(householdId, day, now, usep);
+            List<SpendCalculator.HalfHour> halfHours = finishedHalfHours(profiler, day, now, usep);
             days.put(day, priceLinked
                     ? SpendCalculator.priceLinked(halfHours, components, halfHoursIn(YearMonth.from(day)))
                     : SpendCalculator.fixedRate(halfHours, rate));
@@ -203,12 +189,13 @@ public class SpendService {
     }
 
     /** The day's half-hours that have finished by now, with modelled kWh and their USEP (if saved). */
-    private List<SpendCalculator.HalfHour> finishedHalfHours(long householdId, LocalDate day, Instant now,
+    private List<SpendCalculator.HalfHour> finishedHalfHours(Function<LocalDate, LoadProfileResponse> profiler,
+                                                            LocalDate day, Instant now,
                                                             Map<Instant, BigDecimal> usep) {
         List<SpendCalculator.HalfHour> halfHours = new ArrayList<>();
         Instant dayStart = day.atStartOfDay(SpendCalculator.SINGAPORE).toInstant();
         if (!dayStart.plus(HALF_HOUR).isAfter(now)) {
-            for (LoadProfileResponse.Slot slot : loads.profile(householdId, day).slots()) {
+            for (LoadProfileResponse.Slot slot : profiler.apply(day).slots()) {
                 Instant start = day.atTime(slot.start()).atZone(SpendCalculator.SINGAPORE).toInstant();
                 if (!start.plus(HALF_HOUR).isAfter(now)) {
                     halfHours.add(new SpendCalculator.HalfHour(start, slot.totalKwh(), usep.get(start)));

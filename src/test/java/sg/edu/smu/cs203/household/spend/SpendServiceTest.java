@@ -48,7 +48,7 @@ class SpendServiceTest {
         // 01:10 on 1 Oct: 00:00 and 00:30 have finished; 01:00 hasn't. Only 00:00 has a price.
         Instant now = sg("2026-10-01T01:10");
         priceLinked();
-        when(loads.profile(1L, LocalDate.of(2026, 10, 1))).thenReturn(day(LocalDate.of(2026, 10, 1), "0.5"));
+        when(loads.profiler(1L)).thenReturn(d -> day(d, "0.5"));
         when(prices.prices(sg("2026-10-01T00:00"), now))
                 .thenReturn(java.util.Map.of(sg("2026-10-01T00:00"), new BigDecimal("200")));
         when(tariffs.forPeriod(PlanType.PRICE_LINKED, LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 1)))
@@ -75,7 +75,7 @@ class SpendServiceTest {
         // A demo clock on 26 Sep 2026 at noon: September, 25 full days plus 24 half-hours.
         Instant demo = sg("2026-09-26T12:00");
         priceLinked();
-        when(loads.profile(eq(1L), any())).thenAnswer(call -> day(call.getArgument(1), "0.1"));
+        when(loads.profiler(1L)).thenReturn(d -> day(d, "0.1"));
 
         MonthToDateSpendResponse spend = service(demo).monthToDate(1L);
 
@@ -83,15 +83,15 @@ class SpendServiceTest {
         assertThat(spend.asOf()).isEqualTo(demo);
         assertThat(spend.halfHoursSoFar()).isEqualTo(25 * 48 + 24);
         verify(prices).prices(sg("2026-09-01T00:00"), demo);
-        verify(loads, times(26)).profile(eq(1L), any());
+        // load inputs are fetched once, not once per day
+        verify(loads).profiler(1L);
     }
 
     @Test
     void priceLinkedSpendUsesReplayPricesWhileTheDemoClockIsRunning() {
         Instant now = sg("2026-10-01T01:10");
         priceLinked();
-        when(loads.profile(1L, LocalDate.of(2026, 10, 1)))
-                .thenReturn(day(LocalDate.of(2026, 10, 1), "0.5"));
+        when(loads.profiler(1L)).thenReturn(d -> day(d, "0.5"));
         when(prices.prices(sg("2026-10-01T00:00"), now))
                 .thenReturn(java.util.Map.of(sg("2026-10-01T00:00"), new BigDecimal("200")));
         DemoClock clock = new DemoClock(Clock.fixed(now, SINGAPORE));
@@ -108,7 +108,7 @@ class SpendServiceTest {
     void aFixedRatePlanUsesTheContractedRateAndNeedsNoMarketPrices() {
         Instant now = sg("2026-10-01T01:00");
         when(households.get(1L)).thenReturn(household(PlanType.FIXED, new BigDecimal("29.5")));
-        when(loads.profile(1L, LocalDate.of(2026, 10, 1))).thenReturn(day(LocalDate.of(2026, 10, 1), "1.0"));
+        when(loads.profiler(1L)).thenReturn(d -> day(d, "1.0"));
 
         MonthToDateSpendResponse spend = service(now).monthToDate(1L);
 
@@ -122,7 +122,7 @@ class SpendServiceTest {
     void justAfterMidnightOnTheFirstNothingHasBeenSpentYet() {
         Instant now = sg("2026-11-01T00:10");
         priceLinked();
-        when(loads.profile(1L, LocalDate.of(2026, 11, 1))).thenReturn(day(LocalDate.of(2026, 11, 1), "1.0"));
+        when(loads.profiler(1L)).thenReturn(d -> day(d, "1.0"));
 
         MonthToDateSpendResponse spend = service(now).monthToDate(1L);
 
@@ -136,7 +136,7 @@ class SpendServiceTest {
         // 2 Oct at 01:00: 30 Sep and 1 Oct are full days (48 half-hours), 2 Oct has 2 so far.
         Instant now = sg("2026-10-02T01:00");
         when(households.get(1L)).thenReturn(household(PlanType.FIXED, new BigDecimal("30")));
-        when(loads.profile(eq(1L), any())).thenAnswer(call -> day(call.getArgument(1), "0.5"));
+        when(loads.profiler(1L)).thenReturn(d -> day(d, "0.5"));
 
         var days = service(now).dailySpend(1L, LocalDate.of(2026, 9, 30));
 
@@ -152,7 +152,7 @@ class SpendServiceTest {
     void weeklySplitsTheMonthCalculatesBudgetPaceAndMarksCurrentWeek() {
         Instant now = sg("2026-10-15T12:00");
         when(households.get(1L)).thenReturn(household(PlanType.FIXED, new BigDecimal("30")));
-        when(loads.profile(eq(1L), any())).thenAnswer(call -> day(call.getArgument(1), "1.0"));
+        when(loads.profiler(1L)).thenReturn(d -> day(d, "1.0"));
         when(budgets.find(1L)).thenReturn(java.util.Optional.of(
                 new BudgetRepository.Settings(new BigDecimal("310.00"), null, true)));
 
