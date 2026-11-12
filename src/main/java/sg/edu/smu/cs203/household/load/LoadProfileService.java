@@ -3,6 +3,7 @@ package sg.edu.smu.cs203.household.load;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.function.Function;
 
 import org.springframework.stereotype.Service;
 
@@ -38,14 +39,21 @@ public class LoadProfileService {
         if (day == null) {
             day = LocalDate.now(clock);
         }
+        return profiler(householdId).apply(day);
+    }
+
+    /**
+     * Day-to-profile function for a household. Access check, archetype and appliances are
+     * loaded once here, so callers that need many days do not repeat those queries per day.
+     */
+    public Function<LocalDate, LoadProfileResponse> profiler(long householdId) {
         Household household = households.findById(householdId)
                 .orElseThrow(() -> new HouseholdNotFoundException(householdId));
         ownership.requireAccess(householdId);
         LoadArchetype archetype = archetypeFor(household);
         List<Appliance> owned = appliances.findByHousehold(householdId);
-        LoadProfileCalculator.DailyLoad load =
-                LoadProfileCalculator.calculate(archetype, owned, day);
-        return LoadProfileResponse.from(householdId, archetype, load);
+        return day -> LoadProfileResponse.from(householdId, archetype,
+                LoadProfileCalculator.calculate(archetype, owned, day));
     }
 
     public List<LoadArchetype> archetypes() {
