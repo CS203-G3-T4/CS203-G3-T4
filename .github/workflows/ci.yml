@@ -205,13 +205,13 @@ jobs:
       - name: Rebuild and verify frozen evidence
         run: |
           mkdir -p forecast-artifacts
-          python3 scripts/forecast-artifacts.py build forecast-artifacts/wattly-forecast-evidence-76c4866.tar.gz
-          python3 scripts/forecast-artifacts.py verify forecast-artifacts/wattly-forecast-evidence-76c4866.tar.gz
+          python3 scripts/forecast-artifacts.py build forecast-artifacts/wattly-forecast-evidence-0b73a58.tar.gz
+          python3 scripts/forecast-artifacts.py verify forecast-artifacts/wattly-forecast-evidence-0b73a58.tar.gz
       - uses: actions/upload-artifact@v4
         with:
-          name: wattly-forecast-evidence-76c4866
+          name: wattly-forecast-evidence-0b73a58
           path: |
-            forecast-artifacts/wattly-forecast-evidence-76c4866.tar.gz
+            forecast-artifacts/wattly-forecast-evidence-0b73a58.tar.gz
             docs/forecasting/artifacts.json
           retention-days: 30
 
