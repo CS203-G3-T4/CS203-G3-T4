@@ -90,6 +90,10 @@ class ForecastPersistenceTest {
         saved.evaluateAvailable(NOW.plus(Duration.ofDays(1)),"REPLAY");
         assertThat(saved.points(run.id(),"B1")).isEqualTo(run.points());
         assertThat(jdbc.queryForObject("select count(*) from forecast_evaluation",Integer.class)).isEqualTo(72);
+        // A later pass skips already-scored points and keeps the first evaluation time.
+        saved.evaluateAvailable(NOW.plus(Duration.ofDays(2)),"REPLAY");
+        assertThat(jdbc.queryForObject("select count(*) from forecast_evaluation where evaluated_at=?",Integer.class,
+                java.sql.Timestamp.from(NOW.plus(Duration.ofDays(1))))).isEqualTo(72);
         assertThat(saved.accuracy(7,NOW,"REPLAY").get("available")).isEqualTo(false);
         assertThat(saved.accuracy(7,NOW.plus(Duration.ofDays(1)),"REPLAY").get("available")).isEqualTo(true);
         var mvc=MockMvcBuilders.standaloneSetup(controller).build();
