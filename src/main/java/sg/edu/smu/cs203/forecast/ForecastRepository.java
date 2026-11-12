@@ -110,6 +110,9 @@ public class ForecastRepository {
                     WHERE period_start=p.target_period AND price_status='PROVISIONAL' AND available_at<=? AND published_at<=?
                     ORDER BY published_at DESC,available_at DESC,id DESC LIMIT 1) a ON true
                 WHERE f.mode=? AND f.is_demo=FALSE AND f.as_of<=? AND f.generated_at<=? AND p.target_period+interval '30 minutes'<=?
+                  AND NOT EXISTS (SELECT 1 FROM forecast_evaluation e WHERE e.run_id=p.run_id
+                      AND e.model_identifier=p.model_identifier AND e.horizon=p.horizon
+                      AND e.truth_policy='PROVISIONAL_FIRST_EVALUATION')
                 ON CONFLICT DO NOTHING
                 """,ts(asOf),ts(asOf),ts(asOf),mode,ts(asOf),ts(asOf),ts(asOf));
         jdbc.update("""
@@ -118,6 +121,8 @@ public class ForecastRepository {
                 FROM forecast_point p JOIN forecast_run f ON f.id=p.run_id
                 JOIN market_price_revision a ON a.period_start=p.target_period AND a.price_status='FINAL'
                 WHERE f.mode=? AND f.is_demo=FALSE AND f.as_of<=? AND f.generated_at<=? AND p.target_period+interval '30 minutes'<=?
+                  AND NOT EXISTS (SELECT 1 FROM forecast_evaluation e WHERE e.run_id=p.run_id
+                      AND e.model_identifier=p.model_identifier AND e.horizon=p.horizon AND e.truth_policy='FINAL')
                 GROUP BY p.run_id,p.model_identifier,p.horizon HAVING count(DISTINCT a.usep)=1
                 ON CONFLICT DO NOTHING
                 """,ts(asOf),mode,ts(asOf),ts(asOf),ts(asOf));
