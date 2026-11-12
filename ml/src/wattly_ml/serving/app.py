@@ -13,6 +13,7 @@ from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validato
 from ..artifacts import current_bundle, load_bundle
 from ..data import digest
 from ..data import KnownPrices
+from ..price_demand import PRICE_DEMAND_POLICY
 from ..backtest import predict
 from ..spikes import reference
 from ..timebase import DAY, floor, targets
@@ -94,6 +95,29 @@ def experimental_bundle(home):
     if bundle['manifest'].get('productionEligible') is not False:
         raise ValueError('Experimental serving requires an explicitly unapproved bundle')
     return bundle
+
+
+def quality_flags(manifest, request, experimental):
+    version = manifest.get('featureSchemaVersion')
+    if manifest.get('inputPolicy') == PRICE_DEMAND_POLICY:
+        flags = ['PRICE_CALENDAR_HOLIDAY_DEMAND', 'COMPLETED_PERIOD_PRICE_INPUTS', 'AS_ISSUED_EXPECTED_DEMAND']
+    elif manifest.get('inputPolicy') == 'COMPLETED_PRICE_CALENDAR_HOLIDAY_NO_AUXILIARY_V1':
+        flags = ['PRICE_CALENDAR_HOLIDAY_ONLY', 'COMPLETED_PERIOD_PRICE_INPUTS', 'EXPECTED_DEMAND_OMITTED_BY_RECIPE']
+    elif version in (3, 4):
+        flags = ['PRICE_CALENDAR_HOLIDAY_SOLAR', 'SOLAR_PUBLIC_PROVISIONAL_INPUTS', 'COMPLETED_PERIOD_PRICE_INPUTS']
+        if version == 4:
+            flags.append('AS_ISSUED_EXPECTED_DEMAND')
+    elif manifest.get('featureSchemaVersion', 1) == 1:
+        flags = ['PRICE_CALENDAR_ONLY']
+    elif len({r.targetPeriod for r in request.expectedDemand if r.targetPeriod in targets(request.asOf)}) < 24:
+        flags = ['PRICE_CALENDAR_HOLIDAY_DEMAND', 'EXPECTED_DEMAND_PARTIAL_OR_MISSING']
+    else:
+        flags = ['PRICE_CALENDAR_HOLIDAY_DEMAND']
+    if manifest["retrospective"]:
+        flags.append("RETROSPECTIVE_TRAINING")
+    if experimental:
+        flags.append("EXPERIMENTAL_AI")
+    return flags
 
 
 def create_app(loader=None):
@@ -187,7 +211,6 @@ def create_app(loader=None):
             raise HTTPException(503,detail={"code":"STALE_INPUT"})
         history = KnownPrices({r.periodStart:r.model_dump() for r in request.priceHistory},
                               [r.model_dump() for r in request.expectedDemand])
-        from ..price_demand import PRICE_DEMAND_POLICY
         if manifest.get('inputPolicy') == PRICE_DEMAND_POLICY and not app.state.experimental:
             raise HTTPException(503,detail={'code':'PRICE_DEMAND_REQUIRES_EXPERIMENTAL_MODE'})
         input_evidence = None
@@ -204,6 +227,7 @@ def create_app(loader=None):
         try:
             predictions = predict(bundle,history,request.asOf)
         except Exception:
+            logging.getLogger('wattly_ml').exception('Inference failed')
             raise HTTPException(503,detail={"code":"MODEL_INFERENCE_FAILED"})
         import math
         if len(predictions)!=24 or not all(math.isfinite(v) for v in predictions):
@@ -219,10 +243,7 @@ def create_app(loader=None):
                 "modelVersion":manifest["version"],"usableFrom":manifest["usableFrom"],
                 "servingMode":"EXPERIMENTAL" if app.state.experimental else "APPROVED",
                 "baselineRanking":manifest["baselineRanking"],"manifest":manifest,
-                "points":points,"inputEvidence":input_evidence,"qualityFlags":(['PRICE_CALENDAR_HOLIDAY_DEMAND', 'COMPLETED_PERIOD_PRICE_INPUTS', 'AS_ISSUED_EXPECTED_DEMAND'] if manifest.get('inputPolicy') == PRICE_DEMAND_POLICY else ['PRICE_CALENDAR_HOLIDAY_ONLY', 'COMPLETED_PERIOD_PRICE_INPUTS', 'EXPECTED_DEMAND_OMITTED_BY_RECIPE'] if manifest.get('inputPolicy') == 'COMPLETED_PRICE_CALENDAR_HOLIDAY_NO_AUXILIARY_V1' else ['PRICE_CALENDAR_HOLIDAY_SOLAR', 'SOLAR_PUBLIC_PROVISIONAL_INPUTS', 'COMPLETED_PERIOD_PRICE_INPUTS'] + (['AS_ISSUED_EXPECTED_DEMAND'] if manifest.get('featureSchemaVersion')==4 else []) if manifest.get('featureSchemaVersion') in (3,4) else ['PRICE_CALENDAR_ONLY'] if manifest.get('featureSchemaVersion',1)==1 else
-                    ['PRICE_CALENDAR_HOLIDAY_DEMAND', 'EXPECTED_DEMAND_PARTIAL_OR_MISSING'] if len({r.targetPeriod for r in request.expectedDemand if r.targetPeriod in targets(request.asOf)})<24 else ['PRICE_CALENDAR_HOLIDAY_DEMAND'])+
-                    (["RETROSPECTIVE_TRAINING"] if manifest["retrospective"] else [])+
-                    (["EXPERIMENTAL_AI"] if app.state.experimental else [])}
+                "points":points,"inputEvidence":input_evidence,"qualityFlags":quality_flags(manifest,request,app.state.experimental)}
     return app
 
 
